@@ -33,6 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- HTMLエスケープユーティリティ ---
+    function escapeHTML(value) {
+        if (value == null) return '';
+        return String(value).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+    }
+
     // データ保存時の視覚的フィードバック
     function showSaveIndicator(message = 'データを保存しました') {
         // 既存のインジケーターがあれば削除
@@ -44,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 新しいインジケーターを作成
         const indicator = document.createElement('div');
         indicator.className = 'save-indicator';
-        indicator.innerHTML = `<i class="ph-check-circle"></i> ${message}`;
+        indicator.innerHTML = `<i class="ph-check-circle"></i> ${escapeHTML(message)}`;
         indicator.style.cssText = `
             position: fixed;
             top: 20px;
@@ -281,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'p1', title: '“紙”技エンジニアリング！', description: '一枚の紙をどれだけ長くできるか？どれだけの重さを支えられるか？切り方一つで変わる紙の可能性を切り拓こう！', capacity: 10, title_en: 'Paper Engineering Tricks!', description_en: 'How long can a single sheet of paper become? How much weight can it hold? Explore the surprising potential of paper with clever cuts and design.' },
         { id: 'p2', title: 'ChatGPTを操ろう！', description: 'いま話題の生成AIを使って、難しいコードのプログラミングなしで、楽しくアプリ作りに挑戦！', capacity: 15, title_en: 'Master ChatGPT!', description_en: 'Use trending generative AI to create fun apps without complex coding. Try hands-on building with ChatGPT as your partner.' },
         { id: 'p3', title: '現代の金属魔法？', description: '強靭なピアノ線を素手で折る！曲がった針金を一瞬で真っ直ぐに！身近な金属の不思議な現象を、実験で解き明かそう。', capacity: 10, title_en: 'Modern Metal Magic?', description_en: 'Snap tough piano wire with your bare hands? Straighten bent wire in an instant? Uncover the curious behavior of everyday metals through experiments.' },
-        { id: 'p4', title: '電気の不思議を探ろう！', description: '1Vでは光らないLEDが、電気回路を工夫すれば光りだす？！電気の不思議を徹底調査して、謎を解き明かそう！', capacity: 12, title_en: 'Explore the Wonders of Electricity!', description_en: 'An LED won’t light at 1V—unless you design the circuit cleverly! Investigate the mysteries of electricity and figure out why.' },
+        { id: 'p4', title: '電気の不思議を探ろう！', description: '1Vでは光らないLEDが、電気回路を工夫すれば光りだす？！電気の不思議を徹底調査して、謎を解き明かそう！', capacity: 12, title_en: 'Explore the Wonders of Electricity!', description_en: 'An LED won\'t light at 1V—unless you design the circuit cleverly! Investigate the mysteries of electricity and figure out why.' },
         { id: 'p5', title: '重力を自在に操ろう！', description: 'モノの落下スピードが自在に変えられる？！ニュートンもびっくりの「強磁場」の世界を楽しもう♪', capacity: 8, title_en: 'Bend Gravity at Will!', description_en: 'Change how fast objects fall?! Step into the world of strong magnetic fields—an experience that would amaze even Newton.' }
     ];
 
@@ -290,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         p1: { title_en: 'Paper Engineering Tricks!', description_en: 'How long can a single sheet of paper become? How much weight can it hold? Explore the surprising potential of paper with clever cuts and design.' },
         p2: { title_en: 'Master ChatGPT!', description_en: 'Use trending generative AI to create fun apps without complex coding. Try hands-on building with ChatGPT as your partner.' },
         p3: { title_en: 'Modern Metal Magic?', description_en: 'Snap tough piano wire with your bare hands? Straighten bent wire in an instant? Uncover the curious behavior of everyday metals through experiments.' },
-        p4: { title_en: 'Explore the Wonders of Electricity!', description_en: 'An LED won’t light at 1V—unless you design the circuit cleverly! Investigate the mysteries of electricity and figure out why.' },
+        p4: { title_en: 'Explore the Wonders of Electricity!', description_en: 'An LED won\'t light at 1V—unless you design the circuit cleverly! Investigate the mysteries of electricity and figure out why.' },
         p5: { title_en: 'Bend Gravity at Will!', description_en: 'Change how fast objects fall?! Step into the world of strong magnetic fields—an experience that would amaze even Newton.' }
     };
 
@@ -817,7 +823,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         } else if (program) {
             successDesc.textContent = translations[currentLanguage].successDesc;
             programCardEl.classList.remove('hidden');
-            programCardEl.innerHTML = `<h3>${program.title}</h3><p>${program.description}</p>`;
+            programCardEl.innerHTML = `<h3>${escapeHTML(program.title)}</h3><p>${escapeHTML(program.description)}</p>`;
             programCardEl.style.borderColor = 'var(--success-color)';
             programCardEl.style.backgroundColor = '#eaf6ec';
         } else {
@@ -924,30 +930,30 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             item.dataset.id = p.id;
             item.innerHTML = `
                 <div class="editor-item-header">
-                    <strong>${translations[currentLanguage].programHeader || 'プログラム'} ${index + 1}</strong>
+                    <strong>${escapeHTML(translations[currentLanguage].programHeader || 'プログラム')} ${index + 1}</strong>
                     <i class="ph-list" title="ドラッグして順番変更"></i>
                 </div>
                 <div class="editor-item-row">
-                    <label for="title-${p.id}">${translations[currentLanguage].titleLabel}</label>
-                    <input type="text" id="title-${p.id}" value="${p.title}">
+                    <label for="title-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].titleLabel)}</label>
+                    <input type="text" id="title-${escapeHTML(p.id)}" value="${escapeHTML(p.title)}" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="editor-item-row en-translation-field">
-                    <label for="title-en-${p.id}">${translations[currentLanguage].titleEnLabel}</label>
-                    <input type="text" id="title-en-${p.id}" value="${p.title_en || ''}">
+                    <label for="title-en-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].titleEnLabel)}</label>
+                    <input type="text" id="title-en-${escapeHTML(p.id)}" value="${escapeHTML(p.title_en || '')}" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="editor-item-row">
-                    <label for="desc-${p.id}">${translations[currentLanguage].descriptionLabel}</label>
-                    <textarea id="desc-${p.id}">${p.description}</textarea>
+                    <label for="desc-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].descriptionLabel)}</label>
+                    <textarea id="desc-${escapeHTML(p.id)}" autocomplete="off" spellcheck="false">${escapeHTML(p.description)}</textarea>
                 </div>
                 <div class="editor-item-row en-translation-field">
-                    <label for="desc-en-${p.id}">${translations[currentLanguage].descriptionEnLabel}</label>
-                    <textarea id="desc-en-${p.id}">${p.description_en || ''}</textarea>
+                    <label for="desc-en-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].descriptionEnLabel)}</label>
+                    <textarea id="desc-en-${escapeHTML(p.id)}" autocomplete="off" spellcheck="false">${escapeHTML(p.description_en || '')}</textarea>
                 </div>
                 <div class="editor-item-row">
-                    <label for="capacity-${p.id}">${translations[currentLanguage].capacityLabel}</label>
-                    <input type="number" id="capacity-${p.id}" value="${p.capacity}" style="width: 80px; flex-grow: 0;">
+                    <label for="capacity-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].capacityLabel)}</label>
+                    <input type="number" id="capacity-${escapeHTML(p.id)}" value="${escapeHTML(p.capacity)}" style="width: 80px; flex-grow: 0;">
                     <div style="margin-left: auto;">
-                        <button class="btn btn-danger btn-sm btn-delete-program">${translations[currentLanguage].deleteButton}</button>
+                        <button class="btn btn-danger btn-sm btn-delete-program">${escapeHTML(translations[currentLanguage].deleteButton)}</button>
                     </div>
                 </div>
             `;
@@ -1038,16 +1044,16 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             const description = (currentLanguage === 'en' && p.description_en) ? p.description_en : p.description;
             let fullOverlayHTML = '';
             if (isFull) {
-                fullOverlayHTML = `<div class="full-overlay"><span>${translations[currentLanguage].full}</span></div>`;
+                fullOverlayHTML = `<div class="full-overlay"><span>${escapeHTML(translations[currentLanguage].full)}</span></div>`;
             }
             card.innerHTML = `
                 ${fullOverlayHTML}
-                <h3>${title}</h3>
-                <p>${description}</p>
+                <h3>${escapeHTML(title)}</h3>
+                <p>${escapeHTML(description)}</p>
                 <div class="program-choice-btns" data-program-id="${p.id}">
-                    <button class="p1" ${isFull ? 'disabled' : ''}>${translations[currentLanguage].choice1}</button>
-                    <button class="p2" ${isFull ? 'disabled' : ''}>${translations[currentLanguage].choice2}</button>
-                    <button class="p3" ${isFull ? 'disabled' : ''}>${translations[currentLanguage].choice3}</button>
+                    <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(translations[currentLanguage].choice1)}</button>
+                    <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(translations[currentLanguage].choice2)}</button>
+                    <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(translations[currentLanguage].choice3)}</button>
                 </div>`;
             grid.appendChild(card);
         });
@@ -1146,10 +1152,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         const choice3 = resolveChoice(student.choices?.[2]);
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
         details.innerHTML = `
-            <p>${translations[currentLanguage].nameHeader}: <span>${student.name} 様</span></p>
-            <p>${translations[currentLanguage].choice1}: <span>${choice1}</span></p>
-            <p>${translations[currentLanguage].choice2}: <span>${choice2}</span></p>
-            <p>${translations[currentLanguage].choice3}: <span>${choice3}</span></p>
+            <p>${escapeHTML(translations[currentLanguage].nameHeader)}: <span>${escapeHTML(student.name)} 様</span></p>
+            <p>${escapeHTML(translations[currentLanguage].choice1)}: <span>${escapeHTML(choice1)}</span></p>
+            <p>${escapeHTML(translations[currentLanguage].choice2)}: <span>${escapeHTML(choice2)}</span></p>
+            <p>${escapeHTML(translations[currentLanguage].choice3)}: <span>${escapeHTML(choice3)}</span></p>
         `;
     }
 
@@ -1255,7 +1261,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
     }
 
     function exportToExcel() {
-        const data = [[translations[currentLanguage].programHeader, translations[currentLanguage].nameHeader]];
+        const data = [[escapeHTML(translations[currentLanguage].programHeader), escapeHTML(translations[currentLanguage].nameHeader)]];
         confirmedAttendees.forEach(attendee => {
             const program = programs.find(p => p.id === attendee.assignedProgramId);
             const title = program ? (currentLanguage === 'en' && program.title_en ? program.title_en : program.title) : 'N/A';
@@ -1276,10 +1282,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         const totalEnrolled = Object.values(programEnrollment).reduce((sum, v) => sum + (v || 0), 0);
         const totalRatio = Math.min(100, Math.round((totalEnrolled / Math.max(1, totalCapacity)) * 100));
         summaryEl.innerHTML = `
-            <p><strong>${translations[currentLanguage].totalConfirmed}:</strong> ${confirmedCount}</p>
-            <p><strong>${translations[currentLanguage].totalWaiting}:</strong> ${waitingCount}</p>
+            <p><strong>${escapeHTML(translations[currentLanguage].totalConfirmed)}:</strong> ${confirmedCount}</p>
+            <p><strong>${escapeHTML(translations[currentLanguage].totalWaiting)}:</strong> ${waitingCount}</p>
             <div class="total-progress">
-                <div class="label"><span>${translations[currentLanguage].totalAttendees}</span><span>${totalEnrolled} / ${totalCapacity}</span></div>
+                <div class="label"><span>${escapeHTML(translations[currentLanguage].totalAttendees)}</span><span>${totalEnrolled} / ${totalCapacity}</span></div>
                 <div class="bar"><div class="bar-inner" style="width:${totalRatio}%"></div></div>
             </div>
         `;
@@ -1294,16 +1300,16 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                     const ratio = Math.min(100, Math.round((enrolled / p.capacity) * 100));
                     const attendeeNames = confirmedAttendees
                         .filter(a => a.assignedProgramId === p.id)
-                        .map(a => `<span class=\"chip\">${a.name}</span>`)
+                        .map(a => `<span class=\"chip\">${escapeHTML(a.name)}</span>`)
                         .join('');
                     return `
                         <div class=\"program-card-status\">
                             <div class=\"card-header\">
-                                <h4><span class=\"program-no-badge\">#${idx+1}</span>${title}</h4>
+                                <h4><span class=\"program-no-badge\">#${idx+1}</span>${escapeHTML(title)}</h4>
                                 <span class=\"count-badge\">${enrolled} / ${p.capacity}</span>
                             </div>
                             <div class=\"progress\"><div class=\"progress-bar\" style=\"width:${ratio}%\"></div></div>
-                            <div class=\"attendees-chips\">${attendeeNames || `<span class=\"chip\">${translations[currentLanguage].noAttendees}</span>`}</div>
+                            <div class=\"attendees-chips\">${attendeeNames || `<span class="chip">${escapeHTML(translations[currentLanguage].noAttendees)}</span>`}</div>
                         </div>
                     `;
                 }).join('')}
@@ -1313,9 +1319,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>${translations[currentLanguage].programHeader}</th>
-                        <th>${translations[currentLanguage].statusHeader}</th>
-                        <th>${translations[currentLanguage].attendeesHeader}</th>
+                        <th>${escapeHTML(translations[currentLanguage].programHeader)}</th>
+                        <th>${escapeHTML(translations[currentLanguage].statusHeader)}</th>
+                        <th>${escapeHTML(translations[currentLanguage].attendeesHeader)}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1323,14 +1329,14 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                         const title = (currentLanguage === 'en' && p.title_en) ? p.title_en : p.title;
                         const attendees = confirmedAttendees
                             .filter(a => a.assignedProgramId === p.id)
-                            .map(a => a.name)
+                            .map(a => escapeHTML(a.name))
                             .join(', ');
                         return `
                             <tr>
                                 <td>${idx+1}</td>
-                                <td>${title}</td>
+                                <td>${escapeHTML(title)}</td>
                                 <td>${programEnrollment[p.id] || 0} / ${p.capacity}</td>
-                                <td>${attendees || translations[currentLanguage].noAttendees}</td>
+                                <td>${attendees || escapeHTML(translations[currentLanguage].noAttendees)}</td>
                             </tr>
                         `;
                     }).join('')}
@@ -1348,11 +1354,11 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             <div class="waiting-list">
                 ${waitingList.map(user => `
                     <div class="waiting-item">
-                        <div class="name-chip">${user.name}</div>
+                        <div class="name-chip">${escapeHTML(user.name)}</div>
                         <div class="choices">
-                            <span class="chip">${translations[currentLanguage].choice1}: ${getTitle(user.choices[0])}</span>
-                            <span class="chip">${translations[currentLanguage].choice2}: ${getTitle(user.choices[1])}</span>
-                            <span class="chip">${translations[currentLanguage].choice3}: ${getTitle(user.choices[2])}</span>
+                            <span class="chip">${escapeHTML(translations[currentLanguage].choice1)}: ${escapeHTML(getTitle(user.choices[0]))}</span>
+                            <span class="chip">${escapeHTML(translations[currentLanguage].choice2)}: ${escapeHTML(getTitle(user.choices[1]))}</span>
+                            <span class="chip">${escapeHTML(translations[currentLanguage].choice3)}: ${escapeHTML(getTitle(user.choices[2]))}</span>
                         </div>
                     </div>
                 `).join('')}
@@ -1379,11 +1385,11 @@ function renderRosterPreview() {
     const resMap = rosterMappingInfo.reservations;
     const showFuriRes = !!resMap; // 固定マッピングでフリガナがある
     const shownChoiceIndexes = [0,1,2]; // プレビューは第1〜第3希望を常に表示
-    let resHeader = `<th>${translations[currentLanguage].nameHeader}</th>`;
-    if (showFuriRes) resHeader += `<th>${translations[currentLanguage].furiganaHeader}</th>`;
+    let resHeader = `<th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>`;
+    if (showFuriRes) resHeader += `<th>${escapeHTML(translations[currentLanguage].furiganaHeader)}</th>`;
     shownChoiceIndexes.forEach(choiceIdx => {
         const key = choiceIdx === 0 ? 'choice1' : (choiceIdx === 1 ? 'choice2' : 'choice3');
-        resHeader += `<th>${translations[currentLanguage][key]}</th>`;
+        resHeader += `<th>${escapeHTML(translations[currentLanguage][key])}</th>`;
     });
     const resFiltered = reservations.filter(r => matches(r.name, r.furigana));
     const resBody = resFiltered.map(r => {
@@ -1395,9 +1401,9 @@ function renderRosterPreview() {
             status = 'yellow'; // 待機中
         }
         const statusDot = `<span class="status-dot status-${status}"></span>`;
-        let tds = `<td>${statusDot}${r.name || ''}</td>`;
-        if (showFuriRes) tds += `<td>${r.furigana || ''}</td>`;
-        shownChoiceIndexes.forEach(i => { tds += `<td>${r.choices?.[i] || ''}</td>`; });
+        let tds = `<td>${statusDot}${escapeHTML(r.name || '')}</td>`;
+        if (showFuriRes) tds += `<td>${escapeHTML(r.furigana || '')}</td>`;
+        shownChoiceIndexes.forEach(i => { tds += `<td>${escapeHTML(r.choices?.[i] || '')}</td>`; });
         return `<tr>${tds}</tr>`;
     }).join('');
     rr.innerHTML = `<thead><tr>${resHeader}</tr></thead><tbody>${resBody}</tbody>`;
@@ -1407,9 +1413,9 @@ function renderRosterPreview() {
     // 説明会名簿（必要な列のみ）
     const briMap = rosterMappingInfo.briefing;
     const showFuriBri = briMap && briMap.furiganaIdx != null && briMap.furiganaIdx >= 0;
-    let briHeader = `<th>${translations[currentLanguage].nameHeader}</th>`;
-    if (showFuriBri) briHeader += `<th>${translations[currentLanguage].furiganaHeader}</th>`;
-    briHeader += `<th>${translations[currentLanguage].timeHeader || '時間'}</th>`;
+    let briHeader = `<th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>`;
+    if (showFuriBri) briHeader += `<th>${escapeHTML(translations[currentLanguage].furiganaHeader)}</th>`;
+    briHeader += `<th>${escapeHTML(translations[currentLanguage].timeHeader || '時間')}</th>`;
     const briFiltered = briefingSessionAttendees.filter(a => matches(a.name, a.furigana));
     const briBody = briFiltered.map(a => {
         // ステータス判定: 確定済みリストにいる場合は緑、待機リストにいる場合は黄色、どちらにもいない場合は赤
@@ -1420,9 +1426,9 @@ function renderRosterPreview() {
             status = 'yellow'; // 待機中
         }
         const statusDot = `<span class="status-dot status-${status}"></span>`;
-        let tds = `<td>${statusDot}${a.name || ''}</td>`;
-        if (showFuriBri) tds += `<td>${a.furigana || ''}</td>`;
-        tds += `<td>${a.time || ''}</td>`;
+        let tds = `<td>${statusDot}${escapeHTML(a.name || '')}</td>`;
+        if (showFuriBri) tds += `<td>${escapeHTML(a.furigana || '')}</td>`;
+        tds += `<td>${escapeHTML(a.time || '')}</td>`;
         return `<tr>${tds}</tr>`;
     }).join('');
     rb.innerHTML = `<thead><tr>${briHeader}</tr></thead><tbody>${briBody}</tbody>`;
@@ -1440,7 +1446,7 @@ function renderRosterPreview() {
             .map(a => a.name);
         const othersBody = others.map(n => `
             <tr>
-                <td><span class="status-dot status-green"></span>${n}</td>
+                <td><span class="status-dot status-green"></span>${escapeHTML(n)}</td>
             </tr>
         `).join('');
         ro.innerHTML = othersBody ? `<tbody>${othersBody}</tbody>` : '<tbody></tbody>';

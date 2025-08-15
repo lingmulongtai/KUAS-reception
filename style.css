@@ -265,11 +265,13 @@ body.dark-mode h3 {
 
 /* --- ホーム画面のメインタイトルをおしゃれに大きく --- */
 h1[data-lang-key="mainTitle"] {
-    font-size: clamp(24px, 3.6vw, 46px);
-    font-weight: 800;
+    font-size: clamp(26px, 4.2vw, 50px);
+    font-family: "Zen Maru Gothic", "Inter", "Noto Sans JP", "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    font-weight: 700;
     line-height: 1.12;
     letter-spacing: 0.02em;
-    margin-bottom: 14px;
+    margin-top: 20px;
+    margin-bottom: 0px;
     background: linear-gradient(135deg, #0F8C52 0%, #46A679 50%, #8DBF21 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -292,7 +294,7 @@ body.dark-mode h1[data-lang-key="mainTitle"] {
 }
 /* 英語表示時は2行想定で折り返しを許可し横幅を少し絞る */
 html[lang="en"] h1[data-lang-key="mainTitle"] {
-    font-size: clamp(22px, 3.2vw, 40px);
+    font-size: clamp(26px, 3.8vw, 48px);
     white-space: normal;
     word-break: keep-all;
     overflow-wrap: anywhere;

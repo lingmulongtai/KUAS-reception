@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.sheetjs.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com data:; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
+    <meta name="referrer" content="no-referrer">
     <title>オープンキャンパス受付</title>
     <!-- CSSファイルを読み込み -->
     <link rel="stylesheet" href="style.css">
@@ -10,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/phosphor-icons"></script>
     <!-- ドラッグ＆ドロップとExcel操作のライブラリ -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -52,7 +55,7 @@
                     <div class="input-group">
                         <label for="student-name" data-lang-key="enterFullName">お名前をフルネームで入力してください</label>
                         <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
-                        <input type="text" id="student-name" data-lang-key-placeholder="namePlaceholder">
+                        <input type="text" id="student-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
                         <button id="btn-check-reservation" class="btn btn-primary" data-lang-key="checkReservation">予約を確認する</button>
                     </div>
                 </div>
@@ -69,9 +72,9 @@
                     <div class="input-group">
                         <label for="walk-in-name" data-lang-key="name">お名前</label>
                         <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
-                        <input type="text" id="walk-in-name" data-lang-key-placeholder="namePlaceholder">
+                        <input type="text" id="walk-in-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
                         <label for="walk-in-school" data-lang-key="school">学校名</label>
-                        <input type="text" id="walk-in-school" data-lang-key-placeholder="schoolPlaceholder">
+                        <input type="text" id="walk-in-school" data-lang-key-placeholder="schoolPlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
                         <label for="walk-in-grade" data-lang-key="grade">学年</label>
                         <select id="walk-in-grade">
                             <option value="" data-lang-key="selectGrade">選択してください</option>
@@ -171,7 +174,7 @@
                         <p id="roster-mapping-text">列の対応: 自動検出中…</p>
                     </div>
                     <div class="roster-search">
-                        <input id="roster-search-input" type="text" data-lang-key-placeholder="rosterSearchPlaceholder" placeholder="氏名/フリガナで検索">
+                        <input id="roster-search-input" type="text" data-lang-key-placeholder="rosterSearchPlaceholder" placeholder="氏名/フリガナで検索" autocomplete="off" autocapitalize="off" spellcheck="false">
                     </div>
                     <div class="roster-status-legend">
                         <span class="status-legend-item"><span class="status-dot status-green"></span><span data-lang-key="statusConfirmed">確定済み</span></span>
