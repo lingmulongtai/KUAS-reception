@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オープンキャンパス受付</title>
+    <!-- CSSファイルを読み込み -->
+    <link rel="stylesheet" href="style.css">
+    <!-- モダンなフォントとアイコンを読み込み -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/phosphor-icons"></script>
+    <!-- ドラッグ＆ドロップとExcel操作のライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+
+
+    <!-- ヘッダーバー -->
+    <header class="header-bar">
+        <div class="header-content">
+            <img src="public/kuas_logo.jpg" alt="KUAS Logo" class="header-logo">
+        </div>
+    </header>
+
+    <div class="top-bar-buttons">
+        <button id="help-btn" class="top-bar-btn" title="ヘルプ"><i class="ph-question"></i></button>
+        <button id="theme-switch-btn" class="top-bar-btn" title="Toggle Theme"><i class="ph-moon"></i></button>
+        <button id="lang-switch-btn" class="top-bar-btn" title="Switch Language"><i class="ph-translate"></i></button>
+        <button id="admin-entry-btn" class="top-bar-btn" title="管理画面へ"><i class="ph-gear-six"></i></button>
+    </div>
+
+    <!-- 受付画面用のコンテナ -->
+    <div id="reception-view" class="view-container">
+        <div class="content-wrapper">
+            <button id="btn-back" class="back-btn hidden"><i class="ph-arrow-left"></i> <span data-lang-key="back">戻る</span></button>
+            <h1 data-lang-key="mainTitle">工学部ミニキャップストーン体験 受付</h1>
+            <div id="reception-sections-wrapper">
+                <!-- 初期選択画面 -->
+                <div id="initial-selection" class="section">
+                    <div class="button-group">
+                        <button id="btn-reserved" class="btn btn-primary btn-large"><i class="ph-calendar-check"></i><span data-lang-key="reserved">予約あり</span></button>
+                        <button id="btn-walk-in" class="btn btn-secondary btn-large"><i class="ph-user-plus"></i><span data-lang-key="walkIn">予約なし</span></button>
+                    </div>
+                </div>
+                <!-- 他の受付セクション... -->
+                <div id="name-input-section" class="section section-hidden">
+                    <h1 data-lang-key="reservedNameInputTitle">予約あり - お名前入力</h1>
+                    <div class="input-group">
+                        <label for="student-name" data-lang-key="enterFullName">お名前をフルネームで入力してください</label>
+                        <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
+                        <input type="text" id="student-name" data-lang-key-placeholder="namePlaceholder">
+                        <button id="btn-check-reservation" class="btn btn-primary" data-lang-key="checkReservation">予約を確認する</button>
+                    </div>
+                </div>
+                <div id="reservation-confirmation-section" class="section section-hidden">
+                    <h2 data-lang-key="confirmDetails">ご予約内容の確認</h2>
+                    <div id="confirmation-details" class="confirmation-details"></div>
+                    <div class="button-group">
+                        <button id="btn-confirm-reservation" class="btn btn-primary" data-lang-key="confirmSubmit">この内容で確定</button>
+                        <button id="btn-change-reservation" class="btn btn-secondary" data-lang-key="changeReservation">希望を変更する</button>
+                    </div>
+                </div>
+                <div id="walk-in-section" class="section section-hidden">
+                    <h1 data-lang-key="walkInNameInputTitle">予約なし - お名前入力</h1>
+                    <div class="input-group">
+                        <label for="walk-in-name" data-lang-key="name">お名前</label>
+                        <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
+                        <input type="text" id="walk-in-name" data-lang-key-placeholder="namePlaceholder">
+                        <label for="walk-in-school" data-lang-key="school">学校名</label>
+                        <input type="text" id="walk-in-school" data-lang-key-placeholder="schoolPlaceholder">
+                        <label for="walk-in-grade" data-lang-key="grade">学年</label>
+                        <select id="walk-in-grade">
+                            <option value="" data-lang-key="selectGrade">選択してください</option>
+                            <option value="高校1年生" data-lang-key="grade1">高校1年生</option>
+                            <option value="高校2年生" data-lang-key="grade2">高校2年生</option>
+                            <option value="高校3年生" data-lang-key="grade3">高校3年生</option>
+                            <option value="その他" data-lang-key="other">その他</option>
+                        </select>
+                        <button id="btn-to-program-selection" class="btn btn-primary" data-lang-key="toProgramSelection">プログラム選択へ</button>
+                        <button id="btn-no-capstone" class="btn btn-secondary" data-lang-key="noCapstoneExperience">キャップストーン体験に参加しない</button>
+                    </div>
+                </div>
+                <div id="program-selection-section" class="section section-hidden">
+                    <h2 data-lang-key="selectProgramTitle">希望プログラムを選択してください</h2>
+                    <p data-lang-key="selectProgramDesc">第1〜第3希望まで選択できます。</p>
+                    <div id="program-grid" class="program-grid"></div>
+                    <button id="btn-submit-choices" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="confirmChoices">選択を確定する</button>
+                </div>
+                <div id="no-capstone-section" class="section section-hidden">
+                    <h2 data-lang-key="noCapstoneTitle">キャップストーン体験に参加しない</h2>
+                    <p data-lang-key="noCapstoneDesc">キャップストーン体験に参加しない場合の受付が完了しました。</p>
+                    <div class="no-capstone-info">
+                        <p id="no-capstone-briefing-time" data-lang-key="noCapstoneInfo">工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。</p>
+                    </div>
+                    <button id="btn-no-capstone-complete" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="backToHome">最初の画面に戻る</button>
+                </div>
+                <!-- 完了画面 -->
+                <div id="success-section" class="section section-hidden">
+                    <div class="success-icon-wrapper"><i class="ph-check-circle-fill"></i></div>
+                    <h2 data-lang-key="successTitle">受付が完了しました！</h2>
+                    <p id="success-student-name" style="font-size: 18px; font-weight: bold;"></p>
+                    <p id="success-message-desc" data-lang-key="successDesc">あなたは以下のプログラムに確定しました。</p>
+                    <div id="success-program-card" class="program-card"></div>
+                    <button id="btn-back-to-home" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="backToHome">最初の画面に戻る</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理画面用のコンテナ (初期状態では非表示) -->
+    <div id="admin-view" class="view-container hidden">
+        <div class="content-wrapper">
+             <!-- 管理パネル -->
+            <div id="admin-panel" class="section">
+                <h2 data-lang-key="adminPanel">管理パネル</h2>
+                <div class="admin-tabs">
+                    <div class="admin-tab active" data-tab="editor" data-lang-key="tabProgramEdit">プログラム編集</div>
+                    <div class="admin-tab" data-tab="loader" data-lang-key="tabFileLoad">ファイル読み込み</div>
+                    <div class="admin-tab" data-tab="roster" data-lang-key="tabRoster">名簿プレビュー</div>
+                    <div class="admin-tab" data-tab="status" data-lang-key="tabStatus">受付状況</div>
+                    <div class="admin-tab" data-tab="settings" data-lang-key="tabSettings">設定</div>
+                </div>
+
+                <!-- プログラム編集タブ -->
+                <div id="tab-editor" class="admin-tab-content active">
+                    <div class="toggle-switch-wrapper">
+                        <span data-lang-key="showTranslation">英語翻訳表示</span>
+                        <label class="ios-switch">
+                            <input type="checkbox" id="translation-toggle-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <ul id="program-editor-list"></ul>
+                    <details class="json-editor-container">
+                        <summary data-lang-key="jsonEditor">JSON表示/編集</summary>
+                        <div class="input-group">
+                            <textarea id="json-editor"></textarea>
+                            <button id="btn-apply-json" class="btn btn-secondary btn-sm" style="align-self: flex-end;" data-lang-key="applyJson">JSONを適用</button>
+                        </div>
+                    </details>
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button id="btn-add-program" class="btn btn-secondary" data-lang-key="addProgram">＋ プログラムを追加</button>
+                        <button id="btn-save-programs" class="btn btn-primary" data-lang-key="saveChanges">変更を保存</button>
+                    </div>
+                </div>
+
+                <!-- ファイル読み込みタブ -->
+                <div id="tab-loader" class="admin-tab-content">
+                    <div class="file-upload-wrapper">
+                        <p data-lang-key="fileUpload1">① ミニキャップストーン体験 予約者名簿 (xlsx)</p>
+                        <input type="file" id="reservations-file-input" accept=".xlsx">
+                    </div>
+                    <div class="file-upload-wrapper">
+                        <p data-lang-key="fileUpload2">② 工学部説明会 予約者名簿 (xlsx)</p>
+                        <input type="file" id="briefing-session-file-input" accept=".xlsx">
+                    </div>
+                    <div class="file-upload-wrapper">
+                        <p data-lang-key="loadProgress">③ 進行状況を読み込む (.json)</p>
+                        <input type="file" id="progress-file-input" accept=".json">
+                    </div>
+                    <div id="file-upload-status"></div>
+                </div>
+
+                <!-- 名簿プレビュタブ -->
+                <div id="tab-roster" class="admin-tab-content">
+                    <div class="status-summary" style="margin-top: 0;">
+                        <p id="roster-mapping-text">列の対応: 自動検出中…</p>
+                    </div>
+                    <div class="roster-search">
+                        <input id="roster-search-input" type="text" data-lang-key-placeholder="rosterSearchPlaceholder" placeholder="氏名/フリガナで検索">
+                    </div>
+                    <div class="roster-status-legend">
+                        <span class="status-legend-item"><span class="status-dot status-green"></span><span data-lang-key="statusConfirmed">確定済み</span></span>
+                        <span class="status-legend-item"><span class="status-dot status-yellow"></span><span data-lang-key="statusWaiting">待機中</span></span>
+                        <span class="status-legend-item"><span class="status-dot status-red"></span><span data-lang-key="statusNotRegistered">未受付</span></span>
+                    </div>
+                    <h3 data-lang-key="rosterReservations">ミニキャップストーン体験 予約者名簿 <span id="roster-reservations-count" class="roster-count"></span></h3>
+                    <table id="roster-reservations-table"></table>
+                    <h3 data-lang-key="rosterBriefing" style="margin-top: 30px;">工学部説明会 参加者名簿 <span id="roster-briefing-count" class="roster-count"></span></h3>
+                    <table id="roster-briefing-table"></table>
+                    <h3 data-lang-key="rosterOthers" style="margin-top: 30px;">その他 <span id="roster-others-count" class="roster-count"></span></h3>
+                    <table id="roster-others-table"></table>
+                </div>
+
+                <!-- 受付状況タブ -->
+                <div id="tab-status" class="admin-tab-content">
+                    <div class="status-toggle-wrapper">
+                        <span data-lang-key="cardView">カード表示</span>
+                        <label class="ios-switch">
+                            <input type="checkbox" id="status-view-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div id="status-summary" class="status-summary"></div>
+                    <button id="btn-assign-waiting" class="btn btn-primary" data-lang-key="assignWaiting">待機者を一括割り当て</button>
+                    <h3 data-lang-key="confirmedList">確定済みリスト</h3>
+                    <table id="status-table"></table>
+                    <h3 data-lang-key="waitingList" style="margin-top: 30px;">待機者リスト</h3>
+                    <table id="waiting-list-table"></table>
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button id="btn-save-progress" class="btn btn-secondary" data-lang-key="saveProgress">進行状況を保存</button>
+                        <button id="btn-export-excel" class="btn btn-primary" data-lang-key="exportExcel">Excelファイルに書き出し</button>
+                    </div>
+                </div>
+
+                <!-- 設定タブ -->
+                <div id="tab-settings" class="admin-tab-content">
+                    <div class="toggle-switch-wrapper" style="justify-content: space-between; margin-top: 20px;">
+                        <span data-lang-key="prioritizeReserved">予約者優先割り当て</span>
+                        <label class="ios-switch">
+                            <input type="checkbox" id="prioritize-toggle-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p data-lang-key="prioritizeDesc" style="text-align: left; font-size: 14px; color: var(--text-secondary-color);">
+                        この設定をONにすると、予約なしの参加者は受付時に「割り当て待機」状態になります。全員の受付完了後、「受付状況」タブの「待機者を一括割り当て」ボタンを押してプログラムを確定してください。
+                    </p>
+
+                    <div class="toggle-switch-wrapper" style="justify-content: space-between; margin-top: 16px;">
+                        <span data-lang-key="prioritizeGrade">学年優先割り当て（予約なし）</span>
+                        <label class="ios-switch">
+                            <input type="checkbox" id="prioritize-grade-toggle-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p data-lang-key="prioritizeGradeDesc" style="text-align: left; font-size: 14px; color: var(--text-secondary-color);">
+                        ONのとき、予約なしの待機者を学年（高3→高2→高1→その他）の優先順で割り当てます。OFFのときは先着順です。
+                    </p>
+
+                    <div style="margin-top: 30px; text-align: left;">
+                         <button id="btn-reset-data" class="btn btn-danger" data-lang-key="resetData">受付データをリセット</button>
+                    </div>
+                </div>
+                
+                <button id="btn-exit-admin" class="btn-return" style="margin-top:20px;"><i class="ph-arrow-left"></i> <span data-lang-key="backToReception">受付画面に戻る</span></button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- モーダルコンテナ -->
+    <div id="admin-login-modal" class="modal-overlay">
+        <div class="modal-content-inner">
+            <h2 data-lang-key="adminLogin">管理者ログイン</h2>
+            <div class="input-group">
+                <label for="admin-password" data-lang-key="password">パスワード</label>
+                <input type="password" id="admin-password" autocomplete="off">
+                <p id="password-error"></p>
+                <button id="btn-admin-login" class="btn btn-primary" data-lang-key="login">ログイン</button>
+                <button id="btn-cancel-login" class="btn btn-secondary" data-lang-key="cancel">キャンセル</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="custom-alert-modal" class="modal-overlay">
+        <div class="modal-content-inner alert-content">
+            <p id="alert-message" class="modal-message"></p>
+            <button id="btn-alert-ok" class="btn btn-primary">OK</button>
+        </div>
+    </div>
+
+    <!-- ヘルプモーダル -->
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-content-inner help-content">
+            <div class="help-header">
+                <h2 data-lang-key="scheduleTitle">スケジュール</h2>
+                <button id="btn-close-help" class="close-btn"><i class="ph-x"></i></button>
+            </div>
+            <div class="help-image-container">
+                <img src="public/schedule-scaled.jpg" alt="スケジュール" class="help-image">
+            </div>
+        </div>
+    </div>
+
+    <!-- お祝いエフェクト用キャンバス -->
+    <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+
+    <!-- JavaScriptファイルを読み込み -->
+    <script src="script.js" defer></script>
+</body>
+</html>
