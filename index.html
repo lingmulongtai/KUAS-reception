@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.sheetjs.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com data:; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
     <meta name="referrer" content="no-referrer">
     <title>オープンキャンパス受付</title>
     <!-- CSSファイルを読み込み -->
     <link rel="stylesheet" href="style.css">
-    <!-- モダンなフォントとアイコンを読み込み -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/phosphor-icons"></script>
-    <!-- ドラッグ＆ドロップとExcel操作のライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- ローカルフォントとアイコン/CSS（オフライン用） -->
+    <link rel="stylesheet" href="assets/fonts/fonts.css">
+    <link rel="stylesheet" href="vendor/phosphor-icons/Fonts/regular/style.css">
+    <link rel="stylesheet" href="vendor/phosphor-icons/Fonts/fill/style.css">
+    <!-- ドラッグ＆ドロップとExcel操作のライブラリ（オフライン用） -->
+    <script src="vendor/sortable/Sortable.min.js"></script>
+    <script src="vendor/sheetjs/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -30,23 +28,23 @@
     </header>
 
     <div class="top-bar-buttons">
-        <button id="help-btn" class="top-bar-btn" title="ヘルプ"><i class="ph-question"></i></button>
-        <button id="theme-switch-btn" class="top-bar-btn" title="Toggle Theme"><i class="ph-moon"></i></button>
-        <button id="lang-switch-btn" class="top-bar-btn" title="Switch Language"><i class="ph-translate"></i></button>
-        <button id="admin-entry-btn" class="top-bar-btn" title="管理画面へ"><i class="ph-gear-six"></i></button>
+        <button id="help-btn" class="top-bar-btn" title="ヘルプ"><i class="ph ph-question"></i></button>
+        <button id="theme-switch-btn" class="top-bar-btn" title="Toggle Theme"><i class="ph ph-moon"></i></button>
+        <button id="lang-switch-btn" class="top-bar-btn" title="Switch Language"><i class="ph ph-translate"></i></button>
+        <button id="admin-entry-btn" class="top-bar-btn" title="管理画面へ"><i class="ph ph-gear-six"></i></button>
     </div>
 
     <!-- 受付画面用のコンテナ -->
     <div id="reception-view" class="view-container">
         <div class="content-wrapper">
-            <button id="btn-back" class="back-btn hidden"><i class="ph-arrow-left"></i> <span data-lang-key="back">戻る</span></button>
+            <button id="btn-back" class="back-btn hidden"><i class="ph ph-arrow-left"></i> <span data-lang-key="back">戻る</span></button>
             <h1 data-lang-key="mainTitle">工学部ミニキャップストーン体験 受付</h1>
             <div id="reception-sections-wrapper">
                 <!-- 初期選択画面 -->
                 <div id="initial-selection" class="section">
                     <div class="button-group">
-                        <button id="btn-reserved" class="btn btn-primary btn-large"><i class="ph-calendar-check"></i><span data-lang-key="reserved">予約あり</span></button>
-                        <button id="btn-walk-in" class="btn btn-secondary btn-large"><i class="ph-user-plus"></i><span data-lang-key="walkIn">予約なし</span></button>
+                        <button id="btn-reserved" class="btn btn-primary btn-large"><i class="ph ph-calendar-check"></i><span data-lang-key="reserved">予約あり</span></button>
+                        <button id="btn-walk-in" class="btn btn-secondary btn-large"><i class="ph ph-user-plus"></i><span data-lang-key="walkIn">予約なし</span></button>
                     </div>
                 </div>
                 <!-- 他の受付セクション... -->
@@ -103,7 +101,7 @@
                 </div>
                 <!-- 完了画面 -->
                 <div id="success-section" class="section section-hidden">
-                    <div class="success-icon-wrapper"><i class="ph-check-circle-fill"></i></div>
+                    <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
                     <h2 data-lang-key="successTitle">受付が完了しました！</h2>
                     <p id="success-student-name" style="font-size: 18px; font-weight: bold;"></p>
                     <p id="success-message-desc" data-lang-key="successDesc">あなたは以下のプログラムに確定しました。</p>
@@ -239,7 +237,7 @@
                     </div>
                 </div>
                 
-                <button id="btn-exit-admin" class="btn-return" style="margin-top:20px;"><i class="ph-arrow-left"></i> <span data-lang-key="backToReception">受付画面に戻る</span></button>
+                <button id="btn-exit-admin" class="btn-return" style="margin-top:20px;"><i class="ph ph-arrow-left"></i> <span data-lang-key="backToReception">受付画面に戻る</span></button>
             </div>
         </div>
     </div>
@@ -270,7 +268,7 @@
         <div class="modal-content-inner help-content">
             <div class="help-header">
                 <h2 data-lang-key="scheduleTitle">スケジュール</h2>
-                <button id="btn-close-help" class="close-btn"><i class="ph-x"></i></button>
+                <button id="btn-close-help" class="close-btn"><i class="ph ph-x"></i></button>
             </div>
             <div class="help-image-container">
                 <img src="public/schedule-scaled.jpg" alt="スケジュール" class="help-image">

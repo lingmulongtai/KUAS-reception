@@ -79,7 +79,7 @@ body.dark-mode {
 
 body {
     margin: 0;
-    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    font-family: 'Inter', 'Noto Sans JP', 'Zen Maru Gothic', system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', Arial, sans-serif;
     background: linear-gradient(135deg, rgba(15, 140, 82, 0.45) 0%, rgba(70, 166, 121, 0.45) 100%), url('public/opencampus-img01.jpg');
     background-size: cover;
     background-position: center;
@@ -287,6 +287,11 @@ body.dark-mode h1[data-lang-key="mainTitle"] {
     -webkit-text-fill-color: transparent;
     text-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25);
 }
+/* 日本語表示時の見出しは Zen Maru Gothic を優先し、h1 は太字で表示 */
+html[lang="ja"] h1 {
+    font-family: "Zen Maru Gothic", "Noto Sans JP", "Inter", "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    font-weight: 700;
+}
 /* 予約あり/予約なし の各入力画面タイトルを少し小さく */
 #name-input-section > h1,
 #walk-in-section > h1 {
@@ -295,6 +300,8 @@ body.dark-mode h1[data-lang-key="mainTitle"] {
 /* 英語表示時は2行想定で折り返しを許可し横幅を少し絞る */
 html[lang="en"] h1[data-lang-key="mainTitle"] {
     font-size: clamp(26px, 3.8vw, 48px);
+    font-family: "Zen Maru Gothic", "Inter", "Noto Sans JP", system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", "Yu Gothic", Arial, sans-serif;
+    font-weight: 700;
     white-space: normal;
     word-break: keep-all;
     overflow-wrap: anywhere;

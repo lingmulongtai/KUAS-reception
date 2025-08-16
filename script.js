@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 新しいインジケーターを作成
         const indicator = document.createElement('div');
         indicator.className = 'save-indicator';
-        indicator.innerHTML = `<i class="ph-check-circle"></i> ${escapeHTML(message)}`;
+        indicator.innerHTML = `<i class="ph ph-check-circle"></i> ${escapeHTML(message)}`;
         indicator.style.cssText = `
             position: fixed;
             top: 20px;
@@ -1192,6 +1192,13 @@ let rosterMappingInfo = { reservations: null, briefing: null };
     
     // --- Excel 関連の処理 ---
     function handleFileUpload(file, type) {
+        if (typeof XLSX === 'undefined') {
+            const statusEl = document.getElementById('file-upload-status');
+            if (statusEl) {
+                statusEl.textContent = 'Excel処理ライブラリが見つかりません（オフライン資産の配置を確認してください）';
+            }
+            return;
+        }
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
@@ -1261,6 +1268,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
     }
 
     function exportToExcel() {
+        if (typeof XLSX === 'undefined') {
+            showCustomAlert('errorUnexpected');
+            return;
+        }
         const data = [[escapeHTML(translations[currentLanguage].programHeader), escapeHTML(translations[currentLanguage].nameHeader)]];
         confirmedAttendees.forEach(attendee => {
             const program = programs.find(p => p.id === attendee.assignedProgramId);
@@ -1559,7 +1570,7 @@ function columnLetter(index) {
     function setTheme(theme) {
         currentTheme = theme;
         document.body.classList.toggle('dark-mode', theme === 'dark');
-        themeSwitchBtn.innerHTML = theme === 'dark' ? '<i class="ph-sun"></i>' : '<i class="ph-moon"></i>';
+        themeSwitchBtn.innerHTML = theme === 'dark' ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
         localStorage.setItem('receptionTheme', theme);
     }
 
