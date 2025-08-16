@@ -1,7 +1,9 @@
 ## KUAS Reception アプリ（ローカル用）
 
 ### 概要
-京都先端科学大学 工学部オープンキャンパス向けの「ミニキャップストーン体験」受付アプリです。予約者・当日参加者の受付、希望プログラム選択、管理用の編集・割り当て・名簿プレビュー、進行表示、エクスポート等をブラウザだけで完結します。ネットワーク不要で動作しますが、一部CDN読み込みのため初回はインターネット接続推奨です。
+京都先端科学大学 工学部オープンキャンパス向けの「ミニキャップストーン体験」受付アプリです。予約者・当日参加者の受付、希望プログラム選択、管理用の編集・割り当て・名簿プレビュー、進行表示、エクスポート等をブラウザだけで完結します。
+
+本プロジェクトは「完全ローカル対応」に修正済みです。外部CDNを使用せず、必要なライブラリ・アイコン・フォントはすべてリポジトリに同梱されています。
 
 ## 目次
 - [動作環境](#動作環境)
@@ -12,7 +14,7 @@
 - [データ保存仕様（ローカル）](#データ保存仕様ローカル)
 - [出力（エクスポート）](#出力エクスポート)
 - [セキュリティとプライバシー](#セキュリティとプライバシー)
-- [オフライン運用とCSP](#オフライン運用とcsp)
+- [オフライン運用](#オフライン運用)
 - [ディレクトリ構成](#ディレクトリ構成)
 - [既知の注意点](#既知の注意点)
 - [ライブラリ](#ライブラリ)
@@ -31,7 +33,7 @@
 ## 動作環境
 - 推奨ブラウザ: 最新版の Chrome / Edge
 - OS: Windows / macOS（本リポジトリはWindowsでの動作確認済み）
-- ネットワーク: 初回起動時はCDN（フォント/アイコン/ライブラリ）取得のためインターネット接続を推奨。以降はローカルのみでも動作可能です。
+- ネットワーク: 完全オフラインで動作します（外部通信なし）。
 
 ## 起動方法
 1. このフォルダを任意の場所に配置。
@@ -106,22 +108,16 @@
 
 ## セキュリティとプライバシー
 - **CSP（Content-Security-Policy）の導入**: `index.html` の `<head>` に厳格なメタCSPを設定しています。
-  - 許可ドメイン（必要最小限）:
-    - `script-src`: `self`, `https://cdn.sheetjs.com`, `https://unpkg.com`, `https://cdn.jsdelivr.net`
-    - `style-src`: `self`, `'unsafe-inline'`, `https://fonts.googleapis.com`, `https://unpkg.com`
-    - `font-src`: `self`, `https://fonts.gstatic.com`, `https://unpkg.com`, `data:`
-    - `img-src`: `self`, `data:` / `object-src`: `none` / `base-uri`: `none` / `frame-ancestors`: `none`
+  - 許可ソースはすべて `self` のみ（完全ローカル）。
+  - 例: `style-src 'self' 'unsafe-inline'`, `font-src 'self' data:`, `img-src 'self' data:`。
 - **入力のハードニング**: 氏名/学校/検索などの入力に対し `autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"` を設定し、残留情報と誤補正を抑制。
 - **XSS対策**: 動的に生成するHTMLは `escapeHTML()` によるサニタイズを実施（名簿/受付状況/確認画面など）。
 - **PII最小化**: ログ出力は最小限で、個人情報を含まないようにしています。データはローカル保存のみで外部送信はしません。
 - **リセット手段**: 管理画面「受付データをリセット」で IndexedDB / localStorage の関連データを削除できます。
 
-## オフライン運用とCSP
-- **オフラインでの利用**: 初回にCDNから取得後は基本操作が可能ですが、完全オフライン化する場合は以下の手順を推奨します。
-  1. `Google Fonts / Phosphor Icons / SortableJS / SheetJS` をローカルに同梱
-  2. `index.html` のCDN参照をローカルファイル参照へ変更
-  3. `CSP` の `script-src`/`style-src`/`font-src` から外部ドメインを削除（`'self'` のみに）
-- **アイコンが表示されない場合**: `CSP` に `https://unpkg.com` が `style-src` と `font-src` に含まれているか確認してください（CDN版を利用する場合）。
+## オフライン運用
+- すべての外部依存（フォント/アイコン/ライブラリ）を `assets/` および `vendor/` に同梱済みです。
+- `index.html` はローカルファイルのみを参照し、ネットワーク不要で動作します。
 
 ## 出力（エクスポート）
 - 「Excelファイルに書き出し」を押すと `reception_status.xlsx` を生成します。
@@ -133,9 +129,13 @@
 - `script.js`: 機能実装（受付ロジック、名簿読み込み、保存/復元、多言語、管理画面など）
 - `public/`: ロゴや画像資産
 - `register_of_names/`: 名簿サンプル（xlsx）
+- `assets/fonts/`: ローカルホストされた `Inter` / `Noto Sans JP` / `Zen Maru Gothic` の woff2 と `fonts.css`
+- `vendor/sortable/`: SortableJS（オフライン版）
+- `vendor/sheetjs/`: SheetJS（xlsx.full.min.js オフライン版）
+- `vendor/phosphor-icons/`: Phosphor Icons（CSS+Webfonts オフライン版）
 
 ## 既知の注意点
-- CDN（Google Fonts、Phosphor Icons、SortableJS、SheetJS）を利用しています。オフライン運用時は事前にライブラリをローカルに同梱し、`index.html` の読み込み先と `CSP` を書き換えてください。
+- 完全ローカル対応のため、外部CDNを利用していません。必要ファイルが不足している場合は `assets/` / `vendor/` 配下の構成をご確認ください。
 - 管理者パスワードは初期値が `admin` です。変更する場合は `script.js` 内の該当箇所を修正してください。
 - 氏名入力は「姓 名」の半角スペース区切りで照合します（全角スペースは自動で半角に置換）。
 
@@ -143,10 +143,10 @@
 - SortableJS（ドラッグ&ドロップ）
 - SheetJS（Excel 読み書き）
 - Phosphor Icons（アイコン）
-- Google Fonts（フォント）
+- ローカルホストフォント: Inter / Noto Sans JP / Zen Maru Gothic
 
 ## トラブルシュート
 - 「予約が見つかりません」: 名簿が未インポートか、氏名のスペース区切り/表記ゆれをご確認ください。
 - 「定員いっぱい」: 別プログラムをご案内ください。後でキャンセルが出た場合は待機者一括割り当てをご利用ください。
 - 表示が崩れる/初期化したい: 管理画面の「受付データをリセット」を実行し、ページを再読み込みしてください。
-- **アイコンが表示されない**: `index.html` のCSPで `style-src` と `font-src` に `https://unpkg.com` が含まれているか確認、またはアイコンをローカル同梱して参照先を `self` に変更してください。
+- アイコンが表示されない: `vendor/phosphor-icons/Fonts/regular/style.css` / `fill/style.css` が読み込まれているか、`<i class="ph ph-*>` となっているか確認してください。
