@@ -378,6 +378,14 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             fileUpload2: "② 工学部説明会 予約者名簿 (xlsx)",
             loadProgress: "③ 進行状況を読み込む (.json)",
             exportExcel: "Excelファイルに書き出し",
+            exportData: "書き出し",
+            exportPrompt: "書き出し形式を入力してください（excel / pdf）",
+            exportInvalid: "不正な形式です。excel または pdf を入力してください。",
+            exportTitle: "受付状況",
+            popupBlocked: "ポップアップがブロックされました。ブラウザの設定をご確認ください。",
+            exportSelect: "書き出し形式を選択",
+            exportExcelBtn: "Excel",
+            exportPdfBtn: "PDF",
             rosterMapping: "列の対応: A列=氏名, B列=第1希望, C列=第2希望, D列=第3希望",
             rosterReservations: "ミニキャップストーン体験 予約者名簿",
             rosterBriefing: "工学部説明会 参加者名簿",
@@ -499,6 +507,14 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             fileUpload2: "② Faculty Briefing Session Roster (xlsx)",
             loadProgress: "③ Load Progress (.json)",
             exportExcel: "Export to Excel",
+            exportData: "Export",
+            exportPrompt: "Choose export type: excel or pdf",
+            exportInvalid: "Invalid type. Enter 'excel' or 'pdf'.",
+            exportTitle: "Reception Status",
+            popupBlocked: "Popup was blocked. Please allow popups.",
+            exportSelect: "Select export format",
+            exportExcelBtn: "Excel",
+            exportPdfBtn: "PDF",
             rosterMapping: "Column mapping: A=Name, B=1st Choice, C=2nd Choice, D=3rd Choice",
             rosterReservations: "Mini-Capstone Reservation Roster",
             rosterBriefing: "Faculty Briefing Session Roster",
@@ -1191,6 +1207,177 @@ let rosterMappingInfo = { reservations: null, briefing: null };
     }
     
     // --- Excel 関連の処理 ---
+    let pendingMappingContext = null; // { type, headerRow, jsonData }
+
+    function detectTimeHeaderIndex(headerRow) {
+        const lower = headerRow.map(h => (h || '').toString().toLowerCase());
+        const candidates = ['時間', '時刻', '開始', 'start', 'time'];
+        for (let i = 0; i < lower.length; i++) {
+            if (candidates.some(k => lower[i].includes(k))) return i;
+        }
+        return -1;
+    }
+
+    function buildColumnOptions(headerRow) {
+        return headerRow.map((h, i) => {
+            const letter = columnLetter(i);
+            const text = `${letter}: ${(h ?? '').toString()}`.trim();
+            return { value: i, label: text };
+        });
+    }
+
+    function renderSelect(labelText, id, options, selectedIndex = -1, allowNone = true) {
+        const opts = [];
+        if (allowNone) {
+            opts.push(`<option value="-1">（なし）</option>`);
+        }
+        options.forEach(opt => {
+            const sel = (selectedIndex === opt.value) ? ' selected' : '';
+            opts.push(`<option value="${opt.value}"${sel}>${escapeHTML(opt.label)}</option>`);
+        });
+        return `
+            <div class="editor-item-row">
+                <label for="${id}">${escapeHTML(labelText)}</label>
+                <select id="${id}">${opts.join('')}</select>
+            </div>
+        `;
+    }
+
+    function openMappingModal(context) {
+        pendingMappingContext = context;
+        const { type, headerRow } = context;
+        const options = buildColumnOptions(headerRow);
+        const mappingModal = document.getElementById('mapping-modal');
+        const mappingTitle = document.getElementById('mapping-title');
+        const mappingForm = document.getElementById('mapping-form');
+        const btnApply = document.getElementById('btn-mapping-apply');
+        const btnCancel = document.getElementById('btn-mapping-cancel');
+
+        // 初期推定
+        const resAuto = detectReservationHeaderMapping(headerRow);
+        const briAuto = detectBriefingHeaderMapping(headerRow);
+        const timeAutoIdx = detectTimeHeaderIndex(headerRow);
+
+        if (type === 'reservations') {
+            mappingTitle.textContent = 'ミニキャップストーン体験 名簿の列対応';
+            mappingForm.innerHTML = [
+                renderSelect('名前列（単一）', 'map-name-single', options, resAuto.nameIdx ?? -1, true),
+                '<div style="margin-top:4px; font-size:12px; opacity:.8;">※ 上の「名前列」を使わない場合、下の「姓/名」列を設定してください</div>',
+                renderSelect('姓列（任意）', 'map-last-name', options, -1, true),
+                renderSelect('名列（任意）', 'map-first-name', options, -1, true),
+                renderSelect('セイ（フリガナ）列（任意）', 'map-furigana-sei', options, (resAuto.furiganaIdxs?.[0] ?? -1), true),
+                renderSelect('メイ（フリガナ）列（任意）', 'map-furigana-mei', options, (resAuto.furiganaIdxs?.[1] ?? -1), true),
+                renderSelect('第1希望列', 'map-choice-1', options, (resAuto.choiceIdxs?.[0] ?? -1), false),
+                renderSelect('第2希望列', 'map-choice-2', options, (resAuto.choiceIdxs?.[1] ?? -1), true),
+                renderSelect('第3希望列', 'map-choice-3', options, (resAuto.choiceIdxs?.[2] ?? -1), true)
+            ].join('');
+        } else {
+            mappingTitle.textContent = '工学部説明会 名簿の列対応';
+            mappingForm.innerHTML = [
+                renderSelect('名前列（単一）', 'map-name-single', options, briAuto.nameIdx ?? -1, true),
+                '<div style="margin-top:4px; font-size:12px; opacity:.8;">※ 上の「名前列」を使わない場合、下の「姓/名」列を設定してください</div>',
+                renderSelect('姓列（任意）', 'map-last-name', options, -1, true),
+                renderSelect('名列（任意）', 'map-first-name', options, -1, true),
+                renderSelect('セイ（フリガナ）列（任意）', 'map-furigana-sei', options, (briAuto.furiganaIdxs?.[0] ?? -1), true),
+                renderSelect('メイ（フリガナ）列（任意）', 'map-furigana-mei', options, (briAuto.furiganaIdxs?.[1] ?? -1), true),
+                renderSelect('時間列', 'map-time', options, timeAutoIdx, false)
+            ].join('');
+        }
+
+        // 既存のリスナーをクリア（ボタンをクローン）
+        const newApply = btnApply.cloneNode(true);
+        btnApply.parentNode.replaceChild(newApply, btnApply);
+        const newCancel = btnCancel.cloneNode(true);
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+        newApply.addEventListener('click', onApplyMapping);
+        newCancel.addEventListener('click', () => {
+            mappingModal.classList.remove('visible');
+        });
+
+        mappingModal.classList.add('visible');
+    }
+
+    function onApplyMapping() {
+        if (!pendingMappingContext) return;
+        const { type, jsonData } = pendingMappingContext;
+        const mappingModal = document.getElementById('mapping-modal');
+        const getIdx = (id) => parseInt(document.getElementById(id)?.value ?? '-1', 10);
+        const nameSingle = getIdx('map-name-single');
+        const lastIdx = getIdx('map-last-name');
+        const firstIdx = getIdx('map-first-name');
+        const furiSeiIdx = getIdx('map-furigana-sei');
+        const furiMeiIdx = getIdx('map-furigana-mei');
+
+        if (type === 'reservations') {
+            const c1 = getIdx('map-choice-1');
+            const c2 = getIdx('map-choice-2');
+            const c3 = getIdx('map-choice-3');
+            const map = {
+                nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
+                furiganaIdxs: [furiSeiIdx, furiMeiIdx],
+                choiceIdxs: [c1, c2, c3]
+            };
+            rosterMappingInfo.reservations = map;
+            const rows = jsonData.slice(1);
+            const get = (row, idx) => (idx != null && idx >= 0 ? String(row[idx] ?? '').trim() : '');
+            const parsed = rows
+                .map(row => {
+                    let name = '';
+                    if (typeof map.nameIdx === 'number') {
+                        name = get(row, map.nameIdx);
+                    } else if (Array.isArray(map.nameIdx) && map.nameIdx.length) {
+                        name = map.nameIdx.map(i => get(row, i)).filter(Boolean).join(' ');
+                    }
+                    const furiParts = Array.isArray(map.furiganaIdxs) ? map.furiganaIdxs : [];
+                    const furigana = furiParts.filter(i => i >= 0).map(i => get(row, i)).filter(Boolean).join(' ');
+                    const choices = map.choiceIdxs.map(i => {
+                        const v = get(row, i);
+                        return v || null;
+                    });
+                    return { name, furigana: furigana || undefined, choices };
+                })
+                .filter(r => (r.name || '').trim() !== '');
+            reservations = parsed;
+            const statusEl = document.getElementById('file-upload-status');
+            if (statusEl) statusEl.innerHTML += `<p>予約者名簿を読み込みました。${reservations.length}件</p>`;
+        } else {
+            const timeIdx = getIdx('map-time');
+            const map = {
+                nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
+                furiganaIdxs: [furiSeiIdx, furiMeiIdx],
+                timeIdx: timeIdx
+            };
+            rosterMappingInfo.briefing = map;
+            const rows = jsonData.slice(1);
+            const get = (row, idx) => (idx != null && idx >= 0 ? String(row[idx] ?? '').trim() : '');
+            const parsed = rows
+                .map(row => {
+                    let name = '';
+                    if (typeof map.nameIdx === 'number') {
+                        name = get(row, map.nameIdx);
+                    } else if (Array.isArray(map.nameIdx) && map.nameIdx.length) {
+                        name = map.nameIdx.map(i => get(row, i)).filter(Boolean).join(' ');
+                    }
+                    const furiParts = Array.isArray(map.furiganaIdxs) ? map.furiganaIdxs : [];
+                    const furigana = furiParts.filter(i => i >= 0).map(i => get(row, i)).filter(Boolean).join(' ');
+                    const time = get(row, map.timeIdx);
+                    return { name, furigana: furigana || undefined, time: time || undefined };
+                })
+                .filter(r => (r.name || '').trim() !== '');
+            briefingSessionAttendees = parsed;
+            const statusEl = document.getElementById('file-upload-status');
+            if (statusEl) statusEl.innerHTML += `<p>工学部説明会名簿を読み込みました。${briefingSessionAttendees.length}件</p>`;
+        }
+
+        saveStateToLocalStorage();
+        saveRosterData();
+        updateRosterMappingText();
+        renderRosterPreview();
+        mappingModal.classList.remove('visible');
+        pendingMappingContext = null;
+    }
+
     function handleFileUpload(file, type) {
         if (typeof XLSX === 'undefined') {
             const statusEl = document.getElementById('file-upload-status');
@@ -1210,56 +1397,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             const statusEl = document.getElementById('file-upload-status');
             try {
             const headerRow = (jsonData[0] || []).map(v => (v == null ? '' : String(v).trim()));
-            if (type === 'reservations') {
-                // 体験参加登録者名簿 固定列マッピング
-                // A=No(0) B=姓(1) C=名(2) D=セイ(3) E=メイ(4) ... O=第一希望(14) P=第二希望(15) Q=第三希望(16)
-                const map = {
-                    nameIdx: [1, 2],
-                    furiganaIdx: [3, 4],
-                    choiceIdxs: [14, 15, 16]
-                };
-                rosterMappingInfo.reservations = map;
-                reservations = jsonData.slice(1)
-                    .filter(row => row && row.length && (String(row[1] ?? '').trim() !== '' || String(row[2] ?? '').trim() !== ''))
-                    .map(row => {
-                        const get = (idx) => (idx != null && idx >= 0 ? String(row[idx] ?? '').trim() : '');
-                        const fullName = [get(1), get(2)].filter(Boolean).join(' ');
-                        const fullKana = [get(3), get(4)].filter(Boolean).join(' ');
-                        return {
-                            name: fullName,
-                            furigana: fullKana || undefined,
-                            choices: [get(14) || null, get(15) || null, get(16) || null]
-                        };
-                    });
-                                 statusEl.innerHTML += `<p>予約者名簿を読み込みました。${reservations.length}件</p>`;
-             } else if (type === 'briefing') {
-                 // 工学部説明会参加者名簿 固定列マッピング
-                 // A=No(0) B=時間(1) C=姓(2) D=名(3) E=セイ(4) F=メイ(5)
-                 const map = {
-                     timeIdx: 1,
-                     nameIdx: [2, 3],
-                     furiganaIdx: [4, 5]
-                 };
-                 rosterMappingInfo.briefing = map;
-                 briefingSessionAttendees = jsonData.slice(1)
-                     .filter(row => row && row.length && (String(row[2] ?? '').trim() !== '' || String(row[3] ?? '').trim() !== ''))
-                     .map(row => {
-                         const get = (idx) => (idx != null && idx >= 0 ? String(row[idx] ?? '').trim() : '');
-                         const fullName = [get(2), get(3)].filter(Boolean).join(' ');
-                         const fullKana = [get(4), get(5)].filter(Boolean).join(' ');
-                         const time = get(1); // B列の時間情報
-                         return {
-                             name: fullName,
-                             furigana: fullKana || undefined,
-                             time: time || undefined
-                         };
-                     });
-                 statusEl.innerHTML += `<p>工学部説明会名簿を読み込みました。${briefingSessionAttendees.length}件</p>`;
-             }
-                 saveStateToLocalStorage();
-                 saveRosterData(); // IndexedDBに名簿データを保存
-             updateRosterMappingText();
-             renderRosterPreview();
+            openMappingModal({ type, headerRow, jsonData });
             } catch (error) {
                 showCustomAlert('errorJsonFormat');
             }
@@ -1272,17 +1410,130 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             showCustomAlert('errorUnexpected');
             return;
         }
-        const data = [[escapeHTML(translations[currentLanguage].programHeader), escapeHTML(translations[currentLanguage].nameHeader)]];
-        confirmedAttendees.forEach(attendee => {
-            const program = programs.find(p => p.id === attendee.assignedProgramId);
-            const title = program ? (currentLanguage === 'en' && program.title_en ? program.title_en : program.title) : 'N/A';
-            data.push([title, attendee.name]);
+        const isEn = currentLanguage === 'en';
+        const programLabel = isEn ? 'Program' : 'プログラム';
+        const statusLabel = isEn ? 'Attendees/Capacity' : '出席/枠数';
+        const attendeeLabel = isEn ? 'Attendee' : '参加者';
+        const totalsLabel = isEn ? 'Total' : '合計';
+
+        const rowsByProgram = programs.map(p => {
+            const names = confirmedAttendees
+                .filter(a => a.assignedProgramId === p.id)
+                .map(a => a.name);
+            return { program: p, names };
         });
+        const maxNames = rowsByProgram.reduce((m, r) => Math.max(m, r.names.length), 0);
+
+        const header = [programLabel, statusLabel];
+        for (let i = 1; i <= maxNames; i++) header.push(`${attendeeLabel}${isEn ? ' ' : ''}${i}`);
+
+        const data = [header];
+        rowsByProgram.forEach(({ program: p, names }) => {
+            const title = (isEn && p.title_en) ? p.title_en : p.title;
+            const enrolled = names.length;
+            const capacity = p.capacity || 0;
+            const row = [title, `${enrolled}/${capacity}`, ...names];
+            while (row.length < header.length) row.push('');
+            data.push(row);
+        });
+        data.push([]);
+        data.push([totalsLabel, confirmedAttendees.length]);
 
         const worksheet = XLSX.utils.aoa_to_sheet(data);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Reception Status");
         XLSX.writeFile(workbook, "reception_status.xlsx");
+    }
+
+    function exportToPdf() {
+        // 簡易PDF: 別ウィンドウに印刷用HTMLを作成してユーザーの印刷ダイアログ（PDF保存対応）を開く
+        const win = window.open('', '_blank');
+        if (!win) {
+            showCustomAlert('popupBlocked');
+            return;
+        }
+        const isEn = currentLanguage === 'en';
+        const programHeader = isEn ? 'Program' : 'プログラム';
+        const statusHeader = isEn ? 'Attendees/Capacity' : '出席/枠数';
+        const attendeeHeaderBase = isEn ? 'Attendee' : '参加者';
+        const totalsLabel = isEn ? 'Total' : '合計';
+
+        const rowsByProgram = programs.map(p => {
+            const names = confirmedAttendees
+                .filter(a => a.assignedProgramId === p.id)
+                .map(a => a.name);
+            return { program: p, names };
+        });
+        const maxNames = rowsByProgram.reduce((m, r) => Math.max(m, r.names.length), 0);
+
+        const theadCols = [`<th>${programHeader}</th>`, `<th>${statusHeader}</th>`];
+        for (let i = 1; i <= maxNames; i++) theadCols.push(`<th>${attendeeHeaderBase}${isEn ? ' ' : ''}${i}</th>`);
+
+        const bodyRows = rowsByProgram.map(({ program: p, names }) => {
+            const title = (isEn && p.title_en) ? p.title_en : p.title;
+            const enrolled = names.length;
+            const capacity = p.capacity || 0;
+            const cols = [`<td>${escapeHTML(title)}</td>`, `<td>${enrolled}/${capacity}</td>`];
+            names.forEach(n => cols.push(`<td>${escapeHTML(n)}</td>`));
+            while (cols.length < theadCols.length) cols.push('<td></td>');
+            return `<tr>${cols.join('')}</tr>`;
+        }).join('');
+
+        const totalCount = confirmedAttendees.length;
+
+        const now = new Date();
+        const titleDateJP = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+        const topTitle = `${titleDateJP}　工学部ミニキャップストーン体験　受付状況`;
+
+        win.document.write(`
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHTML(translations[currentLanguage].exportTitle || 'Reception Status')}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', Arial, sans-serif; margin: 24px; color: #111; }
+  h1 { font-size: 18px; margin: 0 0 12px; }
+  table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+  th, td { font-size: 12px; padding: 6px 8px; border: 1px solid #ccc; word-break: break-word; }
+  thead th { background: #f3f5f7; text-align: left; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  tfoot th, tfoot td { font-weight: 700; background: #f7f9fb; }
+  @page { size: A4 portrait; margin: 14mm; }
+</style>
+</head><body>
+  <h1>${escapeHTML(topTitle)}</h1>
+  <table>
+    <thead>
+      <tr>${theadCols.join('')}</tr>
+    </thead>
+    <tbody>
+      ${bodyRows || `<tr><td colspan="${theadCols.length}" style="text-align:center;">${escapeHTML(translations[currentLanguage].noAttendees)}</td></tr>`}
+    </tbody>
+    <tfoot>
+      <tr><th>${totalsLabel}</th><td>${totalCount}</td>${Array(Math.max(0, theadCols.length - 2)).fill('<td></td>').join('')}</tr>
+    </tfoot>
+  </table>
+  <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 100); }<\/script>
+</body></html>`);
+        win.document.close();
+    }
+
+    function openExportPicker() {
+        const exportModal = document.getElementById('export-modal');
+        if (!exportModal) {
+            // フォールバック
+            exportToExcel();
+            return;
+        }
+        exportModal.classList.add('visible');
+        // 既存のハンドラをクリアするためにクローンで差し替え
+        const replaceWithClone = (id, handler) => {
+            const oldBtn = document.getElementById(id);
+            if (!oldBtn) return;
+            const newBtn = oldBtn.cloneNode(true);
+            oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+            if (handler) newBtn.addEventListener('click', handler);
+        };
+        replaceWithClone('btn-export-excel-modal', () => { exportModal.classList.remove('visible'); exportToExcel(); });
+        replaceWithClone('btn-export-pdf-modal', () => { exportModal.classList.remove('visible'); exportToPdf(); });
+        replaceWithClone('btn-export-cancel', () => { exportModal.classList.remove('visible'); });
     }
     
     function renderStatusTable() {
@@ -1394,7 +1645,7 @@ function renderRosterPreview() {
 
     // 予約者名簿（必要な列のみ）
     const resMap = rosterMappingInfo.reservations;
-    const showFuriRes = !!resMap; // 固定マッピングでフリガナがある
+    const showFuriRes = !!(resMap && Array.isArray(resMap.furiganaIdxs) && resMap.furiganaIdxs.some(i => i != null && i >= 0));
     const shownChoiceIndexes = [0,1,2]; // プレビューは第1〜第3希望を常に表示
     let resHeader = `<th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>`;
     if (showFuriRes) resHeader += `<th>${escapeHTML(translations[currentLanguage].furiganaHeader)}</th>`;
@@ -1423,7 +1674,7 @@ function renderRosterPreview() {
 
     // 説明会名簿（必要な列のみ）
     const briMap = rosterMappingInfo.briefing;
-    const showFuriBri = briMap && briMap.furiganaIdx != null && briMap.furiganaIdx >= 0;
+    const showFuriBri = briMap && Array.isArray(briMap.furiganaIdxs) && briMap.furiganaIdxs.some(i => i != null && i >= 0);
     let briHeader = `<th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>`;
     if (showFuriBri) briHeader += `<th>${escapeHTML(translations[currentLanguage].furiganaHeader)}</th>`;
     briHeader += `<th>${escapeHTML(translations[currentLanguage].timeHeader || '時間')}</th>`;
@@ -1471,15 +1722,21 @@ function detectReservationHeaderMapping(headerRow) {
     const lower = headerRow.map(h => (h || '').toString().toLowerCase());
     const find = (candidates) => lower.findIndex(h => candidates.some(k => h.includes(k)));
     const nameIdx = find(['氏名','名前','name']);
-    const furiganaIdx = find(['フリガナ','ふりがな','kana','yomi','読み']);
+    const seiIdx = find(['セイ','せい','sei']);
+    const meiIdx = find(['メイ','めい','mei']);
+    let furiganaIdxs = [seiIdx, meiIdx];
+    // 単一「フリガナ」列しかない場合は両方に同じインデックスを入れておく
+    if (furiganaIdxs.every(i => i < 0)) {
+        const singleFuri = find(['フリガナ','ふりがな','kana','yomi','読み']);
+        if (singleFuri >= 0) furiganaIdxs = [singleFuri, singleFuri];
+    }
     // 第1〜3希望
     const firstIdx = find(['第1希望','第一希望','1st','first','第一','1希望']);
-    // 残りは近傍やキーワードで探す
     const secondIdx = find(['第2希望','第二希望','2nd','second','第二','2希望']);
     const thirdIdx = find(['第3希望','第三希望','3rd','third','第三','3希望']);
     return {
         nameIdx: nameIdx >= 0 ? nameIdx : 0,
-        furiganaIdx: furiganaIdx,
+        furiganaIdxs,
         choiceIdxs: [firstIdx, secondIdx, thirdIdx].map(i => (i == null ? -1 : i))
     };
 }
@@ -1489,8 +1746,14 @@ function detectBriefingHeaderMapping(headerRow) {
     const lower = headerRow.map(h => (h || '').toString().toLowerCase());
     const find = (candidates) => lower.findIndex(h => candidates.some(k => h.includes(k)));
     const nameIdx = find(['氏名','名前','name']);
-    const furiganaIdx = find(['フリガナ','ふりがな','kana','yomi','読み']);
-    return { nameIdx: nameIdx >= 0 ? nameIdx : 0, furiganaIdx };
+    const seiIdx = find(['セイ','せい','sei']);
+    const meiIdx = find(['メイ','めい','mei']);
+    let furiganaIdxs = [seiIdx, meiIdx];
+    if (furiganaIdxs.every(i => i < 0)) {
+        const singleFuri = find(['フリガナ','ふりがな','kana','yomi','読み']);
+        if (singleFuri >= 0) furiganaIdxs = [singleFuri, singleFuri];
+    }
+    return { nameIdx: nameIdx >= 0 ? nameIdx : 0, furiganaIdxs };
 }
 
 function updateRosterMappingText() {
@@ -1499,11 +1762,24 @@ function updateRosterMappingText() {
     const parts = [];
     if (rosterMappingInfo.reservations) {
         const m = rosterMappingInfo.reservations;
-        parts.push(`体験: 氏名=${columnLetter(m.nameIdx)}, フリガナ=${m.furiganaIdx>=0?columnLetter(m.furiganaIdx):'-'} , 希望列=[${m.choiceIdxs.map(i=>i>=0?columnLetter(i):'-').join(', ')}]`);
+        const nameCol = Array.isArray(m.nameIdx)
+            ? (m.nameIdx.length ? m.nameIdx.map(i => columnLetter(i)).join('+') : '-')
+            : columnLetter(m.nameIdx);
+        const furiCol = (Array.isArray(m.furiganaIdxs) && m.furiganaIdxs.some(i=>i>=0))
+            ? m.furiganaIdxs.filter(i=>i>=0).map(i=>columnLetter(i)).join('+')
+            : '-';
+        parts.push(`体験: 氏名=${nameCol}, フリガナ=${furiCol} , 希望列=[${(m.choiceIdxs||[]).map(i=>i>=0?columnLetter(i):'-').join(', ')}]`);
     }
     if (rosterMappingInfo.briefing) {
         const m = rosterMappingInfo.briefing;
-        parts.push(`説明会: 氏名=${columnLetter(m.nameIdx)}, フリガナ=${m.furiganaIdx>=0?columnLetter(m.furiganaIdx):'-'}`);
+        const nameCol = Array.isArray(m.nameIdx)
+            ? (m.nameIdx.length ? m.nameIdx.map(i => columnLetter(i)).join('+') : '-')
+            : columnLetter(m.nameIdx);
+        const furiCol = (Array.isArray(m.furiganaIdxs) && m.furiganaIdxs.some(i=>i>=0))
+            ? m.furiganaIdxs.filter(i=>i>=0).map(i=>columnLetter(i)).join('+')
+            : '-';
+        const timeCol = (m.timeIdx != null && m.timeIdx >= 0) ? columnLetter(m.timeIdx) : '-';
+        parts.push(`説明会: 氏名=${nameCol}, フリガナ=${furiCol}, 時間=${timeCol}`);
     }
     el.textContent = parts.length ? parts.join(' / ') : '列の対応: 自動検出中…';
 }
@@ -1925,7 +2201,7 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
 	
 	document.getElementById('reservations-file-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'reservations'));
 	document.getElementById('briefing-session-file-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'briefing'));
-	document.getElementById('btn-export-excel').addEventListener('click', exportToExcel);
+	document.getElementById('btn-export-excel').addEventListener('click', openExportPicker);
     
     document.getElementById('prioritize-toggle-checkbox').checked = settings.prioritizeReserved;
     document.getElementById('prioritize-toggle-checkbox').addEventListener('change', (e) => {

@@ -67,9 +67,9 @@ body.dark-mode {
     --background-color: transparent;
     --text-color: #eaf6f1;
     --text-secondary-color: #bfd7ce;
-    --content-bg: #152720;
-    --light-gray: #3d5b4f;
-    --card-bg: #1b3329;
+    --content-bg: #2c2c2c;
+    --light-gray: #384e46;
+    --card-bg: #244236;
     background: linear-gradient(135deg, rgba(10, 90, 58, 0.55) 0%, rgba(45, 107, 79, 0.55) 100%), url('public/opencampus-img01.jpg');
     background-size: cover;
     background-position: center;
@@ -173,9 +173,12 @@ body.dark-mode .header-logo {
 
 /* ダークモード時のボタン */
 body.dark-mode .btn {
-    background: rgba(21, 39, 32, 0.92);
-    border: 2px solid rgba(111, 197, 164, 0.45);
+    background: linear-gradient(135deg, #2b5c4d 0%, #235044 100%);
+    border: 2px solid rgba(143, 199, 175, 0.5);
     color: var(--text-color);
+}
+body.dark-mode .btn:hover {
+    background: linear-gradient(135deg, #336e5d 0%, #2b5c4d 100%);
 }
 
 /* ダークモード時のコンテナ */
@@ -187,8 +190,8 @@ body.dark-mode .content-wrapper {
 
 /* ダークモード時の大型ボタン */
 body.dark-mode .btn-large {
-    background: rgba(21, 39, 32, 0.96);
-    border: 2px solid rgba(111, 197, 164, 0.45);
+    background: linear-gradient(135deg, #2b5c4d 0%, #235044 100%);
+    border: 2px solid rgba(143, 199, 175, 0.5);
     color: var(--text-color);
 }
 /* ダークモード個別の虹色スタイルは撤去（ホバーと同じ表現に統一） */

@@ -204,7 +204,7 @@
                     <table id="waiting-list-table"></table>
                     <div class="button-group" style="margin-top: 20px;">
                         <button id="btn-save-progress" class="btn btn-secondary" data-lang-key="saveProgress">進行状況を保存</button>
-                        <button id="btn-export-excel" class="btn btn-primary" data-lang-key="exportExcel">Excelファイルに書き出し</button>
+                        <button id="btn-export-excel" class="btn btn-primary" data-lang-key="exportData">書き出し</button>
                     </div>
                 </div>
 
@@ -260,6 +260,30 @@
         <div class="modal-content-inner alert-content">
             <p id="alert-message" class="modal-message"></p>
             <button id="btn-alert-ok" class="btn btn-primary">OK</button>
+        </div>
+    </div>
+    
+    <!-- 列マッピングモーダル -->
+    <div id="mapping-modal" class="modal-overlay">
+        <div class="modal-content-inner">
+            <h2 id="mapping-title">列の対応を設定</h2>
+            <div id="mapping-form" class="input-group"></div>
+            <div class="button-group" style="margin-top: 12px;">
+                <button id="btn-mapping-apply" class="btn btn-primary">適用</button>
+                <button id="btn-mapping-cancel" class="btn btn-secondary">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 書き出し選択モーダル -->
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal-content-inner">
+            <h2 data-lang-key="exportSelect">書き出し形式を選択</h2>
+            <div class="button-group" style="margin-top: 12px;">
+                <button id="btn-export-excel-modal" class="btn btn-primary" data-lang-key="exportExcelBtn">Excel</button>
+                <button id="btn-export-pdf-modal" class="btn btn-secondary" data-lang-key="exportPdfBtn">PDF</button>
+                <button id="btn-export-cancel" class="btn btn-secondary" data-lang-key="cancel">キャンセル</button>
+            </div>
         </div>
     </div>
 
