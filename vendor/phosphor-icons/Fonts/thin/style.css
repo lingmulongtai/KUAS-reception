@@ -3,8 +3,7 @@
   src:
     url("./Phosphor-Thin.woff2") format("woff2"),
     url("./Phosphor-Thin.woff") format("woff"),
-    url("./Phosphor-Thin.ttf") format("truetype"),
-    url("./Phosphor-Thin.svg#Phosphor-Thin") format("svg");
+    url("./Phosphor-Thin.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: block;
