@@ -1,7 +1,10 @@
+<!-- Language: JA | EN -->
+[日本語 (JA)](README.md) | [English (EN)](README_ENG.md)
+
 ## KUAS Reception App (Offline-Ready)
 
 ### Overview
-This is a browser-based reception app for the Faculty of Engineering Open Campus at Kyoto University of Advanced Science. It completes reception for reserved and walk-in attendees, program preference selection, admin-side editing/assignment/roster preview, status visualization, and export — all locally in the browser.
+This is a browser-based reception app for the Faculty of Engineering Open Campus at Kyoto University of Advanced Science. It covers reception for reserved and walk-in attendees, preference selection, admin-side editing/assignment/roster preview, status visualization, and export — all locally in the browser.
 
 This project is fully offline-ready. No external CDNs are required. All libraries, icons, and fonts are bundled in the repository.
 
@@ -32,7 +35,7 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 
 ## Environment
 - Recommended browsers: Latest Chrome / Edge
-- OS: Windows / macOS (this repository has been tested on Windows)
+- OS: Windows / macOS (tested on Windows)
 - Network: Fully offline (no external network access)
 
 ## How to Run
@@ -49,9 +52,9 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 
 ### Reception Flow
 - **Reserved**
-  - Enter name as "FamilyName GivenName" (space separated) to match your reservation.
+  - Enter name as "FamilyName GivenName" (half-width space separated) to match your reservation.
   - If no preferences were provided during reservation, the app navigates to the selection screen.
-  - Confirm the details and press Confirm. Depending on settings, assignment or waiting will be applied.
+  - Review the details and confirm. Depending on settings, assignment or waiting will be applied.
 - **Walk-in**
   - Enter name (space separated) / school / grade.
   - Go to selection, set up to three preferences, and confirm.
@@ -143,7 +146,7 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
 - SortableJS (drag & drop)
 - SheetJS (Excel read/write)
 - Phosphor Icons (icons)
-- Local-hosted fonts: Inter / Noto Sans JP / Zen Maru Gothic
+- Fonts: Inter / Noto Sans JP / Zen Maru Gothic (all bundled locally)
 
 ## Troubleshooting
 - "Reservation not found": Rosters not imported yet or spacing/notation mismatch. Re-check the name input.
