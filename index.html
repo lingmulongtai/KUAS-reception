@@ -92,8 +92,10 @@
                     <button id="btn-submit-choices" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="confirmChoices">選択を確定する</button>
                 </div>
                 <div id="no-capstone-section" class="section section-hidden">
-                    <h2 data-lang-key="noCapstoneTitle">キャップストーン体験に参加しない</h2>
+                    <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
+                    <h2 data-lang-key="noCapstoneTitle">受付完了</h2>
                     <p data-lang-key="noCapstoneDesc">キャップストーン体験に参加しない場合の受付が完了しました。</p>
+                    <p id="role-color-no-capstone" class="role-message" data-lang-key="roleBlue"></p>
                     <div class="no-capstone-info">
                         <p id="no-capstone-briefing-time" data-lang-key="noCapstoneInfo">工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。</p>
                     </div>
@@ -104,6 +106,7 @@
                     <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
                     <h2 data-lang-key="successTitle">受付が完了しました！</h2>
                     <p id="success-student-name" style="font-size: 18px; font-weight: bold;"></p>
+                    <p id="role-color-success" class="role-message hidden" data-lang-key="roleRed"></p>
                     <p id="success-message-desc" data-lang-key="successDesc">あなたは以下のプログラムに確定しました。</p>
                     <div id="success-program-card" class="program-card"></div>
                     <button id="btn-back-to-home" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="backToHome">最初の画面に戻る</button>

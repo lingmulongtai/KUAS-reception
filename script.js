@@ -362,7 +362,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             confirmChoices: "選択を確定する",
             successTitle: "受付が完了しました！",
             successDesc: "あなたは以下のプログラムに確定しました。",
-            successWaiting: "受付が完了しました。プログラムは後ほど割り当てられます。",
+            successWaiting: "プログラムは後ほど割り当てられます。",
             backToHome: "最初の画面に戻る",
             adminPanel: "管理パネル",
             tabProgramEdit: "プログラム編集",
@@ -454,8 +454,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             noChoicesProvided: "あなたはご予約時にプログラム希望を出していないので、希望を出す必要があります。",
             nameSpaceNote: "※ 姓と名の間にスペースを入力してください",
             scheduleTitle: "スケジュール",
-                            noCapstoneExperience: "キャップストーン体験に参加しない",
-                noCapstoneTitle: "キャップストーン体験に参加しない",
+            noCapstoneExperience: "キャップストーン体験に参加しない",
+            noCapstoneTitle: "受付完了",
                 noCapstoneDesc: "キャップストーン体験に参加しない場合の受付が完了しました。",
                 noCapstoneInfo: "工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。",
                 noCapstoneBriefingTime: "{name}様、あなたの工学部説明会は{time}から始まります。",
@@ -491,7 +491,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             confirmChoices: "Confirm Selection",
             successTitle: "Registration Complete!",
             successDesc: "You have been assigned to the following program.",
-            successWaiting: "Registration is complete. Your program will be assigned later.",
+            successWaiting: "Your program will be assigned later.",
             backToHome: "Back to Home",
             adminPanel: "Admin Panel",
             tabProgramEdit: "Edit Programs",
@@ -584,9 +584,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             wrongPassword: "Incorrect password.",
             noChoicesProvided: "You did not provide program preferences when reserving. Please select your preferences.",
             nameSpaceNote: "※ Please enter a space between your first and last name",
-                            scheduleTitle: "Schedule",
-                            noCapstoneExperience: "Do not participate in the Capstone Experience",
-                noCapstoneTitle: "Do not participate in the Capstone Experience",
+            scheduleTitle: "Schedule",
+            noCapstoneExperience: "Do not participate in the Capstone Experience",
+                noCapstoneTitle: "Registration Complete",
                 noCapstoneDesc: "Registration for not participating in the Capstone Experience is complete.",
                 noCapstoneInfo: "If you are only participating in the Faculty Briefing Session, please register separately for the briefing session.",
                 noCapstoneBriefingTime: "Mr./Ms. {name}, your Faculty Briefing Session starts at {time}.",
@@ -639,6 +639,19 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             } else {
                 briefingTimeEl.textContent = translations[lang].noCapstoneInfo;
             }
+        }
+        // 役割カラー文言の多言語更新
+        const roleSuccess = document.getElementById('role-color-success');
+        if (roleSuccess && !roleSuccess.classList.contains('hidden')) {
+            roleSuccess.innerHTML = (lang === 'ja')
+                ? 'あなたは<span class="text-red">「赤色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
+                : 'Your color is <span class="text-red">red</span>. For smooth guidance, staff will place a colored strap on your wrist.';
+        }
+        const roleNoCap = document.getElementById('role-color-no-capstone');
+        if (roleNoCap) {
+            roleNoCap.innerHTML = (lang === 'ja')
+                ? 'あなたは<span class="text-blue">「青色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
+                : 'Your color is <span class="text-blue">blue</span>. For smooth guidance, staff will place a colored strap on your wrist.';
         }
         
         localStorage.setItem('receptionLang', lang);
@@ -830,24 +843,43 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         const studentNameEl = document.getElementById('success-student-name');
         const programCardEl = document.getElementById('success-program-card');
         const successDesc = document.getElementById('success-message-desc');
+        const roleMsgEl = document.getElementById('role-color-success');
         
         studentNameEl.textContent = `${name} 様`;
         
         if(isWaiting) {
             successDesc.textContent = translations[currentLanguage].successWaiting;
+            successDesc.classList.add('waiting-emphasis');
             programCardEl.classList.add('hidden');
+            if (roleMsgEl) {
+                roleMsgEl.innerHTML = (currentLanguage === 'ja')
+                    ? 'あなたは<span class="text-red">「赤色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
+                    : 'Your color is <span class="text-red">red</span>. For smooth guidance, staff will place a colored strap on your wrist.';
+                roleMsgEl.classList.remove('hidden');
+            }
         } else if (program) {
             successDesc.textContent = translations[currentLanguage].successDesc;
+            successDesc.classList.remove('waiting-emphasis');
             programCardEl.classList.remove('hidden');
             programCardEl.innerHTML = `<h3>${escapeHTML(program.title)}</h3><p>${escapeHTML(program.description)}</p>`;
             programCardEl.style.borderColor = 'var(--success-color)';
             programCardEl.style.backgroundColor = '#eaf6ec';
+            if (roleMsgEl) {
+                roleMsgEl.innerHTML = (currentLanguage === 'ja')
+                    ? 'あなたは<span class="text-red">「赤色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
+                    : 'Your color is <span class="text-red">red</span>. For smooth guidance, staff will place a colored strap on your wrist.';
+                roleMsgEl.classList.remove('hidden');
+            }
         } else {
             successDesc.textContent = translations[currentLanguage].successDesc;
+            successDesc.classList.remove('waiting-emphasis');
             programCardEl.classList.remove('hidden');
             programCardEl.innerHTML = `<h3>申し訳ありません</h3><p>全ての希望プログラムが満員のため、参加できるプログラムがありません。運営スタッフにお声がけください。</p>`;
             programCardEl.style.borderColor = 'var(--danger-color)';
             programCardEl.style.backgroundColor = '#f8d7da';
+            if (roleMsgEl) {
+                roleMsgEl.classList.add('hidden');
+            }
         }
         
         navigationHistory = []; // 完了したら履歴をリセット
@@ -1173,6 +1205,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             <p>${escapeHTML(translations[currentLanguage].choice2)}: <span>${escapeHTML(choice2)}</span></p>
             <p>${escapeHTML(translations[currentLanguage].choice3)}: <span>${escapeHTML(choice3)}</span></p>
         `;
+        // 確認画面では役割カラーは表示しない
     }
 
     // 予約データの希望配列をプログラムIDに正規化
@@ -1582,8 +1615,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                     <tr>
                         <th>#</th>
                         <th>${escapeHTML(translations[currentLanguage].programHeader)}</th>
-                        <th>${escapeHTML(translations[currentLanguage].statusHeader)}</th>
                         <th>${escapeHTML(translations[currentLanguage].attendeesHeader)}</th>
+                        <th>${escapeHTML(translations[currentLanguage].statusHeader)}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1597,8 +1630,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                             <tr>
                                 <td>${idx+1}</td>
                                 <td>${escapeHTML(title)}</td>
-                                <td>${programEnrollment[p.id] || 0} / ${p.capacity}</td>
                                 <td>${attendees || escapeHTML(translations[currentLanguage].noAttendees)}</td>
+                                <td>${programEnrollment[p.id] || 0} / ${p.capacity}</td>
                             </tr>
                         `;
                     }).join('')}
@@ -1612,20 +1645,47 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             if (!prog) return '';
             return (currentLanguage === 'en' && prog.title_en) ? prog.title_en : prog.title;
         };
-        waitingTable.innerHTML = `
-            <div class="waiting-list">
-                ${waitingList.map(user => `
-                    <div class="waiting-item">
-                        <div class="name-chip">${escapeHTML(user.name)}</div>
-                        <div class="choices">
-                            <span class="chip">${escapeHTML(translations[currentLanguage].choice1)}: ${escapeHTML(getTitle(user.choices[0]))}</span>
-                            <span class="chip">${escapeHTML(translations[currentLanguage].choice2)}: ${escapeHTML(getTitle(user.choices[1]))}</span>
-                            <span class="chip">${escapeHTML(translations[currentLanguage].choice3)}: ${escapeHTML(getTitle(user.choices[2]))}</span>
+        if (useCard) {
+            waitingTable.innerHTML = `
+                <div class="waiting-list">
+                    ${waitingList.map(user => `
+                        <div class="waiting-item">
+                            <div class="name-chip">${escapeHTML(user.name)}</div>
+                            <div class="choices">
+                                <span class="chip">${escapeHTML(translations[currentLanguage].choice1)}: ${escapeHTML(getTitle(user.choices[0]))}</span>
+                                <span class="chip">${escapeHTML(translations[currentLanguage].choice2)}: ${escapeHTML(getTitle(user.choices[1]))}</span>
+                                <span class="chip">${escapeHTML(translations[currentLanguage].choice3)}: ${escapeHTML(getTitle(user.choices[2]))}</span>
+                            </div>
                         </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            waitingTable.innerHTML = `
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>
+                            <th>${escapeHTML(translations[currentLanguage].choice1)}</th>
+                            <th>${escapeHTML(translations[currentLanguage].choice2)}</th>
+                            <th>${escapeHTML(translations[currentLanguage].choice3)}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${waitingList.map((user, idx) => `
+                            <tr>
+                                <td>${idx+1}</td>
+                                <td>${escapeHTML(user.name)}</td>
+                                <td>${escapeHTML(getTitle(user.choices[0]))}</td>
+                                <td>${escapeHTML(getTitle(user.choices[1]))}</td>
+                                <td>${escapeHTML(getTitle(user.choices[2]))}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
     }
 
 // 名簿プレビューのレンダリング
@@ -2026,6 +2086,14 @@ function columnLetter(index) {
         } else {
             // 時間が見つからない場合は元のメッセージを表示
             briefingTimeEl.textContent = translations[currentLanguage].noCapstoneInfo;
+        }
+
+        // 役割カラー（青）メッセージ表示
+        const roleMsg = document.getElementById('role-color-no-capstone');
+        if (roleMsg) {
+            roleMsg.innerHTML = (currentLanguage === 'ja')
+                ? 'あなたは<span class="text-blue">「青色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
+                : 'Your color is <span class="text-blue">blue</span>. For smooth guidance, staff will place a colored strap on your wrist.';
         }
         
         navigateTo('no-capstone-section');

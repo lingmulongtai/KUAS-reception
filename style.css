@@ -585,6 +585,20 @@ body.dark-mode .full-overlay { background-color: rgba(0, 0, 0, 0.7); }
 .confirmation-details p { margin: 10px 0; font-size: 16px; }
 .confirmation-details span { font-weight: bold; color: var(--text-color); }
 
+/* --- 役割カラー表示 --- */
+.role-message {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 8px 0 16px;
+}
+.text-red { color: #e74c3c; }
+.text-blue { color: #1e88e5; }
+
+/* --- 受付完了（待機時）メッセージ強調 --- */
+.waiting-emphasis {
+    font-size: 20px;
+}
+
 /* --- 完了画面のスタイル --- */
 .success-icon-wrapper { font-size: 80px; color: var(--success-color); margin-bottom: 20px; }
 #success-program-card { cursor: default; margin-top: 15px; }
