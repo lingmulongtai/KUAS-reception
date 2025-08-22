@@ -73,14 +73,29 @@
                         <input type="text" id="walk-in-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
                         <label for="walk-in-school" data-lang-key="school">学校名</label>
                         <input type="text" id="walk-in-school" data-lang-key-placeholder="schoolPlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
-                        <label for="walk-in-grade" data-lang-key="grade">学年</label>
-                        <select id="walk-in-grade">
-                            <option value="" data-lang-key="selectGrade">選択してください</option>
-                            <option value="高校1年生" data-lang-key="grade1">高校1年生</option>
-                            <option value="高校2年生" data-lang-key="grade2">高校2年生</option>
-                            <option value="高校3年生" data-lang-key="grade3">高校3年生</option>
-                            <option value="その他" data-lang-key="other">その他</option>
-                        </select>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="walk-in-grade" data-lang-key="grade">学年</label>
+                                <select id="walk-in-grade">
+                                    <option value="" data-lang-key="selectGrade">選択してください</option>
+                                    <option value="高校1年生" data-lang-key="grade1">高校1年生</option>
+                                    <option value="高校2年生" data-lang-key="grade2">高校2年生</option>
+                                    <option value="高校3年生" data-lang-key="grade3">高校3年生</option>
+                                    <option value="その他" data-lang-key="other">その他</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label for="walk-in-companions" data-lang-key="companionsCountLabel">同伴者人数</label>
+                                <select id="walk-in-companions">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                        </div>
                         <button id="btn-to-program-selection" class="btn btn-primary" data-lang-key="toProgramSelection">プログラム選択へ</button>
                         <button id="btn-no-capstone" class="btn btn-secondary" data-lang-key="noCapstoneExperience">キャップストーン体験に参加しない</button>
                     </div>
@@ -89,6 +104,17 @@
                     <h2 data-lang-key="selectProgramTitle">希望プログラムを選択してください</h2>
                     <p data-lang-key="selectProgramDesc">第1〜第3希望まで選択できます。</p>
                     <div id="program-grid" class="program-grid"></div>
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label for="companion-count-input" data-lang-key="companionsCountLabel">同伴者人数</label>
+                        <select id="companion-count-input" style="max-width: 160px;">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
                     <button id="btn-submit-choices" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="confirmChoices">選択を確定する</button>
                 </div>
                 <div id="no-capstone-section" class="section section-hidden">

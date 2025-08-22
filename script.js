@@ -165,7 +165,14 @@ document.addEventListener('DOMContentLoaded', () => {
             walkInSchool: document.getElementById('walk-in-school')?.value || '',
             walkInGrade: document.getElementById('walk-in-grade')?.value || '',
             currentChoices: currentChoices,
-            currentSection: getCurrentSection()
+            currentSection: getCurrentSection(),
+            currentUser: currentUser ? {
+                name: currentUser.name,
+                school: currentUser.school,
+                grade: currentUser.grade,
+                companions: currentUser.companions || 0,
+                choices: currentUser.choices || []
+            } : null
         };
         
         saveData('formData', formData);
@@ -236,6 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.currentChoices) {
                 currentChoices = data.currentChoices;
             }
+            if (data.currentUser) {
+                currentUser = {
+                    name: data.currentUser.name,
+                    school: data.currentUser.school,
+                    grade: data.currentUser.grade,
+                    companions: data.currentUser.companions || 0,
+                    choices: Array.isArray(data.currentUser.choices) ? data.currentUser.choices : []
+                };
+            }
             
             // セクションを復元
             if (data.currentSection) {
@@ -256,12 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // 自動保存の設定
     function setupAutoSave() {
         // フォーム入力時の自動保存
-        const formInputs = ['student-name', 'walk-in-name', 'walk-in-school', 'walk-in-grade'];
+        const formInputs = ['student-name', 'walk-in-name', 'walk-in-school', 'walk-in-grade', 'walk-in-companions', 'companion-count-input'];
         formInputs.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
                 element.addEventListener('input', () => {
                     setTimeout(saveFormData, 500); // 500ms遅延で保存
+                });
+                element.addEventListener('change', () => {
+                    setTimeout(saveFormData, 500);
                 });
             }
         });
@@ -454,6 +473,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             noChoicesProvided: "あなたはご予約時にプログラム希望を出していないので、希望を出す必要があります。",
             nameSpaceNote: "※ 姓と名の間にスペースを入力してください",
             scheduleTitle: "スケジュール",
+            companionsCountLabel: "同伴者人数",
             noCapstoneExperience: "キャップストーン体験に参加しない",
             noCapstoneTitle: "受付完了",
                 noCapstoneDesc: "キャップストーン体験に参加しない場合の受付が完了しました。",
@@ -585,6 +605,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             noChoicesProvided: "You did not provide program preferences when reserving. Please select your preferences.",
             nameSpaceNote: "※ Please enter a space between your first and last name",
             scheduleTitle: "Schedule",
+            companionsCountLabel: "Number of companions",
             noCapstoneExperience: "Do not participate in the Capstone Experience",
                 noCapstoneTitle: "Registration Complete",
                 noCapstoneDesc: "Registration for not participating in the Capstone Experience is complete.",
@@ -1199,11 +1220,13 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         const choice2 = resolveChoice(student.choices?.[1]);
         const choice3 = resolveChoice(student.choices?.[2]);
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
+        const companionsCount = Number.isFinite(student.companions) ? Math.max(0, student.companions) : 0;
         details.innerHTML = `
             <p>${escapeHTML(translations[currentLanguage].nameHeader)}: <span>${escapeHTML(student.name)} 様</span></p>
             <p>${escapeHTML(translations[currentLanguage].choice1)}: <span>${escapeHTML(choice1)}</span></p>
             <p>${escapeHTML(translations[currentLanguage].choice2)}: <span>${escapeHTML(choice2)}</span></p>
             <p>${escapeHTML(translations[currentLanguage].choice3)}: <span>${escapeHTML(choice3)}</span></p>
+            <p>${escapeHTML(translations[currentLanguage].companionsCountLabel)}: <span>${companionsCount}</span></p>
         `;
         // 確認画面では役割カラーは表示しない
     }
@@ -1302,7 +1325,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                 renderSelect('メイ（フリガナ）列（任意）', 'map-furigana-mei', options, (resAuto.furiganaIdxs?.[1] ?? -1), true),
                 renderSelect('第1希望列', 'map-choice-1', options, (resAuto.choiceIdxs?.[0] ?? -1), false),
                 renderSelect('第2希望列', 'map-choice-2', options, (resAuto.choiceIdxs?.[1] ?? -1), true),
-                renderSelect('第3希望列', 'map-choice-3', options, (resAuto.choiceIdxs?.[2] ?? -1), true)
+                renderSelect('第3希望列', 'map-choice-3', options, (resAuto.choiceIdxs?.[2] ?? -1), true),
+                renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         } else {
             mappingTitle.textContent = '工学部説明会 名簿の列対応';
@@ -1313,7 +1337,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                 renderSelect('名列（任意）', 'map-first-name', options, -1, true),
                 renderSelect('セイ（フリガナ）列（任意）', 'map-furigana-sei', options, (briAuto.furiganaIdxs?.[0] ?? -1), true),
                 renderSelect('メイ（フリガナ）列（任意）', 'map-furigana-mei', options, (briAuto.furiganaIdxs?.[1] ?? -1), true),
-                renderSelect('時間列', 'map-time', options, timeAutoIdx, false)
+                renderSelect('時間列', 'map-time', options, timeAutoIdx, false),
+                renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         }
 
@@ -1346,10 +1371,12 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             const c1 = getIdx('map-choice-1');
             const c2 = getIdx('map-choice-2');
             const c3 = getIdx('map-choice-3');
+            const compIdx = getIdx('map-companions');
             const map = {
                 nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
-                choiceIdxs: [c1, c2, c3]
+                choiceIdxs: [c1, c2, c3],
+                companionsIdx: compIdx
             };
             rosterMappingInfo.reservations = map;
             const rows = jsonData.slice(1);
@@ -1368,7 +1395,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                         const v = get(row, i);
                         return v || null;
                     });
-                    return { name, furigana: furigana || undefined, choices };
+                    const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
+                    return { name, furigana: furigana || undefined, choices, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             reservations = parsed;
@@ -1376,10 +1404,12 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             if (statusEl) statusEl.innerHTML += `<p>予約者名簿を読み込みました。${reservations.length}件</p>`;
         } else {
             const timeIdx = getIdx('map-time');
+            const compIdx = getIdx('map-companions');
             const map = {
                 nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
-                timeIdx: timeIdx
+                timeIdx: timeIdx,
+                companionsIdx: compIdx
             };
             rosterMappingInfo.briefing = map;
             const rows = jsonData.slice(1);
@@ -1395,7 +1425,8 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                     const furiParts = Array.isArray(map.furiganaIdxs) ? map.furiganaIdxs : [];
                     const furigana = furiParts.filter(i => i >= 0).map(i => get(row, i)).filter(Boolean).join(' ');
                     const time = get(row, map.timeIdx);
-                    return { name, furigana: furigana || undefined, time: time || undefined };
+                    const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
+                    return { name, furigana: furigana || undefined, time: time || undefined, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             briefingSessionAttendees = parsed;
@@ -1459,13 +1490,16 @@ let rosterMappingInfo = { reservations: null, briefing: null };
 
         const header = [programLabel, statusLabel];
         for (let i = 1; i <= maxNames; i++) header.push(`${attendeeLabel}${isEn ? ' ' : ''}${i}`);
+        for (let i = 1; i <= maxNames; i++) header.push(`${attendeeLabel}${isEn ? ' ' : ''}${i} (Companions)`);
 
         const data = [header];
         rowsByProgram.forEach(({ program: p, names }) => {
             const title = (isEn && p.title_en) ? p.title_en : p.title;
             const enrolled = names.length;
             const capacity = p.capacity || 0;
-            const row = [title, `${enrolled}/${capacity}`, ...names];
+            const compByName = (n) => (reservations.find(r => r.name === n)?.companions|0) || 0;
+            const compCells = names.map(n => String(compByName(n)));
+            const row = [title, `${enrolled}/${capacity}`, ...names, ...compCells];
             while (row.length < header.length) row.push('');
             data.push(row);
         });
@@ -1501,6 +1535,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
 
         const theadCols = [`<th>${programHeader}</th>`, `<th>${statusHeader}</th>`];
         for (let i = 1; i <= maxNames; i++) theadCols.push(`<th>${attendeeHeaderBase}${isEn ? ' ' : ''}${i}</th>`);
+        for (let i = 1; i <= maxNames; i++) theadCols.push(`<th>${attendeeHeaderBase}${isEn ? ' ' : ''}${i} (Companions)</th>`);
 
         const bodyRows = rowsByProgram.map(({ program: p, names }) => {
             const title = (isEn && p.title_en) ? p.title_en : p.title;
@@ -1508,6 +1543,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             const capacity = p.capacity || 0;
             const cols = [`<td>${escapeHTML(title)}</td>`, `<td>${enrolled}/${capacity}</td>`];
             names.forEach(n => cols.push(`<td>${escapeHTML(n)}</td>`));
+            names.forEach(n => {
+                const comp = (reservations.find(r => r.name === n)?.companions|0);
+                cols.push(`<td>${comp > 0 ? comp : ''}</td>`);
+            });
             while (cols.length < theadCols.length) cols.push('<td></td>');
             return `<tr>${cols.join('')}</tr>`;
         }).join('');
@@ -1595,7 +1634,11 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                     const ratio = Math.min(100, Math.round((enrolled / p.capacity) * 100));
                     const attendeeNames = confirmedAttendees
                         .filter(a => a.assignedProgramId === p.id)
-                        .map(a => `<span class=\"chip\">${escapeHTML(a.name)}</span>`)
+                        .map(a => {
+                            const comp = (reservations.find(r => r.name === a.name)?.companions|0);
+                            const label = comp > 0 ? `${a.name}（同伴者:${comp}）` : a.name;
+                            return `<span class=\"chip\">${escapeHTML(label)}</span>`;
+                        })
                         .join('');
                     return `
                         <div class=\"program-card-status\">
@@ -1624,7 +1667,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                         const title = (currentLanguage === 'en' && p.title_en) ? p.title_en : p.title;
                         const attendees = confirmedAttendees
                             .filter(a => a.assignedProgramId === p.id)
-                            .map(a => escapeHTML(a.name))
+                            .map(a => {
+                                const comp = (reservations.find(r => r.name === a.name)?.companions|0);
+                                return escapeHTML(comp > 0 ? `${a.name}（同伴者:${comp}）` : a.name);
+                            })
                             .join(', ');
                         return `
                             <tr>
@@ -1676,7 +1722,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                         ${waitingList.map((user, idx) => `
                             <tr>
                                 <td>${idx+1}</td>
-                                <td>${escapeHTML(user.name)}</td>
+                                <td>${escapeHTML((user.companions|0)>0 ? `${user.name}（同伴者:${user.companions}）` : user.name)}</td>
                                 <td>${escapeHTML(getTitle(user.choices[0]))}</td>
                                 <td>${escapeHTML(getTitle(user.choices[1]))}</td>
                                 <td>${escapeHTML(getTitle(user.choices[2]))}</td>
@@ -1705,7 +1751,7 @@ function renderRosterPreview() {
 
     // 予約者名簿（必要な列のみ）
     const resMap = rosterMappingInfo.reservations;
-    const showFuriRes = !!(resMap && Array.isArray(resMap.furiganaIdxs) && resMap.furiganaIdxs.some(i => i != null && i >= 0));
+    let showFuriRes = !!(resMap && Array.isArray(resMap.furiganaIdxs) && resMap.furiganaIdxs.some(i => i != null && i >= 0));
     const shownChoiceIndexes = [0,1,2]; // プレビューは第1〜第3希望を常に表示
     let resHeader = `<th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>`;
     if (showFuriRes) resHeader += `<th>${escapeHTML(translations[currentLanguage].furiganaHeader)}</th>`;
@@ -1714,6 +1760,11 @@ function renderRosterPreview() {
         resHeader += `<th>${escapeHTML(translations[currentLanguage][key])}</th>`;
     });
     const resFiltered = reservations.filter(r => matches(r.name, r.furigana));
+    const resHasComp = resFiltered.some(x => ((x.companions|0) > 0));
+    // マッピングがないがデータにフリガナが含まれる場合は列を出す
+    if (!showFuriRes && resFiltered.some(r => (r.furigana || '').trim() !== '')) {
+        showFuriRes = true;
+    }
     const resBody = resFiltered.map(r => {
         // ステータス判定: 確定済みリストにいる場合は緑、待機リストにいる場合は黄色、どちらにもいない場合は赤
         let status = 'red'; // デフォルトは赤（未受付）
@@ -1726,19 +1777,28 @@ function renderRosterPreview() {
         let tds = `<td>${statusDot}${escapeHTML(r.name || '')}</td>`;
         if (showFuriRes) tds += `<td>${escapeHTML(r.furigana || '')}</td>`;
         shownChoiceIndexes.forEach(i => { tds += `<td>${escapeHTML(r.choices?.[i] || '')}</td>`; });
+        if (resHasComp) {
+            const comp = (r.companions|0);
+            tds += `<td>${comp > 0 ? comp : ''}</td>`;
+        }
         return `<tr>${tds}</tr>`;
     }).join('');
-    rr.innerHTML = `<thead><tr>${resHeader}</tr></thead><tbody>${resBody}</tbody>`;
+    const resHeaderWithComp = resHeader + (resHasComp ? `<th>同伴者</th>` : '');
+    rr.innerHTML = `<thead><tr>${resHeaderWithComp}</tr></thead><tbody>${resBody}</tbody>`;
     const resCountEl = document.getElementById('roster-reservations-count');
     if (resCountEl) resCountEl.textContent = `(${resFiltered.length})`;
 
     // 説明会名簿（必要な列のみ）
     const briMap = rosterMappingInfo.briefing;
-    const showFuriBri = briMap && Array.isArray(briMap.furiganaIdxs) && briMap.furiganaIdxs.some(i => i != null && i >= 0);
+    let showFuriBri = briMap && Array.isArray(briMap.furiganaIdxs) && briMap.furiganaIdxs.some(i => i != null && i >= 0);
     let briHeader = `<th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>`;
     if (showFuriBri) briHeader += `<th>${escapeHTML(translations[currentLanguage].furiganaHeader)}</th>`;
     briHeader += `<th>${escapeHTML(translations[currentLanguage].timeHeader || '時間')}</th>`;
     const briFiltered = briefingSessionAttendees.filter(a => matches(a.name, a.furigana));
+    if (!showFuriBri && briFiltered.some(a => (a.furigana || '').trim() !== '')) {
+        showFuriBri = true;
+    }
+    const briHasComp = briFiltered.some(x => ((x.companions|0) > 0));
     const briBody = briFiltered.map(a => {
         // ステータス判定: 確定済みリストにいる場合は緑、待機リストにいる場合は黄色、どちらにもいない場合は赤
         let status = 'red'; // デフォルトは赤（未受付）
@@ -1751,9 +1811,14 @@ function renderRosterPreview() {
         let tds = `<td>${statusDot}${escapeHTML(a.name || '')}</td>`;
         if (showFuriBri) tds += `<td>${escapeHTML(a.furigana || '')}</td>`;
         tds += `<td>${escapeHTML(a.time || '')}</td>`;
+        if (briHasComp) {
+            const comp = (a.companions|0);
+            tds += `<td>${comp > 0 ? comp : ''}</td>`;
+        }
         return `<tr>${tds}</tr>`;
     }).join('');
-    rb.innerHTML = `<thead><tr>${briHeader}</tr></thead><tbody>${briBody}</tbody>`;
+    const briHeaderWithComp = briHeader + (briHasComp ? `<th>同伴者</th>` : '');
+    rb.innerHTML = `<thead><tr>${briHeaderWithComp}</tr></thead><tbody>${briBody}</tbody>`;
     const briCountEl = document.getElementById('roster-briefing-count');
     if (briCountEl) briCountEl.textContent = `(${briFiltered.length})`;
 
@@ -1775,6 +1840,11 @@ function renderRosterPreview() {
         const roCount = document.getElementById('roster-others-count');
         if (roCount) roCount.textContent = `(${others.length})`;
     }
+        // 同伴者入力の初期値を現在の値で反映
+        const compInput = document.getElementById('companion-count-input');
+        if (compInput && typeof currentUser?.companions === 'number') {
+            compInput.value = String(Math.max(0, currentUser.companions));
+        }
 }
 
 // 列ヘッダから自動検出（体験予約者）
@@ -2018,6 +2088,7 @@ function columnLetter(index) {
         const nameEl = document.getElementById('walk-in-name');
         const schoolEl = document.getElementById('walk-in-school');
         const gradeEl = document.getElementById('walk-in-grade');
+        const companionsEl = document.getElementById('walk-in-companions');
         
         if (!validateAndHighlight([nameEl, schoolEl, gradeEl])) {
             showCustomAlert('errorAllFields');
@@ -2036,7 +2107,8 @@ function columnLetter(index) {
             return;
         }
         
-        currentUser = { name: name, school: schoolEl.value, grade: gradeEl.value, choices: [] };
+        const companions = Math.max(0, parseInt(companionsEl.value || '0', 10) || 0);
+        currentUser = { name: name, school: schoolEl.value, grade: gradeEl.value, choices: [], companions };
         currentChoices = { 1: null, 2: null, 3: null };
         renderProgramGrid();
         updateProgramSelectionUI();
@@ -2116,6 +2188,11 @@ function columnLetter(index) {
 
     document.getElementById('btn-submit-choices').addEventListener('click', () => {
         const choices = [currentChoices[1], currentChoices[2], currentChoices[3]];
+        const companionInput = document.getElementById('companion-count-input');
+        if (companionInput && currentUser) {
+            const companions = Math.max(0, parseInt(companionInput.value || '0', 10) || 0);
+            currentUser.companions = companions;
+        }
         if (choices.filter(c => c).length === 0) {
             showCustomAlert('errorSelectProgram');
             return;

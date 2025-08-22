@@ -512,6 +512,8 @@ body.dark-mode .back-btn:hover {
 .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 15px; font-size: 16px; border: 2px solid #9fb3a8; border-radius: 10px; box-sizing: border-box; transition: border-color 0.3s, background-color 0.3s, color 0.3s; background-color: #f7faf8; color: var(--text-color); }
 .input-group input:focus, .input-group textarea:focus, .input-group select:focus { outline: none; border-color: var(--primary-color); }
 .input-group button { margin-top: 10px; }
+.form-row { display: flex; gap: 12px; align-items: flex-end; }
+.form-col { flex: 1; min-width: 0; }
 .input-group select {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -985,6 +987,7 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .view-container::after {
         display: none;
     }
+    .form-row { flex-direction: column; gap: 10px; }
 }
 
 /* --- キャップストーン体験に参加しないセクションのスタイル --- */
