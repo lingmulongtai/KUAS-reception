@@ -11,6 +11,7 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 ## Table of Contents
 - [Environment](#environment)
 - [How to Run](#how-to-run)
+- [Operational Flow (Event Day)](#operational-flow-event-day)
 - [UI and Flow](#ui-and-flow)
 - [Admin Panel](#admin-panel)
 - [Roster Excel Format](#roster-excel-format)
@@ -42,6 +43,42 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 1. Place this folder anywhere locally.
 2. Open `index.html` in your browser.
 3. On first run, a notice may appear for missing rosters. Import rosters from the Admin panel.
+
+## Operational Flow (Event Day)
+1) Preparation
+- Windows 10/11 with latest Edge/Chrome.
+- Keep the folder structure intact (`index.html`, `script.js`, `style.css`, `assets/`, `vendor/`, ...).
+- Optionally start via a simple local server:
+  - Python: `py -m http.server 8080` → `http://localhost:8080/`
+  - Node: `npm -g i serve && serve -l 8080`
+- Allow popups in the browser (for Excel/PDF export).
+
+2) Import Rosters (Admin → File Load)
+- Reservation roster (xlsx): map columns for Name/Furigana/1st–3rd choices/Companions.
+- Briefing roster (xlsx): map columns for Name/Furigana/Time/Companions.
+- Data is saved locally and persists across reloads (IndexedDB).
+
+3) Reception Flow
+- Reserved: Match by name → Confirmation shows Companions → Confirm.
+  - If preferences missing, navigate to selection. The selection page has a Companions (0–5) dropdown.
+- Walk-in: Enter name/school/grade/companions (0–5) → Select → Confirm.
+- No capstone experience: A dedicated completion screen shows a check icon, briefing guidance, and time (if present).
+
+4) Color Strap Guidance
+- Success screen shows “Your color is red.” with explanation.
+- For waiting (walk-ins prioritized), the same message is shown and “Your program will be assigned later.” is emphasized.
+
+5) Admin Panel Operations
+- Roster Preview: show Furigana and Companions for both reservation/briefing rosters (Companions column appears only if >0 exists; empty cell for 0).
+- Status: supports card/table view. In table view, the confirmed list column order is “Attendees → Status (Count)”.
+- Batch-assign waiting: assigns according to settings (prioritize reserved/grade).
+
+6) Persistence
+- Auto-saves in-progress form (including companions), roster, reception data, and settings. Restores on reload.
+- Use “Reset Reception Data” to clear (IndexedDB/localStorage).
+
+7) Export
+- Export Excel/PDF of confirmed status. Adds per-attendee “Companions” columns and outputs the numbers (blank for 0).
 
 ## UI and Flow
 ### Top (Reception) Buttons (top-right)
@@ -80,6 +117,8 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 - Show reservation and briefing rosters. Search by name/kana.
 - Left color dot indicates status (green=confirmed, yellow=waiting, red=not registered).
 - Column mapping (detected) is shown at the top.
+  - Furigana column is auto-shown if data contains furigana even when mapping is absent.
+  - Companions column is shown only when any row has companions > 0 (0 is blank per row).
 
 ### Tab: Status
 - View confirmed counts/capacity and attendees per program as cards or table.
@@ -94,11 +133,11 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 ## Roster Excel Format
 Import expects the following fixed columns (see samples in `register_of_names/`).
 - **Capstone Reservation Roster**
-  - A=No, B=FamilyName, C=GivenName, D=Furigana(FN), E=Furigana(GN), …, O=1st, P=2nd, Q=3rd
-  - Internal data: `name` (family + given joined with a half-width space), `furigana`, `choices` (array for 1st–3rd)
+  - A=No, B=FamilyName, C=GivenName, D=Furigana(FN), E=Furigana(GN), …, O=1st, P=2nd, Q=3rd, (optional) Companions
+  - Internal data: `name` (family + given joined with a half-width space), `furigana`, `choices` (array for 1st–3rd), `companions`
 - **Briefing Session Roster**
-  - A=No, B=Time, C=FamilyName, D=GivenName, E=Furigana(FN), F=Furigana(GN)
-  - Internal data: `name`, `furigana`, `time`
+  - A=No, B=Time, C=FamilyName, D=GivenName, E=Furigana(FN), F=Furigana(GN), (optional) Companions
+  - Internal data: `name`, `furigana`, `time`, `companions`
 
 ## Local Data Storage
 - Uses **IndexedDB** and **localStorage**.
@@ -124,7 +163,8 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
 
 ## Export
 - Press "Export to Excel" to generate `reception_status.xlsx`.
-  - Columns: `Program`, `Name` (program title uses English when language is set to EN)
+  - Columns: `Program`, `Attendees/Capacity`, `Attendee1..n`, `Attendee1..n (Companions)`
+  - PDF export similarly shows additional `Companions` columns.
 
 ## Directory Structure
 - `index.html`: App shell (views)
