@@ -514,6 +514,7 @@ body.dark-mode .back-btn:hover {
 .input-group button { margin-top: 10px; }
 .form-row { display: flex; gap: 12px; align-items: flex-end; }
 .form-col { flex: 1; min-width: 0; }
+.required-mark { display: inline-block; margin-left: 8px; padding: 2px 6px; font-size: 12px; line-height: 1; color: #fff; background-color: var(--danger-color); border-radius: 6px; vertical-align: middle; }
 .input-group select {
     -webkit-appearance: none;
     -moz-appearance: none;

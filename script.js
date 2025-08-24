@@ -162,12 +162,14 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'currentForm',
             reservedName: document.getElementById('student-name')?.value || '',
             walkInName: document.getElementById('walk-in-name')?.value || '',
+            walkInFurigana: document.getElementById('walk-in-furigana')?.value || '',
             walkInSchool: document.getElementById('walk-in-school')?.value || '',
             walkInGrade: document.getElementById('walk-in-grade')?.value || '',
             currentChoices: currentChoices,
             currentSection: getCurrentSection(),
             currentUser: currentUser ? {
                 name: currentUser.name,
+                furigana: currentUser.furigana || '',
                 school: currentUser.school,
                 grade: currentUser.grade,
                 companions: currentUser.companions || 0,
@@ -232,6 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.walkInName && document.getElementById('walk-in-name')) {
                 document.getElementById('walk-in-name').value = data.walkInName;
             }
+            if (data.walkInFurigana && document.getElementById('walk-in-furigana')) {
+                document.getElementById('walk-in-furigana').value = data.walkInFurigana;
+            }
             if (data.walkInSchool && document.getElementById('walk-in-school')) {
                 document.getElementById('walk-in-school').value = data.walkInSchool;
             }
@@ -246,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.currentUser) {
                 currentUser = {
                     name: data.currentUser.name,
+                    furigana: data.currentUser.furigana || '',
                     school: data.currentUser.school,
                     grade: data.currentUser.grade,
                     companions: data.currentUser.companions || 0,
@@ -272,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 自動保存の設定
     function setupAutoSave() {
         // フォーム入力時の自動保存
-        const formInputs = ['student-name', 'walk-in-name', 'walk-in-school', 'walk-in-grade', 'walk-in-companions', 'companion-count-input'];
+        const formInputs = ['student-name', 'walk-in-name', 'walk-in-furigana', 'walk-in-school', 'walk-in-grade', 'walk-in-companions', 'companion-count-input'];
         formInputs.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -367,6 +373,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             confirmSubmit: "この内容で確定",
             changeReservation: "希望を変更する",
             name: "お名前",
+            furigana: "フリガナ",
+            furiganaPlaceholder: "例：ヤマダ タロウ",
+            requiredMark: "必須",
             school: "学校名",
             schoolPlaceholder: "例：〇〇高等学校",
             grade: "学年",
@@ -474,7 +483,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             nameSpaceNote: "※ 姓と名の間にスペースを入力してください",
             scheduleTitle: "スケジュール",
             companionsCountLabel: "同伴者人数",
-            noCapstoneExperience: "キャップストーン体験に参加しない",
+            noCapstoneExperience: "工学部説明会のみに参加される方はこちら",
             noCapstoneTitle: "受付完了",
                 noCapstoneDesc: "キャップストーン体験に参加しない場合の受付が完了しました。",
                 noCapstoneInfo: "工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。",
@@ -497,6 +506,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             confirmSubmit: "Confirm",
             changeReservation: "Change Preferences",
             name: "Name",
+            furigana: "Furigana",
+            furiganaPlaceholder: "e.g., TARO YAMADA (Katakana)",
+            requiredMark: "Required",
             school: "School Name",
             schoolPlaceholder: "e.g., Example High School",
             grade: "Grade",
@@ -606,7 +618,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             nameSpaceNote: "※ Please enter a space between your first and last name",
             scheduleTitle: "Schedule",
             companionsCountLabel: "Number of companions",
-            noCapstoneExperience: "Do not participate in the Capstone Experience",
+            noCapstoneExperience: "Faculty Briefing only",
                 noCapstoneTitle: "Registration Complete",
                 noCapstoneDesc: "Registration for not participating in the Capstone Experience is complete.",
                 noCapstoneInfo: "If you are only participating in the Faculty Briefing Session, please register separately for the briefing session.",
@@ -826,6 +838,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
     function resetReceptionState() {
         document.getElementById('student-name').value = '';
         document.getElementById('walk-in-name').value = '';
+        const f = document.getElementById('walk-in-furigana'); if (f) f.value = '';
         document.getElementById('walk-in-school').value = '';
         document.getElementById('walk-in-grade').value = '';
         currentUser = null;
@@ -1209,11 +1222,22 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         const resolveChoice = (raw) => {
             const s = (raw || '').toString().trim();
             if (!s || s === '-' || s === '希望なし' || s.toLowerCase() === 'none' || s === 'N/A') return translations[currentLanguage].unselected;
-            // ExcelからIDで来る場合とタイトルで来る場合を許容
-            const byId = programs.find(p => p.id === s);
-            if (byId) return currentLanguage === 'en' && byId.title_en ? byId.title_en : byId.title;
-            const byTitle = programs.find(p => p.title === s || p.title_en === s);
-            if (byTitle) return currentLanguage === 'en' && byTitle.title_en ? byTitle.title_en : byTitle.title;
+            // ID、完全タイトル一致、サブタイトル付きの前半一致に対応
+            const prog = (function() {
+                let p = programs.find(pp => pp.id === s);
+                if (p) return p;
+                p = programs.find(pp => pp.title === s || pp.title_en === s);
+                if (p) return p;
+                const base = extractBaseTitle(s);
+                if (!base) return null;
+                const norm = (t) => (t || '').toString().trim();
+                return programs.find(pp => norm(base) === norm(pp.title) || norm(base) === norm(pp.title_en)
+                    || norm(s).startsWith(norm(pp.title)) || norm(s).startsWith(norm(pp.title_en)));
+            })();
+            if (prog) {
+                const title = currentLanguage === 'en' && prog.title_en ? prog.title_en : prog.title;
+                return extractBaseTitle(title);
+            }
             return translations[currentLanguage].unselected;
         };
         const choice1 = resolveChoice(student.choices?.[0]);
@@ -1231,21 +1255,54 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         // 確認画面では役割カラーは表示しない
     }
 
-    // 予約データの希望配列をプログラムIDに正規化
+    // 予約データの希望配列をプログラムIDに正規化（サブタイトル付きにも対応）
     function normalizeChoicesToProgramIds(rawChoices) {
+        const findProgramByLooseTitle = (input) => {
+            const s = (input || '').toString().trim();
+            if (!s) return null;
+            // 既にIDの場合
+            let prog = programs.find(p => p.id === s);
+            if (prog) return prog;
+            // 完全一致（JP/EN）
+            prog = programs.find(p => p.title === s || p.title_en === s);
+            if (prog) return prog;
+            // サブタイトル区切りで前半を比較（例: タイトル: サブタイトル / タイトル（サブタイトル）など）
+            const base = extractBaseTitle(s);
+            if (base) {
+                const norm = (t) => (t || '').toString().trim();
+                // プログラム名が入力の先頭に一致、または入力の前半がプログラム名と一致
+                prog = programs.find(p => norm(base) === norm(p.title) || norm(base) === norm(p.title_en)
+                    || norm(s).startsWith(norm(p.title)) || norm(s).startsWith(norm(p.title_en))
+                );
+                if (prog) return prog;
+            }
+            return null;
+        };
         const toId = (val) => {
             const s = (val || '').toString().trim();
             if (!s || s === '-' || s === '希望なし' || s.toLowerCase() === 'none' || s === 'N/A') return null;
-            // 既にIDの場合
-            const byId = programs.find(p => p.id === s);
-            if (byId) return byId.id;
-            // タイトル/英語タイトルで一致
-            const byTitle = programs.find(p => p.title === s || p.title_en === s);
-            if (byTitle) return byTitle.id;
-            return null;
+            const prog = findProgramByLooseTitle(s);
+            return prog ? prog.id : null;
         };
         const arr = Array.isArray(rawChoices) ? rawChoices : [];
         return [toId(arr[0]), toId(arr[1]), toId(arr[2])];
+    }
+
+    // サブタイトルを含む文字列からベースタイトル（前半）を抽出
+    function extractBaseTitle(raw) {
+        const s = (raw || '').toString().trim();
+        if (!s) return '';
+        const separators = ['：', ':', '（', '(', '【', '『', '〜', '～'];
+        // ハイフンは両側スペースがある場合のみ区切りとみなす
+        const hyphenIdx = s.indexOf(' - ');
+        let cutIdx = -1;
+        separators.forEach(sep => {
+            const idx = s.indexOf(sep);
+            if (idx >= 0) cutIdx = (cutIdx < 0) ? idx : Math.min(cutIdx, idx);
+        });
+        if (hyphenIdx >= 0) cutIdx = (cutIdx < 0) ? hyphenIdx : Math.min(cutIdx, hyphenIdx);
+        if (cutIdx >= 0) return s.slice(0, cutIdx).trim();
+        return s;
     }
 
     // --- 入力検証 ---
@@ -1260,6 +1317,29 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             }
         });
         return allValid;
+    }
+    
+    // プログラム選択画面の同伴者入力の表示/非表示を切り替え
+    function setProgramCompanionsVisibility(visible) {
+        const compInput = document.getElementById('companion-count-input');
+        if (!compInput) return;
+        const wrapper = compInput.closest('.input-group');
+        if (!wrapper) return;
+        if (visible) {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+        }
+    }
+
+    // 予約経由のときは、名簿から読み込んだ同伴者人数をセレクトに反映
+    function setProgramCompanionsFromCurrentUser() {
+        const compInput = document.getElementById('companion-count-input');
+        if (!compInput) return;
+        const value = (typeof currentUser?.companions === 'number')
+            ? String(Math.max(0, currentUser.companions))
+            : '0';
+        compInput.value = value;
     }
     
     // --- Excel 関連の処理 ---
@@ -1689,7 +1769,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         const getTitle = (id) => {
             const prog = programs.find(p => p.id === id);
             if (!prog) return '';
-            return (currentLanguage === 'en' && prog.title_en) ? prog.title_en : prog.title;
+            // 表示はタイトルのみ（サブタイトルは含めない）
+            const title = (currentLanguage === 'en' && prog.title_en) ? prog.title_en : prog.title;
+            return extractBaseTitle(title);
         };
         if (useCard) {
             waitingTable.innerHTML = `
@@ -2065,6 +2147,8 @@ function columnLetter(index) {
                 renderProgramGrid();
                 updateProgramSelectionUI();
                 navigateTo('program-selection-section');
+                setProgramCompanionsVisibility(true); // 予約あり（希望未入力）は表示
+                setProgramCompanionsFromCurrentUser();
                 document.querySelector('.content-wrapper').classList.add('has-back-btn');
                 return;
             }
@@ -2081,21 +2165,25 @@ function columnLetter(index) {
         renderProgramGrid();
         updateProgramSelectionUI();
         navigateTo('program-selection-section');
+        setProgramCompanionsVisibility(true); // 予約あり（変更）は表示
+        setProgramCompanionsFromCurrentUser();
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
 
     document.getElementById('btn-to-program-selection').addEventListener('click', () => {
         const nameEl = document.getElementById('walk-in-name');
+        const furiganaEl = document.getElementById('walk-in-furigana');
         const schoolEl = document.getElementById('walk-in-school');
         const gradeEl = document.getElementById('walk-in-grade');
         const companionsEl = document.getElementById('walk-in-companions');
         
-        if (!validateAndHighlight([nameEl, schoolEl, gradeEl])) {
+        if (!validateAndHighlight([nameEl, furiganaEl, gradeEl, companionsEl])) {
             showCustomAlert('errorAllFields');
             return;
         }
         
         const name = nameEl.value.trim().replace(/　/g, ' ');
+        const furigana = furiganaEl.value.trim().replace(/　/g, ' ');
         
         // 既に登録済みかチェック
         const isAlreadyConfirmed = confirmedAttendees.some(attendee => attendee.name === name);
@@ -2108,25 +2196,28 @@ function columnLetter(index) {
         }
         
         const companions = Math.max(0, parseInt(companionsEl.value || '0', 10) || 0);
-        currentUser = { name: name, school: schoolEl.value, grade: gradeEl.value, choices: [], companions };
+        currentUser = { name: name, furigana, school: schoolEl.value, grade: gradeEl.value, choices: [], companions };
         currentChoices = { 1: null, 2: null, 3: null };
         renderProgramGrid();
         updateProgramSelectionUI();
         navigateTo('program-selection-section');
+        setProgramCompanionsVisibility(false); // 予約なしは非表示
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
 
     document.getElementById('btn-no-capstone').addEventListener('click', () => {
         const nameEl = document.getElementById('walk-in-name');
+        const furiganaEl = document.getElementById('walk-in-furigana');
         const schoolEl = document.getElementById('walk-in-school');
         const gradeEl = document.getElementById('walk-in-grade');
         
-        if (!validateAndHighlight([nameEl, schoolEl, gradeEl])) {
+        if (!validateAndHighlight([nameEl, furiganaEl, gradeEl])) {
             showCustomAlert('errorAllFields');
             return;
         }
         
         const name = nameEl.value.trim().replace(/　/g, ' ');
+        const furigana = furiganaEl.value.trim().replace(/　/g, ' ');
         
         // 既に登録済みかチェック
         const isAlreadyConfirmed = confirmedAttendees.some(attendee => attendee.name === name);
@@ -2140,7 +2231,8 @@ function columnLetter(index) {
         
         // キャップストーン体験に参加しない場合の処理
         currentUser = { 
-            name: name, 
+            name: name,
+            furigana,
             school: schoolEl.value, 
             grade: gradeEl.value, 
             choices: [],
@@ -2180,6 +2272,7 @@ function columnLetter(index) {
         
         // フォームをクリア
         document.getElementById('walk-in-name').value = '';
+        document.getElementById('walk-in-furigana').value = '';
         document.getElementById('walk-in-school').value = '';
         document.getElementById('walk-in-grade').value = '';
         
@@ -2189,7 +2282,7 @@ function columnLetter(index) {
     document.getElementById('btn-submit-choices').addEventListener('click', () => {
         const choices = [currentChoices[1], currentChoices[2], currentChoices[3]];
         const companionInput = document.getElementById('companion-count-input');
-        if (companionInput && currentUser) {
+        if (companionInput && currentUser && !companionInput.closest('.input-group')?.classList.contains('hidden')) {
             const companions = Math.max(0, parseInt(companionInput.value || '0', 10) || 0);
             currentUser.companions = companions;
         }
@@ -2223,7 +2316,7 @@ function columnLetter(index) {
     });
     
     // エラーハイライト解除リスナー
-    ['student-name', 'walk-in-name', 'walk-in-school', 'walk-in-grade'].forEach(id => {
+    ['student-name', 'walk-in-name', 'walk-in-furigana', 'walk-in-school', 'walk-in-grade', 'walk-in-companions'].forEach(id => {
         document.getElementById(id).addEventListener('input', (e) => e.target.classList.remove('input-error'));
     });
 

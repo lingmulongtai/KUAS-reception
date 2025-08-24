@@ -68,14 +68,22 @@
                 <div id="walk-in-section" class="section section-hidden">
                     <h1 data-lang-key="walkInNameInputTitle">予約なし - お名前入力</h1>
                     <div class="input-group">
-                        <label for="walk-in-name" data-lang-key="name">お名前</label>
-                        <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
-                        <input type="text" id="walk-in-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="walk-in-name" data-lang-key="name">お名前</label><span class="required-mark" data-lang-key="requiredMark">必須</span>
+                                <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
+                                <input type="text" id="walk-in-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
+                            </div>
+                            <div class="form-col">
+                                <label for="walk-in-furigana" data-lang-key="furigana">フリガナ</label><span class="required-mark" data-lang-key="requiredMark">必須</span>
+                                <input type="text" id="walk-in-furigana" data-lang-key-placeholder="furiganaPlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
+                            </div>
+                        </div>
                         <label for="walk-in-school" data-lang-key="school">学校名</label>
                         <input type="text" id="walk-in-school" data-lang-key-placeholder="schoolPlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
                         <div class="form-row">
                             <div class="form-col">
-                                <label for="walk-in-grade" data-lang-key="grade">学年</label>
+                                <label for="walk-in-grade" data-lang-key="grade">学年</label><span class="required-mark" data-lang-key="requiredMark">必須</span>
                                 <select id="walk-in-grade">
                                     <option value="" data-lang-key="selectGrade">選択してください</option>
                                     <option value="高校1年生" data-lang-key="grade1">高校1年生</option>
@@ -85,8 +93,9 @@
                                 </select>
                             </div>
                             <div class="form-col">
-                                <label for="walk-in-companions" data-lang-key="companionsCountLabel">同伴者人数</label>
+                                <label for="walk-in-companions" data-lang-key="companionsCountLabel">同伴者人数</label><span class="required-mark" data-lang-key="requiredMark">必須</span>
                                 <select id="walk-in-companions">
+                                    <option value="" data-lang-key="selectGrade">選択してください</option>
                                     <option value="0">0</option>
                                     <option value="1">1</option>
                                     <option value="2">2</option>
@@ -104,7 +113,7 @@
                     <h2 data-lang-key="selectProgramTitle">希望プログラムを選択してください</h2>
                     <p data-lang-key="selectProgramDesc">第1〜第3希望まで選択できます。</p>
                     <div id="program-grid" class="program-grid"></div>
-                    <div class="input-group" style="margin-top: 10px;">
+                    <div class="input-group hidden" style="margin-top: 10px;">
                         <label for="companion-count-input" data-lang-key="companionsCountLabel">同伴者人数</label>
                         <select id="companion-count-input" style="max-width: 160px;">
                             <option value="0">0</option>
