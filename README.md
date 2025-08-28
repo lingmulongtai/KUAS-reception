@@ -1,12 +1,12 @@
 <!-- Language: JA | EN -->
 [日本語 (JA)](README.md) | [English (EN)](README_ENG.md)
 
-## KUAS Reception アプリ（完全ローカル対応）
+## KUAS Reception アプリ（オンライン/CDN 対応）
 
 ### 概要
 京都先端科学大学 工学部オープンキャンパス向けの「ミニキャップストーン体験」受付アプリです。予約者・当日参加者の受付、希望プログラム選択、管理用の編集・割り当て・名簿プレビュー、進行表示、エクスポートまでをブラウザだけで完結します。
 
-本プロジェクトは「完全ローカル対応」です。外部CDNは不使用で、必要なライブラリ・アイコン・フォントはすべて本リポジトリに同梱済みです。
+本プロジェクトはオンライン/CDN 対応です。フォント・アイコン・主要ライブラリは CDN から読み込み、画像は `public/` 配下のローカル資産を使用します。
 
 ## 目次
 - [動作環境](#動作環境)
@@ -39,9 +39,9 @@
 - OS: Windows / macOS（Windowsで動作確認）
 - ネットワーク: オンライン（CDNからフォント/アイコン/ライブラリを取得）
 
-## 起動方法
+## 起動方法（ローカル）
 1. このフォルダを任意の場所に配置。
-2. ブラウザで `index.html` を開くと起動します。
+2. ブラウザで `index.html`（リポジトリ直下）を開くか、`public/index.html` を開きます。
 3. 初回は名簿未読込みの通知が出ます。管理画面から名簿を読み込んでください。
 
 ## 当日の使用方法
@@ -149,17 +149,16 @@
 - クリア方法: 管理画面の「受付データをリセット」。
 
 ## セキュリティとプライバシー
-- **CSP（Content-Security-Policy）**: `index.html` の `<meta http-equiv="Content-Security-Policy">` をCDN対応に更新済み。
-  - 許可ドメイン（例）: `fonts.googleapis.com`, `fonts.gstatic.com`, `cdn.jsdelivr.net`, Firebase 関連 (`www.gstatic.com`, `firestore.googleapis.com` など)
-  - 画像はデモとして `images.unsplash.com`, `placehold.co` を許可
+- **CSP（Content-Security-Policy）**: `index.html` は CDN/Firebase 用ドメインを許可する設定です。
+- 画像は `public/` からローカル参照します（`img-src 'self' data:`）。
 - **入力のハードニング**: 入力欄に `autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"` を設定。
 - **XSS対策**: 動的に生成するHTMLは `escapeHTML()` によるサニタイズを実施。
 - **PII最小化**: 個人情報を含むログは出力せず、データは外部送信しません（ローカル保存のみ）。
 - **リセット手段**: 管理画面「受付データをリセット」で IndexedDB / localStorage の関連データを削除可能。
 
 ## オフライン運用
-- すべての外部依存（フォント/アイコン/ライブラリ）を `assets/` および `vendor/` に同梱しています。
-- `index.html` はローカルファイルのみを参照し、ネットワーク不要で動作します。
+- フォント/アイコン/ライブラリは CDN から取得（オンライン必須）。
+- 画像は `public/` からローカル参照。
 
 ## 出力（エクスポート）
 - 「Excelファイルに書き出し」を押すと `reception_status.xlsx` を生成します。
@@ -172,7 +171,7 @@
 - `script.js`: 機能実装（受付ロジック、名簿読み込み、保存/復元、多言語、管理画面など）
 - `register_of_names/`: 名簿サンプル（xlsx）
   
-（注）ローカルのフォント/ベンダーファイルは不要になりました。容量削減のため `assets/fonts/` と `vendor/`、`public/` は削除可能です。
+（注）ローカルのフォント/ベンダーファイルは不要です。容量削減のため `assets/fonts/` と `vendor/` は削除可能です。
 
 ## 既知の注意点
 - 完全ローカル対応のため、外部CDNを利用していません。必要ファイルが不足している場合は `assets/` / `vendor/` 配下の構成をご確認ください。

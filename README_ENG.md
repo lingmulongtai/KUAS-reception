@@ -1,12 +1,12 @@
 <!-- Language: JA | EN -->
 [日本語 (JA)](README.md) | [English (EN)](README_ENG.md)
 
-## KUAS Reception App (Offline-Ready)
+## KUAS Reception App (Online/CDN)
 
 ### Overview
 This is a browser-based reception app for the Faculty of Engineering Open Campus at Kyoto University of Advanced Science. It covers reception for reserved and walk-in attendees, preference selection, admin-side editing/assignment/roster preview, status visualization, and export — all locally in the browser.
 
-This project is fully offline-ready. No external CDNs are required. All libraries, icons, and fonts are bundled in the repository.
+This project loads fonts/icons/libs from CDNs, while images are served locally from the `public/` folder.
 
 ## Table of Contents
 - [Environment](#environment)
@@ -158,8 +158,8 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
 - **Reset**: Use the admin panel to clear IndexedDB/localStorage.
 
 ## Offline Operation
-- All external dependencies (fonts/icons/libs) are bundled under `assets/` and `vendor/`.
-- `index.html` references only local files; no network is required.
+- Fonts/icons/libs are fetched from CDNs (requires internet).
+- Images are read from `public/` locally.
 
 ## Export
 - Press "Export to Excel" to generate `reception_status.xlsx`.
@@ -167,12 +167,14 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
   - PDF export similarly shows additional `Companions` columns.
 
 ## Directory Structure
-- `index.html`: App shell (now loads from CDN)
+- `index.html`: Entry page (CDN loading, images from `public/`)
 - `style.css`: Styles (light/dark, animations)
 - `script.js`: Logic (reception, roster import, persistence, i18n, admin, etc.)
+- `firebase-init.js`: Firebase initialization
+- `public/`: Local images and optional `public/index.html`
 - `register_of_names/`: Sample rosters (xlsx)
 
-(Note) Local fonts/vendor folders are no longer necessary. You may delete `assets/fonts/`, `vendor/`, and `public/` to reduce size.
+(Note) Local fonts/vendor folders are no longer necessary. You may delete `assets/fonts/` and `vendor/` to reduce size.
 
 ## Notes
 - The app is fully local. If something is missing, verify the `assets/` and `vendor/` folders are intact.
