@@ -1,0 +1,12 @@
+specVersion: "v1beta"
+serviceId: "kuas-reception-app"
+location: "asia-east1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "postgres"
+      cloudSql:
+        instanceId: "kuas-reception-app-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

@@ -37,7 +37,7 @@ This project is fully offline-ready. No external CDNs are required. All librarie
 ## Environment
 - Recommended browsers: Latest Chrome / Edge
 - OS: Windows / macOS (tested on Windows)
-- Network: Fully offline (no external network access)
+- Network: Online (fonts/icons/libs loaded from CDN)
 
 ## How to Run
 1. Place this folder anywhere locally.
@@ -149,9 +149,9 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
 - To clear: use "Reset Reception Data" in the admin panel.
 
 ## Security and Privacy
-- **CSP (Content-Security-Policy)**: A strict meta CSP is set in `index.html`.
-  - All sources are `self` only (fully local).
-  - Examples: `style-src 'self' 'unsafe-inline'`, `font-src 'self' data:`, `img-src 'self' data:`.
+- **CSP (Content-Security-Policy)**: Updated to allow required CDNs.
+  - Allowed domains include `fonts.googleapis.com`, `fonts.gstatic.com`, `cdn.jsdelivr.net`, Firebase endpoints, etc.
+  - Demo images use `images.unsplash.com`, placeholders from `placehold.co`.
 - **Input Hardening**: `autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"` are set on inputs to avoid residual data and auto-correction.
 - **XSS Mitigation**: Dynamic HTML is sanitized with `escapeHTML()` (rosters/status/confirmation, etc.).
 - **PII Minimization**: Logs are minimal and exclude personally identifiable information. All data stays locally; nothing is sent externally.
@@ -167,20 +167,56 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
   - PDF export similarly shows additional `Companions` columns.
 
 ## Directory Structure
-- `index.html`: App shell (views)
+- `index.html`: App shell (now loads from CDN)
 - `style.css`: Styles (light/dark, animations)
 - `script.js`: Logic (reception, roster import, persistence, i18n, admin, etc.)
-- `public/`: Images (logos, schedule)
 - `register_of_names/`: Sample rosters (xlsx)
-- `assets/fonts/`: Local-hosted fonts (`Inter`, `Noto Sans JP`, `Zen Maru Gothic`) and `fonts.css`
-- `vendor/sortable/`: SortableJS (offline)
-- `vendor/sheetjs/`: SheetJS (`xlsx.full.min.js`, offline)
-- `vendor/phosphor-icons/`: Phosphor Icons (CSS + webfonts, offline)
+
+(Note) Local fonts/vendor folders are no longer necessary. You may delete `assets/fonts/`, `vendor/`, and `public/` to reduce size.
 
 ## Notes
 - The app is fully local. If something is missing, verify the `assets/` and `vendor/` folders are intact.
 - Admin password default is `admin`. To change, update the corresponding part in `script.js`.
 - Names are matched using half-width space between family and given names. Full-width spaces are normalized to half-width.
+
+## Firebase Setup (optional online mode)
+If you want to run with Firebase (Email/Password admin login and Firestore persistence), follow:
+
+1) Create a Firebase project. Enable Authentication (Email/Password) and Cloud Firestore.
+
+2) Create `firebase-config.js` in project root:
+
+```html
+// Define before firebase-init.js
+window.firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_APP.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
+};
+```
+
+3) Serve or open `index.html`. Use the gear icon → login with an email/password account created in Firebase Auth.
+
+4) Minimal Firestore security rules (example; harden for production):
+
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isStaff() { return request.auth != null; }
+
+    match /participants/{id} {
+      allow create: if true;           // Consider App Check for abuse prevention
+      allow read, update, delete: if isStaff();
+    }
+    match /programs/{id} { allow read: if true; allow write: if isStaff(); }
+    match /sessions/{id} { allow read: if true; allow write: if isStaff(); }
+  }
+}
+```
 
 ## Libraries
 - SortableJS (drag & drop)

@@ -831,6 +831,13 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         adminView.classList.remove('hidden');
         // 設定ボタンをアニメーションで右へ退避
         setAdminButtonVisibilityWithAnimation(false);
+        try {
+            if (window.firebase && window.firebase.auth) {
+                const user = window.firebase.auth().currentUser;
+                const emailSpan = document.getElementById('admin-user-email');
+                if (emailSpan) emailSpan.textContent = (user && user.email) ? user.email : '';
+            }
+        } catch (_) {}
         renderAdminEditor();
         renderStatusTable();
     }
@@ -2264,18 +2271,31 @@ function columnLetter(index) {
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
 
-    document.getElementById('btn-no-capstone-complete').addEventListener('click', () => {
-        // キャップストーン体験に参加しない場合の受付完了処理
-        // ここでは特別な処理は行わず、最初の画面に戻る
+    document.getElementById('btn-no-capstone-complete').addEventListener('click', async () => {
+        try {
+            if (currentUser && window.firebase && window.firebase.firestore) {
+                const db = window.firebase.firestore();
+                await db.collection('participants').add({
+                    name: currentUser.name,
+                    furigana: currentUser.furigana || '',
+                    school: currentUser.school || '',
+                    grade: currentUser.grade || '',
+                    companions: 0,
+                    choices: [],
+                    assignedProgramId: null,
+                    status: 'briefing_only',
+                    createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } catch (e) { console.error(e); }
+        // 最初の画面に戻る
         navigateTo('initial-selection');
         document.querySelector('.content-wrapper').classList.remove('has-back-btn');
-        
         // フォームをクリア
         document.getElementById('walk-in-name').value = '';
         document.getElementById('walk-in-furigana').value = '';
         document.getElementById('walk-in-school').value = '';
         document.getElementById('walk-in-grade').value = '';
-        
         currentUser = null;
     });
 
@@ -2323,30 +2343,42 @@ function columnLetter(index) {
     // 管理者フロー
     document.getElementById('admin-entry-btn').addEventListener('click', () => adminLoginModal.classList.add('visible'));
     document.getElementById('btn-cancel-login').addEventListener('click', () => adminLoginModal.classList.remove('visible'));
-    document.getElementById('btn-admin-login').addEventListener('click', () => {
+    // Firebase Auth でメール/パスワードログイン
+    document.getElementById('btn-admin-login').addEventListener('click', async () => {
+        const emailInput = document.getElementById('admin-email');
         const passwordInput = document.getElementById('admin-password');
-        if (passwordInput.value === 'admin') {
-            adminLoginModal.classList.remove('visible');
-            passwordInput.value = '';
-            document.getElementById('password-error').textContent = '';
-            showAdminView();
-        } else {
-            // ポップアップ表示（既存のカスタムアラートを使用）
+        const errorEl = document.getElementById('password-error');
+        errorEl.textContent = '';
+        try {
+            if (window.firebase && window.firebase.auth) {
+                await window.firebase.auth().signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
+                adminLoginModal.classList.remove('visible');
+                emailInput.value = '';
+                passwordInput.value = '';
+                const user = window.firebase.auth().currentUser;
+                if (user) {
+                    const emailSpan = document.getElementById('admin-user-email');
+                    if (emailSpan) emailSpan.textContent = user.email || '';
+                }
+                showAdminView();
+            } else {
+                // Firebase未設定の場合は従来パスワード 'admin' でフォールバック
+                if (passwordInput.value === 'admin') {
+                    adminLoginModal.classList.remove('visible');
+                    passwordInput.value = '';
+                    showAdminView();
+                } else {
+                    showCustomAlert('wrongPassword');
+                    errorEl.textContent = translations[currentLanguage].wrongPassword;
+                }
+            }
+        } catch (e) {
+            console.error(e);
             showCustomAlert('wrongPassword');
-            // エラーメッセージを赤文字で表示
-            document.getElementById('password-error').textContent = translations[currentLanguage].wrongPassword;
-            // 簡易的な連続アタック対策: 入力をロック＆解除までの遅延
-            passwordInput.disabled = true;
-            document.getElementById('btn-admin-login').disabled = true;
-            setTimeout(() => {
-                passwordInput.disabled = false;
-                document.getElementById('btn-admin-login').disabled = false;
-                passwordInput.focus();
-                passwordInput.select();
-            }, 2000);
+            errorEl.textContent = (e && e.message) ? e.message : translations[currentLanguage].wrongPassword;
         }
     });
-    // Enterキーでログイン（パスワード入力中）
+    // Enterキーでログイン
     const adminPasswordInput = document.getElementById('admin-password');
     if (adminPasswordInput) {
         adminPasswordInput.addEventListener('keydown', (e) => {
@@ -2354,6 +2386,20 @@ function columnLetter(index) {
                 e.preventDefault();
                 document.getElementById('btn-admin-login').click();
             }
+        });
+    }
+    // ログアウト
+    const adminLogoutBtn = document.getElementById('btn-admin-logout');
+    if (adminLogoutBtn) {
+        adminLogoutBtn.addEventListener('click', async () => {
+            try {
+                if (window.firebase && window.firebase.auth) {
+                    await window.firebase.auth().signOut();
+                }
+            } catch (e) { console.error(e); }
+            document.getElementById('admin-user-email').textContent = '';
+            // 受付画面へ戻す
+            showReceptionView();
         });
     }
     
@@ -2510,13 +2556,35 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     // 完了処理
     document.getElementById('btn-confirm-reservation').addEventListener('click', () => {
         const isReserved = reservations.some(r => r.name === currentUser.name);
+        const finalizeLocal = (assignedProgram) => {
+            showSuccessScreen(currentUser.name, assignedProgram, !assignedProgram);
+        };
+        const writeToFirestore = async (assignedProgramId) => {
+            try {
+                if (window.firebase && window.firebase.firestore) {
+                    const db = window.firebase.firestore();
+                    const doc = {
+                        name: currentUser.name,
+                        furigana: currentUser.furigana || '',
+                        school: currentUser.school || '',
+                        grade: currentUser.grade || '',
+                        companions: currentUser.companions || 0,
+                        choices: currentUser.choices || [],
+                        assignedProgramId: assignedProgramId || null,
+                        status: assignedProgramId ? 'assigned' : (settings.prioritizeReserved && !isReserved ? 'waiting' : 'registered'),
+                        createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    await db.collection('participants').add(doc);
+                }
+            } catch (e) { console.error('Firestore write error', e); }
+        };
         if (settings.prioritizeReserved && !isReserved) {
             waitingList.push(currentUser);
             saveReceptionData(); // IndexedDBに保存
-            showSuccessScreen(currentUser.name, null, true);
+            writeToFirestore(null).finally(() => finalizeLocal(null));
         } else {
             const assignedProgram = assignProgram(currentUser);
-            showSuccessScreen(currentUser.name, assignedProgram);
+            writeToFirestore(assignedProgram ? assignedProgram.id : null).finally(() => finalizeLocal(assignedProgram));
         }
     });
     
@@ -2602,6 +2670,42 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     checkRosterDataStatus().catch(error => {
         console.error('名簿データチェックエラー:', error);
     });
+
+    // Firestore によるリアルタイム参加者一覧（簡易）。ログイン時のみ起動。
+    try {
+        if (window.firebase && window.firebase.auth && window.firebase.firestore) {
+            window.firebase.auth().onAuthStateChanged(user => {
+                const emailSpan = document.getElementById('admin-user-email');
+                if (emailSpan) emailSpan.textContent = user?.email || '';
+                if (!user) return;
+                const db = window.firebase.firestore();
+                db.collection('participants').orderBy('createdAt', 'desc').limit(200)
+                    .onSnapshot(snap => {
+                        // 受付状況タブ下部に一覧を描画（存在しなければ作成）
+                        let container = document.getElementById('firestore-participants');
+                        if (!container) {
+                            const tab = document.getElementById('tab-status');
+                            if (!tab) return;
+                            container = document.createElement('div');
+                            container.id = 'firestore-participants';
+                            container.style.marginTop = '20px';
+                            tab.appendChild(container);
+                        }
+                        const rows = [];
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            rows.push(`<tr><td>${escapeHTML(d.name || '')}</td><td>${escapeHTML(d.status || '')}</td><td>${escapeHTML(d.assignedProgramId || '')}</td></tr>`);
+                        });
+                        container.innerHTML = `
+                            <h4 style="margin-top: 24px;">Firestore 参加者一覧（最新200件）</h4>
+                            <table class="simple-table">
+                                <thead><tr><th>氏名</th><th>状態</th><th>割当</th></tr></thead>
+                                <tbody>${rows.join('')}</tbody>
+                            </table>`;
+                    });
+            });
+        }
+    } catch (e) { console.error(e); }
 
     // 名簿検索イベント
     const rosterSearchInput = document.getElementById('roster-search-input');

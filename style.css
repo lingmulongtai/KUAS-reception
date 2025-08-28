@@ -130,9 +130,7 @@ body.dark-mode .header-bar {
 }
 
 /* ダークモード時のヘッダーロゴ */
-body.dark-mode .header-logo {
-    content: url('public/kuas_logo_darkmode.png');
-}
+body.dark-mode .header-logo { content: url('public/kuas_logo_darkmode.png'); }
 
 /* --- 全画面共通のコンテナ --- */
 .view-container {

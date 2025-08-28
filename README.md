@@ -37,7 +37,7 @@
 ## 動作環境
 - 推奨ブラウザ: 最新版の Chrome / Edge
 - OS: Windows / macOS（Windowsで動作確認）
-- ネットワーク: 完全オフラインで動作（外部通信なし）
+- ネットワーク: オンライン（CDNからフォント/アイコン/ライブラリを取得）
 
 ## 起動方法
 1. このフォルダを任意の場所に配置。
@@ -149,9 +149,9 @@
 - クリア方法: 管理画面の「受付データをリセット」。
 
 ## セキュリティとプライバシー
-- **CSP（Content-Security-Policy）**: `index.html` の `<meta http-equiv="Content-Security-Policy">` で厳格なCSPを設定。
-  - 許可ソースはすべて `self` のみ（完全ローカル）。
-  - 例: `style-src 'self' 'unsafe-inline'`, `font-src 'self' data:`, `img-src 'self' data:`。
+- **CSP（Content-Security-Policy）**: `index.html` の `<meta http-equiv="Content-Security-Policy">` をCDN対応に更新済み。
+  - 許可ドメイン（例）: `fonts.googleapis.com`, `fonts.gstatic.com`, `cdn.jsdelivr.net`, Firebase 関連 (`www.gstatic.com`, `firestore.googleapis.com` など)
+  - 画像はデモとして `images.unsplash.com`, `placehold.co` を許可
 - **入力のハードニング**: 入力欄に `autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"` を設定。
 - **XSS対策**: 動的に生成するHTMLは `escapeHTML()` によるサニタイズを実施。
 - **PII最小化**: 個人情報を含むログは出力せず、データは外部送信しません（ローカル保存のみ）。
@@ -167,20 +167,56 @@
   - PDF出力も同様に `Companions` 列群を追加して表示します。
 
 ## ディレクトリ構成
-- `index.html`: アプリ本体（画面定義）
+- `index.html`: アプリ本体（CDN読み込みに変更）
 - `style.css`: スタイル（ライト/ダーク対応、アニメーション含む）
 - `script.js`: 機能実装（受付ロジック、名簿読み込み、保存/復元、多言語、管理画面など）
-- `public/`: ロゴや画像資産
 - `register_of_names/`: 名簿サンプル（xlsx）
-- `assets/fonts/`: ローカルホストされた `Inter` / `Noto Sans JP` / `Zen Maru Gothic` の woff2 と `fonts.css`
-- `vendor/sortable/`: SortableJS（オフライン版）
-- `vendor/sheetjs/`: SheetJS（`xlsx.full.min.js` オフライン版）
-- `vendor/phosphor-icons/`: Phosphor Icons（CSS+Webfonts オフライン版）
+  
+（注）ローカルのフォント/ベンダーファイルは不要になりました。容量削減のため `assets/fonts/` と `vendor/`、`public/` は削除可能です。
 
 ## 既知の注意点
 - 完全ローカル対応のため、外部CDNを利用していません。必要ファイルが不足している場合は `assets/` / `vendor/` 配下の構成をご確認ください。
 - 管理者パスワードの初期値は `admin` です。変更する場合は `script.js` 内の該当箇所を修正してください。
 - 氏名入力は「姓 名」の半角スペース区切りで照合します（全角スペースは自動で半角に正規化）。
+
+## Firebase 設定（任意のオンライン運用）
+Firebase を利用して、管理者のメール/パスワードログインと Firestore への保存を行う場合：
+
+1) Firebase プロジェクトを作成し、Authentication（Email/Password）と Cloud Firestore を有効化。
+
+2) プロジェクト直下に `firebase-config.js` を作成：
+
+```html
+// firebase-init.js より前に定義してください
+window.firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_APP.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
+};
+```
+
+3) `index.html` を開き、歯車ボタンから管理者ログイン（Firebase で作成した Email/Password）。
+
+4) Firestore セキュリティルール（例。実運用では厳格化してください）
+
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isStaff() { return request.auth != null; }
+
+    match /participants/{id} {
+      allow create: if true;           // App Check 等で濫用対策を
+      allow read, update, delete: if isStaff();
+    }
+    match /programs/{id} { allow read: if true; allow write: if isStaff(); }
+    match /sessions/{id} { allow read: if true; allow write: if isStaff(); }
+  }
+}
+```
 
 ## ライブラリ
 - SortableJS（ドラッグ&ドロップ）

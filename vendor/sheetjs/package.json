@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
-  }
-}
-"overrides": {
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
-}
