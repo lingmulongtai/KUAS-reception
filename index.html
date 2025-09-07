@@ -12,11 +12,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" as="image" href="public/opencampus-img01.jpg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-    <!-- ドラッグ＆ドロップとExcel操作のライブラリ（オフライン用） -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- ドラッグ＆ドロップとExcel操作のライブラリ（オンライン最適化：defer） -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 </head>
 <body>
 
@@ -25,7 +32,7 @@
     <!-- ヘッダーバー -->
     <header class="header-bar">
         <div class="header-content">
-            <img src="public/kuas_logo.jpg" alt="KUAS Logo" class="header-logo">
+            <img src="public/kuas_logo.jpg" alt="KUAS Logo" class="header-logo" decoding="async" fetchpriority="high">
         </div>
     </header>
 
@@ -341,7 +348,7 @@
                 <button id="btn-close-help" class="close-btn"><i class="ph ph-x"></i></button>
             </div>
             <div class="help-image-container">
-                <img src="public/schedule-scaled.jpg" alt="スケジュール" class="help-image">
+                <img src="public/schedule-scaled.jpg" alt="スケジュール" class="help-image" loading="lazy" decoding="async" fetchpriority="low">
             </div>
         </div>
     </div>

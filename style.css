@@ -989,6 +989,115 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .form-row { flex-direction: column; gap: 10px; }
 }
 
+/* スマートフォン向け（幅768px以下）の追加最適化 */
+@media (max-width: 768px) {
+    .header-bar { padding: 16px 0; }
+    .header-content { height: 60px; }
+    .header-logo { height: 80px; margin: 10px; }
+    .view-container { padding: 92px 12px 28px 12px; }
+    .content-wrapper { border-radius: 20px; }
+    h2 { font-size: 22px; }
+    h3 { font-size: 18px; }
+    .button-group { gap: 18px; }
+    .top-bar-buttons { top: 90px; right: 8px; }
+}
+
+/* 小型スマートフォン向け（幅480px以下） */
+@media (max-width: 480px) {
+    body { background-attachment: scroll; }
+    .header-bar { padding: 10px 0; }
+    .header-content { height: 52px; }
+    .header-logo { height: 64px; margin: 6px; }
+    .view-container { padding: 78px 8px 20px 8px; }
+    .content-wrapper { padding: 18px 12px; border-radius: 16px; }
+    h1 { font-size: 22px; }
+    h1[data-lang-key="mainTitle"] { font-size: clamp(20px, 7vw, 28px); }
+    h2 { font-size: 20px; }
+    h3 { font-size: 17px; }
+    .button-group { gap: 12px; }
+    .btn-large { height: 120px; min-width: 130px; font-size: 16px; padding: 14px 12px; border-radius: 14px; }
+    .btn-large i { font-size: 30px; }
+    .top-bar-buttons { top: 66px; right: 4px; gap: 4px; }
+    .top-bar-btn { width: 32px; height: 32px; font-size: 18px; }
+    .program-grid { grid-template-columns: 1fr; }
+    .program-card { padding: 14px; }
+    .program-card h3 { font-size: 18px; }
+    .program-card p { font-size: 13px; }
+    .program-choice-btns { gap: 6px; }
+    .program-choice-btns button { font-size: 10px; padding: 6px; }
+    .input-group label { font-size: 14px; }
+    .input-group input, .input-group textarea, .input-group select { padding: 12px; font-size: 14px; }
+    .modal-content-inner { width: 96%; padding: 18px 14px; max-width: 360px; }
+    .back-btn { bottom: 12px; padding: 10px 16px; font-size: 15px; }
+}
+
+/* タブレット向け最適化 */
+@media (max-width: 1024px) {
+    .header-content { height: 64px; }
+    .header-logo { height: 90px; margin: 10px; }
+    .view-container { padding: 100px 12px 32px 12px; }
+    .content-wrapper { max-width: 840px; padding: 40px 30px; }
+    .program-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .top-bar-buttons { top: 96px; right: 8px; gap: 8px; }
+}
+
+/* スマートフォン向け最適化（一般） */
+@media (max-width: 600px) {
+    body { background-attachment: scroll; }
+    .header-bar { padding: 12px 0; }
+    .header-content { height: 56px; }
+    .header-logo { height: 72px; margin: 8px; }
+    .view-container { padding: 84px 10px 24px 10px; align-items: flex-start; }
+    .content-wrapper { padding: 22px 16px; border-radius: 18px; }
+    h1 { font-size: 24px; }
+    h1[data-lang-key="mainTitle"] { font-size: clamp(22px, 6vw, 32px); white-space: normal; }
+    .button-group { gap: 16px; }
+    .btn-large { height: 140px; min-width: 160px; padding: 18px 16px; font-size: 18px; border-radius: 16px; }
+    .btn-large i { font-size: 36px; }
+    .top-bar-buttons { top: 76px; right: 6px; gap: 6px; }
+    .top-bar-btn { width: 36px; height: 36px; font-size: 22px; }
+    .program-grid { grid-template-columns: 1fr; }
+    .program-card { padding: 16px; }
+    .program-choice-btns { gap: 8px; }
+    .program-choice-btns button { font-size: 11px; padding: 8px; }
+    .modal-content-inner { width: 94%; padding: 22px 16px; }
+    .help-content { max-width: 96vw !important; max-height: 90vh !important; }
+    .help-image-container { height: calc(90vh - 72px); }
+    .back-btn { bottom: 14px; padding: 12px 18px; font-size: 16px; }
+
+    /* ホーム: 予約あり/予約なし を縦並びに */
+    #initial-selection .button-group { flex-direction: column; align-items: stretch; }
+    #initial-selection .button-group .btn-large { width: 100%; min-width: 0; height: 128px; }
+
+    /* 予約なしフォームの整列最適化 */
+    #walk-in-section .input-group { gap: 12px; }
+    #walk-in-section .form-row { flex-direction: column; gap: 8px; }
+    #walk-in-section .form-col { flex: 1 1 100%; width: 100%; }
+    #walk-in-section input, #walk-in-section select, #walk-in-section textarea { font-size: 16px; }
+
+    /* 管理画面: タブ/入力/表のモバイル最適化 */
+    .admin-tabs { overflow-x: auto; white-space: nowrap; gap: 8px; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+    .admin-tab { flex: 0 0 auto; padding: 8px 12px; font-size: 14px; }
+    .admin-tab-content { padding: 0; }
+    .editor-item-row { flex-direction: column; align-items: stretch; gap: 6px; }
+    .editor-item-row label { width: 100%; text-align: left; padding-right: 0; margin-bottom: 2px; }
+    #roster-reservations-table, #roster-briefing-table, #status-table, #waiting-list-table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    #roster-reservations-table th, #roster-reservations-table td,
+    #roster-briefing-table th, #roster-briefing-table td,
+    #status-table th, #status-table td,
+    #waiting-list-table th, #waiting-list-table td { padding: 6px; font-size: 13px; }
+    .status-summary { padding: 12px; }
+}
+
+/* 小型端末（狭幅）向け最適化 */
+@media (max-width: 400px) {
+    .button-group { gap: 12px; }
+    .btn-large { height: 128px; min-width: 140px; font-size: 16px; }
+    .btn-large i { font-size: 32px; }
+    .top-bar-buttons { top: 70px; right: 4px; gap: 4px; }
+    .top-bar-btn { width: 34px; height: 34px; font-size: 20px; }
+}
+
 /* --- キャップストーン体験に参加しないセクションのスタイル --- */
 .no-capstone-info {
     background: var(--card-bg);
