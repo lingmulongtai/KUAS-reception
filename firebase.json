@@ -63,11 +63,16 @@
     }
   ],
   "hosting": {
-    "public": "public",
+    "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "functions/**",
+      "kuas-reception/**",
+      "dataconnect/**",
+      "dataconnect-generated/**",
+      "register_of_names/**"
     ]
   }
 }
