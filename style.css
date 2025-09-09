@@ -1119,3 +1119,39 @@ body.dark-mode .no-capstone-info {
     background: var(--card-bg);
     border-color: #444;
 }
+
+/* --- 追加のスマートフォン最適化（優先適用のため末尾に配置） --- */
+@media (max-width: 600px) {
+    .header-bar { padding: 8px 0; }
+    .header-content { height: 48px; }
+    .header-logo { height: 58px; margin: 6px; }
+
+    /* 固定トップボタンの位置とサイズをさらに小さく */
+    .top-bar-buttons { top: 88px; right: 6px; gap: 6px; }
+    .top-bar-btn { width: 34px; height: 34px; font-size: 20px; }
+
+    /* ビューの上部余白を圧縮しつつ中央配置を維持 */
+    .view-container { padding: 72px 10px 22px 10px; align-items: center; justify-content: center; }
+
+    /* ホームのコンテナを常に余白ができるように縮小 */
+    .content-wrapper {
+        width: min(94vw, 560px);
+        padding: 22px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-bar { padding: 6px 0; }
+    .header-content { height: 44px; }
+    .header-logo { height: 50px; margin: 4px; }
+
+    .top-bar-buttons { top: 78px; right: 4px; gap: 4px; }
+    .top-bar-btn { width: 30px; height: 30px; font-size: 18px; }
+
+    .view-container { padding: 64px 8px 18px 8px; align-items: center; justify-content: center; }
+
+    .content-wrapper {
+        width: min(94vw, 480px);
+        padding: 18px 12px;
+    }
+}
