@@ -1,4 +1,5 @@
 // Firebase initialization (compat). Requires window.firebaseConfig defined in firebase-config.js
+
 (function() {
 	try {
 		if (!window.firebase || !window.firebase.initializeApp) {

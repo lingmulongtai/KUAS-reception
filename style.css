@@ -721,9 +721,22 @@ body.dark-mode .full-overlay { background-color: rgba(0, 0, 0, 0.7); }
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+.top-bar-btn.logged-in {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #ffffff;
+}
 .top-bar-btn i { color: inherit; }
 .top-bar-btn:hover { 
     background: rgba(255, 255, 255, 1); 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+/* ログイン中はホバーしても白くしない */
+.top-bar-btn.logged-in:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
@@ -732,8 +745,19 @@ body.dark-mode .top-bar-btn {
     border: 1px solid rgba(143, 199, 175, 0.28); 
     color: var(--text-color); 
 }
+body.dark-mode .top-bar-btn.logged-in {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: #0f1a14;
+}
 body.dark-mode .top-bar-btn:hover {
     background: rgba(22, 44, 36, 0.95);
+}
+/* ダークモードのログイン中ホバー */
+body.dark-mode .top-bar-btn.logged-in:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: #0f1a14;
 }
 body.dark-mode .top-bar-btn i { color: var(--text-color); }
 

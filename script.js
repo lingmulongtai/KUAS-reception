@@ -423,6 +423,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             password: "パスワード",
             login: "ログイン",
             cancel: "キャンセル",
+            logout: "ログアウト",
             choice1: "第1希望",
             choice2: "第2希望",
             choice3: "第3希望",
@@ -558,6 +559,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             password: "Password",
             login: "Login",
             cancel: "Cancel",
+            logout: "Logout",
             choice1: "1st Choice",
             choice2: "2nd Choice",
             choice3: "3rd Choice",
@@ -772,6 +774,19 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             adminEntryBtn.addEventListener('animationend', onEnd);
         }
         isAdminBtnVisible = shouldShow;
+    }
+
+    function updateAdminEntryVisual(isLoggedIn) {
+        if (!adminEntryBtn) return;
+        try {
+            adminEntryBtn.classList.toggle('logged-in', !!isLoggedIn);
+            const icon = adminEntryBtn.querySelector('i');
+            if (icon) {
+                // ログイン時は filled shield-check、未ログイン時は gear
+                icon.className = isLoggedIn ? 'ph ph-shield-check' : 'ph ph-gear-six';
+            }
+            adminEntryBtn.title = isLoggedIn ? (currentLanguage === 'ja' ? '管理画面（ログイン中）' : 'Admin (Logged in)') : (currentLanguage === 'ja' ? '管理画面へ' : 'Open Admin');
+        } catch (_) {}
     }
 
     function showSection(sectionId) {
@@ -2341,7 +2356,23 @@ function columnLetter(index) {
     });
 
     // 管理者フロー
-    document.getElementById('admin-entry-btn').addEventListener('click', () => adminLoginModal.classList.add('visible'));
+    document.getElementById('admin-entry-btn').addEventListener('click', () => {
+        try {
+            // Firebase 認証済みならそのまま管理画面へ
+            if (window.firebase && window.firebase.auth && window.firebase.auth().currentUser) {
+                showAdminView();
+                return;
+            }
+        } catch (_) {}
+        // フォールバックセッションがあれば維持
+        const fallbackSession = localStorage.getItem('adminSession') === 'true';
+        if (fallbackSession) {
+            showAdminView();
+            return;
+        }
+        // 未ログイン時のみモーダル表示
+        adminLoginModal.classList.add('visible');
+    });
     document.getElementById('btn-cancel-login').addEventListener('click', () => adminLoginModal.classList.remove('visible'));
     // Firebase Auth でメール/パスワードログイン
     document.getElementById('btn-admin-login').addEventListener('click', async () => {
@@ -2361,12 +2392,17 @@ function columnLetter(index) {
                     if (emailSpan) emailSpan.textContent = user.email || '';
                 }
                 showAdminView();
+                // Firebase 認証は SDK が状態保持するため、ローカルのフラグは不要
+                updateAdminEntryVisual(true);
             } else {
                 // Firebase未設定の場合は従来パスワード 'admin' でフォールバック
                 if (passwordInput.value === 'admin') {
                     adminLoginModal.classList.remove('visible');
                     passwordInput.value = '';
+                    // フォールバックセッションを保持（ログアウトまで有効）
+                    try { localStorage.setItem('adminSession', 'true'); } catch (_) {}
                     showAdminView();
+                    updateAdminEntryVisual(true);
                 } else {
                     showCustomAlert('wrongPassword');
                     errorEl.textContent = translations[currentLanguage].wrongPassword;
@@ -2397,11 +2433,38 @@ function columnLetter(index) {
                     await window.firebase.auth().signOut();
                 }
             } catch (e) { console.error(e); }
+            // フォールバックセッションをクリア
+            try { localStorage.removeItem('adminSession'); } catch (_) {}
             document.getElementById('admin-user-email').textContent = '';
             // 受付画面へ戻す
             showReceptionView();
+            updateAdminEntryVisual(false);
         });
     }
+
+    // ページ読み込み時、既存セッションがあれば管理画面を自動表示
+    try {
+        if (window.firebase && window.firebase.auth) {
+            // Firebaseは非同期で状態復元されるため、onAuthStateChangedで遷移
+            window.firebase.auth().onAuthStateChanged(function(user){
+                updateAdminEntryVisual(!!user);
+                if (user) {
+                    const emailSpan = document.getElementById('admin-user-email');
+                    if (emailSpan) emailSpan.textContent = user.email || '';
+                    // 既に受付画面表示中なら管理画面へ
+                    if (document.getElementById('admin-view').classList.contains('hidden')) {
+                        showAdminView();
+                    }
+                }
+            });
+        } else {
+            const fallbackSession = localStorage.getItem('adminSession') === 'true';
+            updateAdminEntryVisual(fallbackSession);
+            if (fallbackSession) {
+                showAdminView();
+            }
+        }
+    } catch (_) {}
     
 // 未保存変更がある場合に離脱確認してからタブ切り替え
 document.querySelectorAll('.admin-tab').forEach(tab => {

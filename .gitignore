@@ -67,3 +67,10 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# 個人情報・作業ファイルを除外
+register_of_names/**
+*.xlsx
+*.local
+*.secret.*
+.env*
