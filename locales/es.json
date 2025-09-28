@@ -1,0 +1,15 @@
+{
+    "mainTitle": "Recepción de Experiencia Mini-Capstone de la Facultad de Ingeniería",
+    "reserved": "Reservado",
+    "walkIn": "Sin reserva",
+    "back": "Volver",
+    "enterFullName": "Por favor, ingrese su nombre completo",
+    "reservedNameInputTitle": "Reservado - Ingrese su nombre",
+    "walkInNameInputTitle": "Sin reserva - Ingrese su nombre",
+    "namePlaceholder": "Ej: Taro Yamada",
+    "checkReservation": "Verificar Reserva",
+    "confirmDetails": "Confirmar sus datos",
+    "confirmSubmit": "Confirmar",
+    "changeReservation": "Cambiar preferencias",
+    "name": "Nombre"
+}

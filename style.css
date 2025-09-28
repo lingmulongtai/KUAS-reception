@@ -767,6 +767,40 @@ body.dark-mode .top-bar-btn i { color: var(--text-color); }
 .top-bar-buttons #theme-switch-btn { order: 3; }
 .top-bar-buttons #help-btn { order: 4; }
 
+/* --- Language Menu --- */
+.lang-menu {
+    display: none;
+    position: absolute;
+    top: 55px;
+    right: 110px;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1001;
+    overflow: hidden;
+    padding: 4px;
+    flex-direction: column;
+}
+
+.lang-menu a {
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--text-color);
+    display: block;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.lang-menu a:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.lang-menu.visible {
+    display: flex;
+}
+
 /* --- トップバーのアニメーション --- */
 @keyframes slide-out-right {
     from { transform: translateX(0); opacity: 1; }

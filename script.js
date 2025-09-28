@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- IndexedDB データベース管理 ---
     const dbName = 'KUASReceptionDB';
-    const dbVersion = 1;
+    const dbVersion = 2; // スキーマ変更のためバージョンを上げる
     let db;
 
     // IndexedDB初期化
@@ -18,10 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 
-                // ユーザーデータ用のストア
-                if (!db.objectStoreNames.contains('userData')) {
-                    const userStore = db.createObjectStore('userData', { keyPath: 'id' });
-                    userStore.createIndex('timestamp', 'timestamp', { unique: false });
+                // ユーザーデータ用のストアは削除
+                if (db.objectStoreNames.contains('userData')) {
+                    db.deleteObjectStore('userData');
                 }
                 
                 // フォームデータ用のストア
@@ -180,18 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData('formData', formData);
     }
 
-    // 受付データ保存（確定済みリストと待機者リスト）
-    function saveReceptionData() {
-        const receptionData = {
-            id: 'receptionData',
-            confirmedAttendees: confirmedAttendees,
-            waitingList: waitingList,
-            programEnrollment: programEnrollment
-        };
-        
-        saveData('userData', receptionData);
-    }
-
     // 名簿データ保存
     function saveRosterData() {
         const rosterData = {
@@ -202,25 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         saveData('userData', rosterData);
-    }
-
-    // 受付データ復元
-    async function restoreReceptionData() {
-        const data = await getData('userData', 'receptionData');
-        if (data) {
-            if (data.confirmedAttendees) {
-                confirmedAttendees = data.confirmedAttendees;
-            }
-            if (data.waitingList) {
-                waitingList = data.waitingList;
-            }
-            if (data.programEnrollment) {
-                programEnrollment = data.programEnrollment;
-            }
-            
-            // 復元完了時にインジケーターを表示
-            showSaveIndicator('受付データを復元しました');
-        }
     }
 
     // フォームデータ復元
@@ -297,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await initDB();
             await restoreFormData();
-            await restoreReceptionData(); // 受付データも復元
             setupAutoSave();
         } catch (error) {
             console.error('アプリ初期化エラー:', error);
@@ -337,235 +304,123 @@ document.addEventListener('DOMContentLoaded', () => {
     let reservations = [ { name: '山田 太郎', choices: ['p1', 'p3', 'p2'] }, { name: '佐藤 花子', choices: ['p2', 'p5', 'p1'] } ];
     let briefingSessionAttendees = [];
     
-    let programEnrollment = {};
-    let confirmedAttendees = [];
-    let waitingList = [];
     let currentChoices = { 1: null, 2: null, 3: null };
     let currentUser = null;
     let sortable = null;
     let navigationHistory = [];
-    let currentLanguage = 'ja';
-    let currentTheme = 'light';
+let currentLanguage = window.currentLanguage || 'ja';
+
+// Bridge: mimic old `translations[currentLanguage].key` API using locales in window.translations
+const translations = new Proxy({}, {
+    get: function(_, lang) {
+        return new Proxy({}, {
+            get: function(__, key) {
+                const dict = (window.translations && window.translations[lang]) || {};
+                const val = dict[key];
+                if (typeof val === 'string') return val;
+                if (key === 'confirmDelete') {
+                    return (title) => {
+                        const tmpl = dict.confirmDelete || (lang === 'ja' ? '「{title}」を削除しますか？' : 'Are you sure you want to delete "{title}"?');
+                        return tmpl.replace('{title}', title);
+                    };
+                }
+                if (key === 'assignConfirm') {
+                    return (count) => {
+                        const tmpl = dict.assignConfirm || (lang === 'ja' ? '{count}人をプログラムに割り当てます。よろしいですか？' : 'Assign {count} people to programs. Are you sure?');
+                        return tmpl.replace('{count}', count);
+                    };
+                }
+                if (key === 'assignComplete') {
+                    return (count) => {
+                        const tmpl = dict.assignComplete || (lang === 'ja' ? '{count}人の割り当てが完了しました。' : 'Assignment for {count} people is complete.');
+                        return tmpl.replace('{count}', count);
+                    };
+                }
+                return val;
+            }
+        });
+    }
+});
+
+function getTranslation(key) {
+    const langMap = (window.translations && window.translations[currentLanguage]) || {};
+    return typeof langMap[key] === 'string' ? langMap[key] : '';
+}
+
+function getTranslatedValue(defaultValue, englishValue) {
+    if (currentLanguage === 'en' && englishValue) {
+        return englishValue;
+    }
+    return defaultValue || englishValue || '';
+}
+
+let currentTheme = 'light';
     let settings = {
         prioritizeReserved: true,
         prioritizeGrade: true // 予約なしの学年優先（デフォルトON）
     };
-
 // 管理パネル（プログラム編集）の未保存変更フラグ
 let adminEditorDirty = false;
-
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
-let rosterMappingInfo = { reservations: null, briefing: null };
-
-    // --- 多言語対応 ---
-    const translations = {
-        ja: {
-            mainTitle: "工学部ミニキャップストーン体験 受付",
-            reserved: "予約あり",
-            walkIn: "予約なし",
-            back: "戻る",
-            enterFullName: "お名前をフルネームで入力してください",
-            reservedNameInputTitle: "予約あり - お名前入力",
-            walkInNameInputTitle: "予約なし - お名前入力",
-            namePlaceholder: "例：山田 太郎",
-            checkReservation: "予約を確認する",
-            confirmDetails: "ご予約内容の確認",
-            confirmSubmit: "この内容で確定",
-            changeReservation: "希望を変更する",
-            name: "お名前",
-            furigana: "フリガナ",
-            furiganaPlaceholder: "例：ヤマダ タロウ",
-            requiredMark: "必須",
-            school: "学校名",
-            schoolPlaceholder: "例：〇〇高等学校",
-            grade: "学年",
-            selectGrade: "選択してください",
-            grade1: "高校1年生",
-            grade2: "高校2年生",
-            grade3: "高校3年生",
-            other: "その他",
-            toProgramSelection: "キャップストーン体験プログラム選択へ",
-            selectProgramTitle: "希望プログラムを選択してください",
-            selectProgramDesc: "第1〜第3希望まで選択できます。",
-            confirmChoices: "選択を確定する",
-            successTitle: "受付が完了しました！",
-            successDesc: "あなたは以下のプログラムに確定しました。",
-            successWaiting: "プログラムは後ほど割り当てられます。",
-            backToHome: "最初の画面に戻る",
-            adminPanel: "管理パネル",
-            tabProgramEdit: "プログラム編集",
-            tabFileLoad: "ファイル読み込み",
-            tabRoster: "名簿プレビュー",
-            tabStatus: "受付状況",
-            tabSettings: "設定",
-            jsonEditor: "JSON表示/編集",
-            applyJson: "JSONを適用",
-            addProgram: "＋ プログラムを追加",
-            saveChanges: "変更を保存",
-            fileUpload1: "① ミニキャップストーン体験 予約者名簿 (xlsx)",
-            fileUpload2: "② 工学部説明会 予約者名簿 (xlsx)",
-            loadProgress: "③ 進行状況を読み込む (.json)",
-            exportExcel: "Excelファイルに書き出し",
-            exportData: "書き出し",
-            exportPrompt: "書き出し形式を入力してください（excel / pdf）",
-            exportInvalid: "不正な形式です。excel または pdf を入力してください。",
-            exportTitle: "受付状況",
-            popupBlocked: "ポップアップがブロックされました。ブラウザの設定をご確認ください。",
-            exportSelect: "書き出し形式を選択",
-            exportExcelBtn: "Excel",
-            exportPdfBtn: "PDF",
-            rosterMapping: "列の対応: A列=氏名, B列=第1希望, C列=第2希望, D列=第3希望",
-            rosterReservations: "ミニキャップストーン体験 予約者名簿",
-            rosterBriefing: "工学部説明会 参加者名簿",
-            saveProgress: "進行状況を保存",
-            backToReception: "受付画面に戻る",
-            adminLogin: "管理者ログイン",
-            password: "パスワード",
-            login: "ログイン",
-            cancel: "キャンセル",
-            logout: "ログアウト",
-            choice1: "第1希望",
-            choice2: "第2希望",
-            choice3: "第3希望",
-            nameHeader: "お名前",
-            programHeader: "プログラム",
-            statusHeader: "受付状況 (人)",
-            attendeesHeader: "参加者一覧",
-            waitingHeader: "割り当て待機中",
-            furiganaHeader: "フリガナ",
-            timeHeader: "時間",
-            noAttendees: "まだいません",
-            unselected: "未選択",
-            titleLabel: "タイトル",
-            descriptionLabel: "説明文",
-            capacityLabel: "定員",
-            deleteButton: "削除",
-            showTranslation: "英語翻訳表示",
-            autoTranslate: "自動英訳",
-            titleEnLabel: "タイトル(英)",
-            descriptionEnLabel: "説明文(英)",
-            full: "定員いっぱいです",
-            assignWaiting: "待機者を一括割り当て",
-            prioritizeReserved: "予約者優先割り当て",
-            prioritizeDesc: "この設定をONにすると、予約なしの参加者は受付時に「割り当て待機」状態になります。全員の受付完了後、「受付状況」タブの「待機者を一括割り当て」ボタンを押してプログラムを確定してください。",
-            prioritizeGrade: "学年優先割り当て（予約なし）",
-            prioritizeGradeDesc: "ONのとき、予約なしの待機者を学年（高3→高2→高1→その他）の優先順で割り当てます。OFFのときは先着順です。",
-            confirmedList: "確定済みリスト",
-            waitingList: "待機者リスト",
-            cardView: "カード表示",
-            totalConfirmed: "確定済み合計",
-            totalWaiting: "待機中合計",
-            totalAttendees: "受付合計",
-            resetData: "受付データをリセット",
-            // Alert Messages
-            errorEnterName: "お名前を入力してください。",
-            errorNotFound: "予約が見つかりません。お名前をご確認いただくか、当日参加として受付してください。",
-            errorAllFields: "すべての項目を入力してください。",
-            errorSelectProgram: "希望プログラムを一つ以上選択してください。",
-            errorJsonFormat: "JSONの形式が正しくありません。",
-            infoJsonApplied: "JSONからデータを適用しました。",
-            infoChangesSaved: "変更を保存しました。",
-            settingsSaved: "設定を保存しました。",
-            errorProgramFull: "このプログラムは満員です。別のプログラムを選択してください。",
-            errorInvalidProgram: "プログラムのデータに不整合があります。別のプログラムを選択してください。",
-            errorDuplicateChoices: "同じプログラムを複数の希望に指定することはできません。",
-            errorUnexpected: "予期しないエラーが発生しました。やり直してください。",
-            confirmDelete: (title) => `「${title}」を削除しますか？`,
-            assignConfirm: (count) => `${count}人をプログラムに割り当てます。よろしいですか？`,
-            assignComplete: (count) => `${count}人の割り当てが完了しました。`,
-            noWaiting: "待機中の参加者はいません。",
-            noRosterData: "名簿データがインポートされていません。管理画面から名簿ファイルをインポートしてください。",
-            resetConfirm: "すべての受付データ（確定、待機リスト）がリセットされます。この操作は元に戻せません。よろしいですか？",
-            resetComplete: "データをリセットしました。ページを再読み込みします。",
-            reloadDisabled: "データの損失を防ぐため、このページでの再読み込みは無効になっています。",
-            errorAlreadyRegistered: "あなたはすでに受付済みまたは待機中です。",
-            wrongPassword: "パスワードが間違っています。",
-            noChoicesProvided: "あなたはご予約時にプログラム希望を出していないので、希望を出す必要があります。",
-            nameSpaceNote: "※ 姓と名の間にスペースを入力してください",
-            scheduleTitle: "スケジュール",
-            companionsCountLabel: "同伴者人数",
-            noCapstoneExperience: "工学部説明会のみに参加される方はこちら",
-            noCapstoneTitle: "受付完了",
-                noCapstoneDesc: "キャップストーン体験に参加しない場合の受付が完了しました。",
-                noCapstoneInfo: "工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。",
-                noCapstoneBriefingTime: "{name}様、あなたの工学部説明会は{time}から始まります。",
-            statusConfirmed: "確定済み",
-            statusWaiting: "待機中",
-            statusNotRegistered: "未受付"
-        },
-        en: {
-            mainTitle: "Faculty of Engineering Mini-Capstone Experience Reception",
-            reserved: "Reserved",
-            walkIn: "Walk-in",
-            back: "Back",
-            enterFullName: "Please enter your full name",
-            reservedNameInputTitle: "Reserved - Enter Your Name",
-            walkInNameInputTitle: "Walk-in - Enter Your Name",
-            namePlaceholder: "e.g., Taro Yamada",
-            checkReservation: "Check Reservation",
-            confirmDetails: "Confirm Your Details",
-            confirmSubmit: "Confirm",
-            changeReservation: "Change Preferences",
-            name: "Name",
-            furigana: "Furigana",
-            furiganaPlaceholder: "e.g., TARO YAMADA (Katakana)",
-            requiredMark: "Required",
-            school: "School Name",
-            schoolPlaceholder: "e.g., Example High School",
-            grade: "Grade",
-            selectGrade: "Please select",
-            grade1: "1st Year High School",
+/*
             grade2: "2nd Year High School",
             grade3: "3rd Year High School",
             other: "Other",
             toProgramSelection: "Select Capstone Experience Program",
+            noCapstoneExperience: "For those attending only the Faculty of Engineering Briefing",
             selectProgramTitle: "Select Your Preferred Programs",
-            selectProgramDesc: "You may choose up to three preferences.",
-            confirmChoices: "Confirm Selection",
+            selectProgramDesc: "You can select up to 3 preferences.",
+            confirmChoices: "Confirm Choices",
             successTitle: "Registration Complete!",
-            successDesc: "You have been assigned to the following program.",
+            successDesc: "You have been confirmed for the following program:",
             successWaiting: "Your program will be assigned later.",
             backToHome: "Back to Home",
             adminPanel: "Admin Panel",
             tabProgramEdit: "Edit Programs",
             tabFileLoad: "Load Files",
             tabRoster: "Roster Preview",
-            tabStatus: "Status",
+            tabStatus: "Reception Status",
             tabSettings: "Settings",
+            showTranslation: "Show English Translation",
             jsonEditor: "View/Edit JSON",
             applyJson: "Apply JSON",
             addProgram: "+ Add Program",
             saveChanges: "Save Changes",
-            fileUpload1: "① Capstone Experience Reservation Roster (xlsx)",
-            fileUpload2: "② Faculty Briefing Session Roster (xlsx)",
+            fileUpload1: "① Mini-Capstone Experience Reservation Roster (xlsx)",
+            fileUpload2: "② Faculty of Engineering Briefing Session Roster (xlsx)",
             loadProgress: "③ Load Progress (.json)",
-            exportExcel: "Export to Excel",
+            rosterReservations: "Mini-Capstone Experience Reservation Roster",
+            rosterBriefing: "Faculty of Engineering Briefing Session Roster",
+            rosterOthers: "Others",
+            rosterSearchPlaceholder: "Search by Name/Furigana",
+            statusConfirmed: "Confirmed",
+            statusWaiting: "Waiting",
+            statusNotRegistered: "Not Registered",
+            confirmedList: "Confirmed List",
+            waitingList: "Waiting List",
+            assignWaiting: "Assign Waiting Participants",
+            saveProgress: "Save Progress",
             exportData: "Export",
-            exportPrompt: "Choose export type: excel or pdf",
-            exportInvalid: "Invalid type. Enter 'excel' or 'pdf'.",
-            exportTitle: "Reception Status",
-            popupBlocked: "Popup was blocked. Please allow popups.",
-            exportSelect: "Select export format",
+            exportSelect: "Select Export Format",
             exportExcelBtn: "Excel",
             exportPdfBtn: "PDF",
-            rosterMapping: "Column mapping: A=Name, B=1st Choice, C=2nd Choice, D=3rd Choice",
-            rosterReservations: "Mini-Capstone Reservation Roster",
-            rosterBriefing: "Faculty Briefing Session Roster",
-            rosterSearchPlaceholder: "Search by name/kana",
-            rosterOthers: "Others",
-            saveProgress: "Save Progress",
-            backToReception: "Back to Reception",
+            prioritizeReserved: "Prioritize Reserved Participants",
+            prioritizeDesc: "When ON, walk-in participants are set to 'Waiting'. After all registrations, assign them from the 'Reception Status' tab using the 'Assign Waiting Participants' button.",
+            prioritizeGrade: "Prioritize by Grade (for Walk-ins)",
+            prioritizeGradeDesc: "When ON, waiting walk-ins are assigned by grade (3rd yr → 2nd yr → 1st yr → Other). When OFF, it's first-come, first-served.",
+            resetData: "Reset Reception Data",
+            backToReception: "Back to Reception Screen",
             adminLogin: "Admin Login",
             password: "Password",
             login: "Login",
-            cancel: "Cancel",
             logout: "Logout",
+            cancel: "Cancel",
             choice1: "1st Choice",
             choice2: "2nd Choice",
             choice3: "3rd Choice",
             nameHeader: "Name",
             programHeader: "Program",
-            statusHeader: "Status (Count)",
+            statusHeader: "Status (count)",
             attendeesHeader: "Attendees",
             waitingHeader: "Waiting for Assignment",
             furiganaHeader: "Furigana",
@@ -576,119 +431,213 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             descriptionLabel: "Description",
             capacityLabel: "Capacity",
             deleteButton: "Delete",
-            showTranslation: "Show English Translation",
-            autoTranslate: "Auto Translate",
-            titleEnLabel: "Title (EN)",
-            descriptionEnLabel: "Desc (EN)",
+            autoTranslate: "Auto-translate to English",
+            titleEnLabel: "Title (English)",
+            descriptionEnLabel: "Description (English)",
             full: "This program is full",
-            assignWaiting: "Assign All Waiting",
-            prioritizeReserved: "Prioritize Reserved Attendees",
-            prioritizeDesc: "When this is ON, walk-in attendees will be put on a waiting list. After all registrations are complete, press the 'Assign All Waiting' button in the 'Status' tab to assign them to programs.",
-            prioritizeGrade: "Prioritize Grade (Walk-ins)",
-            prioritizeGradeDesc: "When ON, assign walk-in waitlist by grade priority (HS3 > HS2 > HS1 > Others). When OFF, use first-come-first-served.",
-            confirmedList: "Confirmed List",
-            waitingList: "Waiting List",
             cardView: "Card View",
             totalConfirmed: "Total Confirmed",
             totalWaiting: "Total Waiting",
-            totalAttendees: "Total Attendees",
-            resetData: "Reset Reception Data",
-            // Alert Messages
+            totalAttendees: "Total Registered",
+            scheduleTitle: "Schedule",
+            companionsCountLabel: "Number of Companions",
+            noCapstoneTitle: "Registration Complete",
+            noCapstoneDesc: "Your registration for not participating in the capstone experience is complete.",
+            noCapstoneInfo: "If you are only attending the Faculty of Engineering briefing, please register for it separately.",
+            nameSpaceNote: "※ Please put a space between family and given name",
             errorEnterName: "Please enter your name.",
             errorNotFound: "Reservation not found. Please check the name or register as a walk-in.",
-            errorAllFields: "Please fill in all fields.",
+            errorAllFields: "Please fill in all required fields.",
             errorSelectProgram: "Please select at least one program.",
             errorJsonFormat: "Invalid JSON format.",
-            infoJsonApplied: "Applied data from JSON.",
+            infoJsonApplied: "Data applied from JSON.",
             infoChangesSaved: "Changes have been saved.",
             settingsSaved: "Settings have been saved.",
-            errorProgramFull: "This program is full. Please select another program.",
-            errorInvalidProgram: "Program data is inconsistent. Please select another program.",
+            errorProgramFull: "This program is full. Please choose another.",
+            errorInvalidProgram: "Invalid program data. Please choose another.",
             errorDuplicateChoices: "You cannot select the same program for multiple preferences.",
             errorUnexpected: "An unexpected error occurred. Please try again.",
             confirmDelete: (title) => `Are you sure you want to delete "${title}"?`,
             assignConfirm: (count) => `Assign ${count} people to programs. Are you sure?`,
             assignComplete: (count) => `Assignment for ${count} people is complete.`,
-            noWaiting: "There are no attendees on the waiting list.",
-            noRosterData: "Roster data has not been imported. Please import roster files from the admin panel.",
+            noWaiting: "There are no participants on the waiting list.",
+            noRosterData: "Roster data has not been imported. Please import the roster file from the admin panel.",
             resetConfirm: "All reception data (confirmed and waiting lists) will be reset. This action cannot be undone. Are you sure?",
             resetComplete: "Data has been reset. The page will now reload.",
-            reloadDisabled: "To prevent data loss, reloading this page has been disabled.",
-            errorAlreadyRegistered: "You have already registered or are on the waiting list.",
+            reloadDisabled: "Reloading is disabled on this page to prevent data loss.",
+            errorAlreadyRegistered: "You are already registered or on the waiting list.",
             wrongPassword: "Incorrect password.",
-            noChoicesProvided: "You did not provide program preferences when reserving. Please select your preferences.",
-            nameSpaceNote: "※ Please enter a space between your first and last name",
-            scheduleTitle: "Schedule",
-            companionsCountLabel: "Number of companions",
-            noCapstoneExperience: "Faculty Briefing only",
-                noCapstoneTitle: "Registration Complete",
-                noCapstoneDesc: "Registration for not participating in the Capstone Experience is complete.",
-                noCapstoneInfo: "If you are only participating in the Faculty Briefing Session, please register separately for the briefing session.",
-                noCapstoneBriefingTime: "Mr./Ms. {name}, your Faculty Briefing Session starts at {time}.",
-            statusConfirmed: "Confirmed",
-            statusWaiting: "Waiting",
-            statusNotRegistered: "Not Registered"
+            noChoicesProvided: "You did not provide program preferences with your reservation, so you must select them now.",
+            noCapstoneBriefingTime: "{name}, your Faculty of Engineering briefing session starts at {time}.",
+        },
+        es: { // Ejemplo de un tercer idioma
+            mainTitle: "Recepción de Experiencia Mini-Capstone de la Facultad de Ingeniería",
+            reserved: "Reservado",
+            walkIn: "Sin reserva",
+            back: "Volver",
+            enterFullName: "Por favor, ingrese su nombre completo",
+            reservedNameInputTitle: "Reservado - Ingrese su nombre",
+            walkInNameInputTitle: "Sin reserva - Ingrese su nombre",
+            namePlaceholder: "Ej: Taro Yamada",
+            checkReservation: "Verificar Reserva",
+            confirmDetails: "Confirmar sus datos",
+            confirmSubmit: "Confirmar",
+            changeReservation: "Cambiar preferencias",
+            name: "Nombre",
+            furigana: "Furigana",
+            furiganaPlaceholder: "Ej: YAMADA TARO",
+            requiredMark: "Wajib",
+            school: "Nama Sekolah",
+            schoolPlaceholder: "Ej: SMA Negeri 1",
+            grade: "Kelas",
+            selectGrade: "Silakan pilih",
+            grade1: "Kelas 1 SMA",
+            grade2: "Kelas 2 SMA",
+            grade3: "Kelas 3 SMA",
+            other: "Lainnya",
+            toProgramSelection: "Pilih Program Pengalaman Capstone",
+            noCapstoneExperience: "Bagi yang hanya menghadiri Pengarahan Fakultas Teknik",
+            selectProgramTitle: "Pilih Program Pilihan Anda",
+            selectProgramDesc: "Anda dapat memilih hingga 3 preferensi.",
+            confirmChoices: "Konfirmasi Pilihan",
+            successTitle: "Pendaftaran Selesai!",
+            successDesc: "Anda telah dikonfirmasi untuk program berikut:",
+            successWaiting: "Program Anda akan ditentukan nanti.",
+            backToHome: "Kembali ke Beranda",
+            adminPanel: "Panel Admin",
+            tabProgramEdit: "Edit Program",
+            tabFileLoad: "Muat File",
+            tabRoster: "Pratinjau Daftar Nama",
+            tabStatus: "Status Penerimaan",
+            tabSettings: "Pengaturan",
+            showTranslation: "Tampilkan Terjemahan Bahasa Inggris",
+            jsonEditor: "Lihat/Edit JSON",
+            applyJson: "Terapkan JSON",
+            addProgram: "+ Tambah Program",
+            saveChanges: "Simpan Perubahan",
+            fileUpload1: "① Daftar Reservasi Pengalaman Mini-Capstone (xlsx)",
+            fileUpload2: "② Daftar Sesi Pengarahan Fakultas Teknik (xlsx)",
+            loadProgress: "③ Muat Progres (.json)",
+            rosterReservations: "Daftar Reservasi Pengalaman Mini-Capstone",
+            rosterBriefing: "Daftar Sesi Pengarahan Fakultas Teknik",
+            rosterOthers: "Lainnya",
+            rosterSearchPlaceholder: "Cari berdasarkan Nama/Furigana",
+            statusConfirmed: "Terkonfirmasi",
+            statusWaiting: "Menunggu",
+            statusNotRegistered: "Belum Terdaftar",
+            confirmedList: "Daftar Terkonfirmasi",
+            waitingList: "Daftar Tunggu",
+            assignWaiting: "Tetapkan Peserta yang Menunggu",
+            saveProgress: "Simpan Progres",
+            exportData: "Ekspor",
+            exportSelect: "Pilih Format Ekspor",
+            exportExcelBtn: "Excel",
+            exportPdfBtn: "PDF",
+            prioritizeReserved: "Prioritaskan Peserta yang Reservasi",
+            prioritizeDesc: "Jika AKTIF, peserta yang datang langsung akan berstatus 'Menunggu'. Setelah semua pendaftaran selesai, tetapkan mereka dari tab 'Status Penerimaan' menggunakan tombol 'Tetapkan Peserta yang Menunggu'.",
+            prioritizeGrade: "Prioritaskan berdasarkan Kelas (untuk yang Langsung Datang)",
+            prioritizeGradeDesc: "Jika AKTIF, peserta yang menunggu akan ditetapkan berdasarkan kelas (Kelas 3 → Kelas 2 → Kelas 1 → Lainnya). Jika NONAKTIF, berdasarkan urutan kedatangan.",
+            resetData: "Atur Ulang Data Penerimaan",
+            backToReception: "Kembali ke Layar Penerimaan",
+            adminLogin: "Login Admin",
+            password: "Kata Sandi",
+            login: "Login",
+            logout: "Logout",
+            cancel: "Batal",
+            choice1: "Pilihan 1",
+            choice2: "Pilihan 2",
+            choice3: "Pilihan 3",
+            nameHeader: "Nama",
+            programHeader: "Program",
+            statusHeader: "Status (jumlah)",
+            attendeesHeader: "Peserta",
+            waitingHeader: "Menunggu Penempatan",
+            furiganaHeader: "Furigana",
+            timeHeader: "Waktu",
+            noAttendees: "Belum ada",
+            unselected: "Tidak dipilih",
+            titleLabel: "Judul",
+            descriptionLabel: "Deskripsi",
+            capacityLabel: "Kapasitas",
+            deleteButton: "Hapus",
+            autoTranslate: "Terjemahkan otomatis ke Bahasa Inggris",
+            titleEnLabel: "Judul (Inggris)",
+            descriptionEnLabel: "Deskripsi (Inggris)",
+            full: "Program ini sudah penuh",
+            cardView: "Tampilan Kartu",
+            totalConfirmed: "Total Terkonfirmasi",
+            totalWaiting: "Total Menunggu",
+            totalAttendees: "Total Terdaftar",
+            scheduleTitle: "Jadwal",
+            companionsCountLabel: "Jumlah Pendamping",
+            noCapstoneTitle: "Pendaftaran Selesai",
+            noCapstoneDesc: "Pendaftaran Anda untuk tidak berpartisipasi dalam pengalaman capstone telah selesai.",
+            noCapstoneInfo: "Jika Anda hanya menghadiri pengarahan Fakultas Teknik, silakan mendaftar secara terpisah.",
+            nameSpaceNote: "※ Harap beri spasi antara nama keluarga dan nama depan",
+            // Alert Messages
+            errorEnterName: "Silakan masukkan nama Anda.",
+            errorNotFound: "Reservasi tidak ditemukan. Silakan periksa nama atau daftar sebagai peserta langsung.",
+            errorAllFields: "Harap isi semua kolom yang wajib diisi.",
+            errorSelectProgram: "Silakan pilih setidaknya satu program.",
+            errorJsonFormat: "Format JSON tidak valid.",
+            infoJsonApplied: "Data diterapkan dari JSON.",
+            infoChangesSaved: "Perubahan telah disimpan.",
+            settingsSaved: "Pengaturan telah disimpan.",
+            errorProgramFull: "Program ini penuh. Silakan pilih yang lain.",
+            errorInvalidProgram: "Data program tidak valid. Silakan pilih yang lain.",
+            errorDuplicateChoices: "Anda tidak dapat memilih program yang sama untuk beberapa preferensi.",
+            errorUnexpected: "Terjadi kesalahan tak terduga. Silakan coba lagi.",
+            confirmDelete: (title) => `Apakah Anda yakin ingin menghapus "${title}"?`,
+            assignConfirm: (count) => `Tetapkan ${count} orang ke program. Apakah Anda yakin?`,
+            assignComplete: (count) => `Penetapan untuk ${count} orang selesai.`,
+            noWaiting: "Tidak ada peserta dalam daftar tunggu.",
+            noRosterData: "Data daftar nama belum diimpor. Silakan impor file dari panel admin.",
+            resetConfirm: "Semua data penerimaan (daftar terkonfirmasi dan menunggu) akan diatur ulang. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin?",
+            resetComplete: "Data telah diatur ulang. Halaman akan dimuat ulang sekarang.",
+            reloadDisabled: "Memuat ulang dinonaktifkan di halaman ini untuk mencegah kehilangan data.",
+            errorAlreadyRegistered: "Anda sudah terdaftar atau berada dalam daftar tunggu.",
+            wrongPassword: "Kata sandi salah.",
+            noChoicesProvided: "Anda tidak memberikan preferensi program saat reservasi, jadi Anda harus memilihnya sekarang.",
+            noCapstoneBriefingTime: "{name}, sesi pengarahan Fakultas Teknik Anda dimulai pukul {time}.",
         }
-    };
+    };*/
 
-    function updateLanguage(lang) {
+    async function updateLanguage(lang) {
+        await window.loadTranslations(lang);
         currentLanguage = lang;
         document.documentElement.lang = lang;
         document.querySelectorAll('[data-lang-key]').forEach(el => {
             const key = el.dataset.langKey;
-            const translation = translations[lang][key];
-            if (typeof translation === 'function') return;
-            if (translation) {
-                el.textContent = translation;
-            }
+            const translation = getTranslation(key);
+            if (translation) el.textContent = translation;
         });
         document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
             const key = el.dataset.langKeyPlaceholder;
-             if (translations[lang][key]) {
-                el.placeholder = translations[lang][key];
-            }
+            const translation = getTranslation(key);
+            if (translation) el.placeholder = translation;
         });
-        // 動的な部分も更新
         const currentVisibleSection = document.querySelector('#reception-sections-wrapper .section:not(.section-hidden)');
         if (currentVisibleSection && currentVisibleSection.id === 'program-selection-section') {
             renderProgramGrid();
         }
         if (document.getElementById('admin-view').classList.contains('hidden') === false) {
             renderAdminEditor();
-            renderStatusTable();
+            updateStatusView();
             renderRosterPreview();
         }
         if (currentUser) {
             showConfirmation(currentUser);
         }
-        
-        // キャップストーン体験に参加しない画面の時間表示を更新
         const briefingTimeEl = document.getElementById('no-capstone-briefing-time');
         if (briefingTimeEl && currentUser && currentUser.noCapstone) {
             const briefingAttendee = briefingSessionAttendees.find(a => a.name === currentUser.name);
             if (briefingAttendee && briefingAttendee.time) {
-                const timeMessage = translations[lang].noCapstoneBriefingTime
-                    .replace('{name}', currentUser.name)
-                    .replace('{time}', briefingAttendee.time);
-                briefingTimeEl.textContent = timeMessage;
+                const tmpl = getTranslation('noCapstoneBriefingTime');
+                briefingTimeEl.textContent = (tmpl || '{name} {time}').replace('{name}', currentUser.name).replace('{time}', briefingAttendee.time);
             } else {
-                briefingTimeEl.textContent = translations[lang].noCapstoneInfo;
+                briefingTimeEl.textContent = getTranslation('noCapstoneInfo') || '';
             }
         }
-        // 役割カラー文言の多言語更新
-        const roleSuccess = document.getElementById('role-color-success');
-        if (roleSuccess && !roleSuccess.classList.contains('hidden')) {
-            roleSuccess.innerHTML = (lang === 'ja')
-                ? 'あなたは<span class="text-red">「赤色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
-                : 'Your color is <span class="text-red">red</span>. For smooth guidance, staff will place a colored strap on your wrist.';
-        }
-        const roleNoCap = document.getElementById('role-color-no-capstone');
-        if (roleNoCap) {
-            roleNoCap.innerHTML = (lang === 'ja')
-                ? 'あなたは<span class="text-blue">「青色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
-                : 'Your color is <span class="text-blue">blue</span>. For smooth guidance, staff will place a colored strap on your wrist.';
-        }
-        
         localStorage.setItem('receptionLang', lang);
     }
 
@@ -878,23 +827,26 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         resetReceptionState();
         showReceptionSection('initial-selection');
     }
-    
     // --- 割り当てと完了画面 ---
     function assignProgram(user) {
+        // Firestoreの最新データから現在のプログラム参加人数を計算
+        const currentEnrollment = {};
+        programs.forEach(p => { currentEnrollment[p.id] = 0; });
+        allParticipants.forEach(p => {
+            if (p.assignedProgramId && currentEnrollment[p.assignedProgramId] !== undefined) {
+                currentEnrollment[p.assignedProgramId]++;
+            }
+        });
+
         for (const choiceId of user.choices) {
-            if (choiceId && (programEnrollment[choiceId] || 0) < programs.find(p => p.id === choiceId).capacity) {
-                programEnrollment[choiceId]++; 
-                const assigned = programs.find(p => p.id === choiceId);
-                confirmedAttendees.push({ name: user.name, assignedProgramId: assigned.id });
-                saveReceptionData(); // 受付データを保存
-                return assigned;
+            if (choiceId && (currentEnrollment[choiceId] || 0) < programs.find(p => p.id === choiceId).capacity) {
+                // 割り当て成功
+                return programs.find(p => p.id === choiceId);
             }
         }
-        confirmedAttendees.push({ name: user.name, assignedProgramId: null });
-        saveReceptionData(); // 受付データを保存
+        // 割り当て失敗
         return null;
     }
-
     function showSuccessScreen(name, program, isWaiting = false) {
         const studentNameEl = document.getElementById('success-student-name');
         const programCardEl = document.getElementById('success-program-card');
@@ -904,7 +856,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         studentNameEl.textContent = `${name} 様`;
         
         if(isWaiting) {
-            successDesc.textContent = translations[currentLanguage].successWaiting;
+            successDesc.textContent = window.translations[currentLanguage]?.successWaiting || '';
             successDesc.classList.add('waiting-emphasis');
             programCardEl.classList.add('hidden');
             if (roleMsgEl) {
@@ -914,7 +866,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                 roleMsgEl.classList.remove('hidden');
             }
         } else if (program) {
-            successDesc.textContent = translations[currentLanguage].successDesc;
+            successDesc.textContent = window.translations[currentLanguage]?.successDesc || '';
             successDesc.classList.remove('waiting-emphasis');
             programCardEl.classList.remove('hidden');
             programCardEl.innerHTML = `<h3>${escapeHTML(program.title)}</h3><p>${escapeHTML(program.description)}</p>`;
@@ -927,7 +879,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                 roleMsgEl.classList.remove('hidden');
             }
         } else {
-            successDesc.textContent = translations[currentLanguage].successDesc;
+            successDesc.textContent = window.translations[currentLanguage]?.successDesc || '';
             successDesc.classList.remove('waiting-emphasis');
             programCardEl.classList.remove('hidden');
             programCardEl.innerHTML = `<h3>申し訳ありません</h3><p>全ての希望プログラムが満員のため、参加できるプログラムがありません。運営スタッフにお声がけください。</p>`;
@@ -947,7 +899,6 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         // お祝いエフェクト（供給1.5秒、落下鑑賞5秒）
         launchConfetti(1500, 5000);
     }
-
     // --- コンフェッティ（軽量実装） ---
     function launchConfetti(supplyMs = 1000, tailMs = 5000) {
         const canvas = document.getElementById('confetti-canvas');
@@ -1144,20 +1095,21 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             if (isFull) {
                 card.classList.add('is-full');
             }
-            const title = (currentLanguage === 'en' && p.title_en) ? p.title_en : p.title;
-            const description = (currentLanguage === 'en' && p.description_en) ? p.description_en : p.description;
+            const title = getTranslatedValue(p.title, p.title_en);
+            const description = getTranslatedValue(p.description, p.description_en);
             let fullOverlayHTML = '';
-            if (isFull) {
-                fullOverlayHTML = `<div class="full-overlay"><span>${escapeHTML(translations[currentLanguage].full)}</span></div>`;
+            const fullText = getTranslation('full');
+            if (isFull && fullText) {
+                fullOverlayHTML = `<div class="full-overlay"><span>${escapeHTML(fullText)}</span></div>`;
             }
             card.innerHTML = `
                 ${fullOverlayHTML}
                 <h3>${escapeHTML(title)}</h3>
                 <p>${escapeHTML(description)}</p>
                 <div class="program-choice-btns" data-program-id="${p.id}">
-                    <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(translations[currentLanguage].choice1)}</button>
-                    <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(translations[currentLanguage].choice2)}</button>
-                    <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(translations[currentLanguage].choice3)}</button>
+                    <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
+                    <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
+                    <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
                 </div>`;
             grid.appendChild(card);
         });
@@ -1233,7 +1185,6 @@ let rosterMappingInfo = { reservations: null, briefing: null };
             }
         }
     }
-
     function showConfirmation(student) {
         const details = document.getElementById('confirmation-details');
         const getTitle = (id) => {
@@ -1294,8 +1245,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                 const norm = (t) => (t || '').toString().trim();
                 // プログラム名が入力の先頭に一致、または入力の前半がプログラム名と一致
                 prog = programs.find(p => norm(base) === norm(p.title) || norm(base) === norm(p.title_en)
-                    || norm(s).startsWith(norm(p.title)) || norm(s).startsWith(norm(p.title_en))
-                );
+                    || norm(s).startsWith(norm(p.title)) || norm(s).startsWith(norm(p.title_en)));
                 if (prog) return prog;
             }
             return null;
@@ -1457,7 +1407,6 @@ let rosterMappingInfo = { reservations: null, briefing: null };
 
         mappingModal.classList.add('visible');
     }
-
     function onApplyMapping() {
         if (!pendingMappingContext) return;
         const { type, jsonData } = pendingMappingContext;
@@ -1570,7 +1519,6 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         };
         reader.readAsArrayBuffer(file);
     }
-
     function exportToExcel() {
         if (typeof XLSX === 'undefined') {
             showCustomAlert('errorUnexpected');
@@ -1596,7 +1544,7 @@ let rosterMappingInfo = { reservations: null, briefing: null };
 
         const data = [header];
         rowsByProgram.forEach(({ program: p, names }) => {
-            const title = (isEn && p.title_en) ? p.title_en : p.title;
+            const title = getTranslatedValue(p.title, p.title_en);
             const enrolled = names.length;
             const capacity = p.capacity || 0;
             const compByName = (n) => (reservations.find(r => r.name === n)?.companions|0) || 0;
@@ -1788,11 +1736,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
         `;
         
         const waitingTable = document.getElementById('waiting-list-table');
-        const getTitle = (id) => {
+        const getProgramTitle = (id) => {
             const prog = programs.find(p => p.id === id);
             if (!prog) return '';
-            // 表示はタイトルのみ（サブタイトルは含めない）
-            const title = (currentLanguage === 'en' && prog.title_en) ? prog.title_en : prog.title;
+            const title = getTranslatedValue(prog.title, prog.title_en);
             return extractBaseTitle(title);
         };
         if (useCard) {
@@ -1802,9 +1749,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                         <div class="waiting-item">
                             <div class="name-chip">${escapeHTML(user.name)}</div>
                             <div class="choices">
-                                <span class="chip">${escapeHTML(translations[currentLanguage].choice1)}: ${escapeHTML(getTitle(user.choices[0]))}</span>
-                                <span class="chip">${escapeHTML(translations[currentLanguage].choice2)}: ${escapeHTML(getTitle(user.choices[1]))}</span>
-                                <span class="chip">${escapeHTML(translations[currentLanguage].choice3)}: ${escapeHTML(getTitle(user.choices[2]))}</span>
+                                <span class="chip">${escapeHTML(getTranslation('choice1') || '')}: ${escapeHTML(getProgramTitle(user.choices[0]))}</span>
+                                <span class="chip">${escapeHTML(getTranslation('choice2') || '')}: ${escapeHTML(getProgramTitle(user.choices[1]))}</span>
+                                <span class="chip">${escapeHTML(getTranslation('choice3') || '')}: ${escapeHTML(getProgramTitle(user.choices[2]))}</span>
                             </div>
                         </div>
                     `).join('')}
@@ -1816,10 +1763,10 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>${escapeHTML(translations[currentLanguage].nameHeader)}</th>
-                            <th>${escapeHTML(translations[currentLanguage].choice1)}</th>
-                            <th>${escapeHTML(translations[currentLanguage].choice2)}</th>
-                            <th>${escapeHTML(translations[currentLanguage].choice3)}</th>
+                            <th>${escapeHTML(getTranslation('nameHeader') || '')}</th>
+                            <th>${escapeHTML(getTranslation('choice1') || '')}</th>
+                            <th>${escapeHTML(getTranslation('choice2') || '')}</th>
+                            <th>${escapeHTML(getTranslation('choice3') || '')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1827,9 +1774,9 @@ let rosterMappingInfo = { reservations: null, briefing: null };
                             <tr>
                                 <td>${idx+1}</td>
                                 <td>${escapeHTML((user.companions|0)>0 ? `${user.name}（同伴者:${user.companions}）` : user.name)}</td>
-                                <td>${escapeHTML(getTitle(user.choices[0]))}</td>
-                                <td>${escapeHTML(getTitle(user.choices[1]))}</td>
-                                <td>${escapeHTML(getTitle(user.choices[2]))}</td>
+                                <td>${escapeHTML(getProgramTitle(user.choices[0]))}</td>
+                                <td>${escapeHTML(getProgramTitle(user.choices[1]))}</td>
+                                <td>${escapeHTML(getProgramTitle(user.choices[2]))}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -2028,15 +1975,9 @@ function columnLetter(index) {
     }
     return s;
 }
-    
     function initializeEnrollment() {
         programEnrollment = {};
         programs.forEach(p => { programEnrollment[p.id] = 0; });
-        confirmedAttendees.forEach(attendee => {
-            if (attendee.assignedProgramId && programEnrollment[attendee.assignedProgramId] !== undefined) {
-                programEnrollment[attendee.assignedProgramId]++;
-            }
-        });
     }
 
     // --- LocalStorage 関連 ---
@@ -2045,10 +1986,6 @@ function columnLetter(index) {
             programs,
             reservations,
             briefingSessionAttendees,
-            // IndexedDBで管理するため、localStorageには保存しない
-            // programEnrollment,
-            // confirmedAttendees,
-            // waitingList,
             settings
         };
         localStorage.setItem('receptionData', JSON.stringify(state));
@@ -2062,10 +1999,6 @@ function columnLetter(index) {
                 programs = state.programs || programs;
                 reservations = state.reservations || reservations;
                 briefingSessionAttendees = state.briefingSessionAttendees || [];
-                // IndexedDBから復元されるため、localStorageからは読み込まない
-                // programEnrollment = state.programEnrollment || {};
-                // confirmedAttendees = state.confirmedAttendees || [];
-                // waitingList = state.waitingList || [];
                 if (state.settings) {
                     settings = state.settings;
                 }
@@ -2098,15 +2031,18 @@ function columnLetter(index) {
     const savedTheme = localStorage.getItem('receptionTheme') || 'light';
     setTheme(savedTheme);
 
+    // 汎用セーフリスナー
+    const addListener = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
+
     // カスタムアラートの閉じるボタン
-    document.getElementById('btn-alert-ok').addEventListener('click', () => {
+    addListener(document.getElementById('btn-alert-ok'), 'click', () => {
         customAlertModal.classList.remove('visible');
     });
 
-    // 受付画面のイベントリスナー
-    document.getElementById('btn-reserved').addEventListener('click', () => navigateTo('name-input-section'));
-    document.getElementById('btn-walk-in').addEventListener('click', () => navigateTo('walk-in-section'));
-    document.getElementById('btn-back').addEventListener('click', goBack);
+    // 受付画面のイベントリスナー（存在チェック付き）
+    addListener(document.getElementById('btn-reserved'), 'click', () => navigateTo('name-input-section'));
+    addListener(document.getElementById('btn-walk-in'), 'click', () => navigateTo('walk-in-section'));
+    addListener(document.getElementById('btn-back'), 'click', goBack);
 
     // 初期選択画面のキーボード操作（←/→で選択、Enterで決定）
     document.addEventListener('keydown', (e) => {
@@ -2285,7 +2221,6 @@ function columnLetter(index) {
         navigateTo('no-capstone-section');
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
-
     document.getElementById('btn-no-capstone-complete').addEventListener('click', async () => {
         try {
             if (currentUser && window.firebase && window.firebase.firestore) {
@@ -2358,19 +2293,26 @@ function columnLetter(index) {
     // 管理者フロー
     document.getElementById('admin-entry-btn').addEventListener('click', () => {
         try {
-            // Firebase 認証済みならそのまま管理画面へ
-            if (window.firebase && window.firebase.auth && window.firebase.auth().currentUser) {
-                showAdminView();
+            if (window.firebase && window.firebase.auth) {
+                const userNow = window.firebase.auth().currentUser;
+                if (userNow) {
+                    showAdminView();
+                    return;
+                }
+                // 認証状態がまだ復元中の可能性があるため、短く待ってから再判定（最大1秒まで再試行）
+                let tries = 0;
+                const retry = () => {
+                    const userLater = window.firebase.auth().currentUser;
+                    if (userLater) { showAdminView(); return; }
+                    if (++tries >= 4) { adminLoginModal.classList.add('visible'); return; }
+                    setTimeout(retry, 250);
+                };
+                retry();
                 return;
             }
         } catch (_) {}
-        // フォールバックセッションがあれば維持
         const fallbackSession = localStorage.getItem('adminSession') === 'true';
-        if (fallbackSession) {
-            showAdminView();
-            return;
-        }
-        // 未ログイン時のみモーダル表示
+        if (fallbackSession) { showAdminView(); return; }
         adminLoginModal.classList.add('visible');
     });
     document.getElementById('btn-cancel-login').addEventListener('click', () => adminLoginModal.classList.remove('visible'));
@@ -2383,17 +2325,8 @@ function columnLetter(index) {
         try {
             if (window.firebase && window.firebase.auth) {
                 await window.firebase.auth().signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
-                adminLoginModal.classList.remove('visible');
-                emailInput.value = '';
-                passwordInput.value = '';
-                const user = window.firebase.auth().currentUser;
-                if (user) {
-                    const emailSpan = document.getElementById('admin-user-email');
-                    if (emailSpan) emailSpan.textContent = user.email || '';
-                }
-                showAdminView();
-                // Firebase 認証は SDK が状態保持するため、ローカルのフラグは不要
-                updateAdminEntryVisual(true);
+                // onAuthStateChanged に処理を委譲（確実に状態反映）
+                return;
             } else {
                 // Firebase未設定の場合は従来パスワード 'admin' でフォールバック
                 if (passwordInput.value === 'admin') {
@@ -2405,13 +2338,14 @@ function columnLetter(index) {
                     updateAdminEntryVisual(true);
                 } else {
                     showCustomAlert('wrongPassword');
-                    errorEl.textContent = translations[currentLanguage].wrongPassword;
+                    errorEl.textContent = getTranslation('wrongPassword') || 'Wrong password.';
                 }
             }
         } catch (e) {
             console.error(e);
+            const msg = (e && e.code === 'auth/wrong-password') || (e && e.code === 'auth/user-not-found') ? (getTranslation('wrongPassword') || 'Wrong password.') : (e && e.message) || 'Error';
             showCustomAlert('wrongPassword');
-            errorEl.textContent = (e && e.message) ? e.message : translations[currentLanguage].wrongPassword;
+            errorEl.textContent = msg;
         }
     });
     // Enterキーでログイン
@@ -2451,10 +2385,9 @@ function columnLetter(index) {
                 if (user) {
                     const emailSpan = document.getElementById('admin-user-email');
                     if (emailSpan) emailSpan.textContent = user.email || '';
-                    // 既に受付画面表示中なら管理画面へ
-                    if (document.getElementById('admin-view').classList.contains('hidden')) {
-                        showAdminView();
-                    }
+                    // ログインが確認できたら必ず管理画面へ遷移し、モーダルを閉じる
+                    adminLoginModal.classList.remove('visible');
+                    showAdminView();
                 }
             });
         } else {
@@ -2465,7 +2398,6 @@ function columnLetter(index) {
             }
         }
     } catch (_) {}
-    
 // 未保存変更がある場合に離脱確認してからタブ切り替え
 document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
@@ -2531,7 +2463,6 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     }
     showReceptionView();
 });
-	
 	// ヘッダーロゴクリックでホームへ戻る
     const headerLogo = document.querySelector('.header-logo');
     if (headerLogo) {
@@ -2568,54 +2499,25 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     
     document.getElementById('btn-reset-data').addEventListener('click', () => {
         showCustomAlert('resetConfirm', () => {
+            // Firestoreのデータを削除する処理をここに追加（今回は未実装）
+            // ローカルのデータ削除
             localStorage.removeItem('receptionData');
-            localStorage.removeItem('noRosterDataLastShown'); // 名簿データポップアップ表示記録も削除
-            // IndexedDBの受付データと名簿データも削除
-            deleteData('userData', 'receptionData');
-            deleteData('userData', 'rosterData');
+            localStorage.removeItem('noRosterDataLastShown');
             showCustomAlert('resetComplete', () => {
                 location.reload();
             });
         }, true);
     });
 
-    document.getElementById('btn-assign-waiting').addEventListener('click', () => {
-        if(waitingList.length === 0) {
-            showCustomAlert('noWaiting');
-            return;
-        }
-        const count = waitingList.length;
-        if(confirm(translations[currentLanguage].assignConfirm(count))) {
-            // 学年優先がONの場合、並べ替えてから割り当て
-            const gradePriority = (g) => {
-                if (!g) return 99;
-                if (typeof g !== 'string') return 99;
-                if (g.includes('3')) return 1; // 高3
-                if (g.includes('2')) return 2; // 高2
-                if (g.includes('1')) return 3; // 高1
-                return 4; // その他
-            };
-            const list = settings.prioritizeGrade
-                ? [...waitingList].sort((a, b) => gradePriority(a.grade) - gradePriority(b.grade))
-                : [...waitingList];
-            list.forEach(user => {
-                assignProgram(user);
-            });
-            waitingList = [];
-            saveReceptionData(); // IndexedDBに保存
-            renderStatusTable();
-            showCustomAlert(translations[currentLanguage].assignComplete(count));
-        }
-    });
+document.getElementById('btn-assign-waiting').addEventListener('click', assignWaitingListParticipants);
 
     // 受付状況: 表/カード切替
-    const statusViewToggle = document.getElementById('status-view-toggle');
-    if (statusViewToggle) {
-        statusViewToggle.addEventListener('change', () => {
-            renderStatusTable();
-        });
-    }
-
+const statusViewToggle = document.getElementById('status-view-toggle');
+if (statusViewToggle) {
+    statusViewToggle.addEventListener('change', () => {
+        updateStatusView();
+    });
+}
     // 完了処理
     document.getElementById('btn-confirm-reservation').addEventListener('click', () => {
         const isReserved = reservations.some(r => r.name === currentUser.name);
@@ -2642,8 +2544,6 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
             } catch (e) { console.error('Firestore write error', e); }
         };
         if (settings.prioritizeReserved && !isReserved) {
-            waitingList.push(currentUser);
-            saveReceptionData(); // IndexedDBに保存
             writeToFirestore(null).finally(() => finalizeLocal(null));
         } else {
             const assignedProgram = assignProgram(currentUser);
@@ -2653,18 +2553,19 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     
     document.getElementById('btn-back-to-home').addEventListener('click', showReceptionView);
     
-    document.getElementById('help-btn').addEventListener('click', () => {
-        document.getElementById('help-modal').classList.add('visible');
+    // ヘルプ: 安全にイベント登録
+    safeOn(document.getElementById('help-btn'), 'click', () => {
+        const modal = document.getElementById('help-modal');
+        if (modal) modal.classList.add('visible');
     });
-
-    document.getElementById('btn-close-help').addEventListener('click', () => {
-        document.getElementById('help-modal').classList.remove('visible');
+    safeOn(document.getElementById('btn-close-help'), 'click', () => {
+        const modal = document.getElementById('help-modal');
+        if (modal) modal.classList.remove('visible');
     });
-
     // ヘルプモーダルの外側をクリックしても閉じる
-    document.getElementById('help-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'help-modal') {
-            document.getElementById('help-modal').classList.remove('visible');
+    safeOn(document.getElementById('help-modal'), 'click', (e) => {
+        if (e.target && e.target.id === 'help-modal') {
+            e.currentTarget.classList.remove('visible');
         }
     });
 
@@ -2675,15 +2576,54 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
         }
     });
 
-    document.getElementById('lang-switch-btn').addEventListener('click', () => {
+    const langSwitchBtn = document.getElementById('lang-switch-btn');
+    const langMenu = document.getElementById('lang-menu');
+    const safeOn = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
+
+    // Left-click: Toggle Ja/En and ensure menu is hidden.
+    safeOn(langSwitchBtn, 'click', () => {
+        langMenu.classList.remove('visible'); // Hide menu on left-click
         const newLang = currentLanguage === 'ja' ? 'en' : 'ja';
         updateLanguage(newLang);
-        // 言語切替トースト表示（右上）
         const msg = newLang === 'ja' ? '言語が日本語に切り替わりました。' : 'Language switched to English.';
         showSaveIndicator(msg);
     });
 
-    themeSwitchBtn.addEventListener('click', () => {
+    // Right-click: Prevent default and toggle menu.
+    safeOn(langSwitchBtn, 'contextmenu', (e) => {
+        e.preventDefault();
+        langMenu.classList.toggle('visible');
+    });
+
+    // Global click: Hide menu if click is outside the button and menu.
+    document.addEventListener('click', (e) => {
+        // Use closest to handle clicks on child elements of the button (like the icon)
+        if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
+            if (langMenu) langMenu.classList.remove('visible');
+        }
+    });
+
+    // Menu click: Select language and hide menu.
+    safeOn(langMenu, 'click', (e) => {
+        e.preventDefault(); // Prevent <a> tag from navigating
+        if (e.target.tagName === 'A') {
+            const newLang = e.target.dataset.lang;
+            if (newLang && newLang !== currentLanguage) { // Only update if language is different
+                updateLanguage(newLang);
+                let msg = '';
+                switch (newLang) {
+                    case 'ja': msg = '言語が日本語に切り替わりました。'; break;
+                    case 'en': msg = 'Language switched to English.'; break;
+                    case 'es': msg = 'Idioma cambiado a Español.'; break;
+                    case 'id': msg = 'Bahasa diubah ke Bahasa Indonesia.'; break;
+                }
+                showSaveIndicator(msg);
+            }
+            langMenu.classList.remove('visible'); // Always hide after click
+        }
+    });
+
+    safeOn(themeSwitchBtn, 'click', () => {
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
         setTheme(newTheme);
         const msg = (currentLanguage === 'ja')
@@ -2691,90 +2631,44 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
             : (newTheme === 'dark' ? 'Theme switched to Dark mode.' : 'Theme switched to Light mode.');
         showSaveIndicator(msg);
     });
-    
-    // 名簿データのインポート状況をチェック
-    async function checkRosterDataStatus() {
-        // IndexedDBから名簿データを復元
-        const savedState = await getData('userData', 'rosterData');
-        
-        // IndexedDBに保存された名簿データがある場合は復元
-        if (savedState && savedState.rosterMappingInfo) {
-            rosterMappingInfo = savedState.rosterMappingInfo;
-            if (savedState.reservations) {
-                reservations = savedState.reservations;
-            }
-            if (savedState.briefingSessionAttendees) {
-                briefingSessionAttendees = savedState.briefingSessionAttendees;
-            }
-        }
-        
-        const hasReservationsData = rosterMappingInfo.reservations !== null;
-        const hasBriefingData = rosterMappingInfo.briefing !== null;
-        
-        if (!hasReservationsData && !hasBriefingData) {
-            // 一日一回、初めての起動時のみポップアップを表示
-            const today = new Date().toDateString();
-            const lastShownDate = localStorage.getItem('noRosterDataLastShown');
-            
-            if (lastShownDate !== today) {
-                setTimeout(() => {
-                    showCustomAlert('noRosterData');
-                    // 今日表示したことを記録
-                    localStorage.setItem('noRosterDataLastShown', today);
-                }, 500); // 少し遅延させて画面の初期化を待つ
-            }
+
+    // Firestoreの初期化とリスナー設定
+    function initializeFirestore() {
+        if (window.firebase && window.firebase.firestore) {
+            const dbFS = window.firebase.firestore();
+            listenToParticipants(dbFS);
+            console.log("Firestore is initialized and listeners are set up.");
+        } else {
+            console.error("Firebase Firestore is not available.");
         }
     }
 
-    // 初期画面表示
-    showReceptionSection('initial-selection');
-
-    // 名簿データのインポート状況をチェック（非同期）
-    checkRosterDataStatus().catch(error => {
-        console.error('名簿データチェックエラー:', error);
-    });
-
-    // Firestore によるリアルタイム参加者一覧（簡易）。ログイン時のみ起動。
-    try {
-        if (window.firebase && window.firebase.auth && window.firebase.firestore) {
-            window.firebase.auth().onAuthStateChanged(user => {
-                const emailSpan = document.getElementById('admin-user-email');
-                if (emailSpan) emailSpan.textContent = user?.email || '';
-                if (!user) return;
-                const db = window.firebase.firestore();
-                db.collection('participants').orderBy('createdAt', 'desc').limit(200)
-                    .onSnapshot(snap => {
-                        // 受付状況タブ下部に一覧を描画（存在しなければ作成）
-                        let container = document.getElementById('firestore-participants');
-                        if (!container) {
-                            const tab = document.getElementById('tab-status');
-                            if (!tab) return;
-                            container = document.createElement('div');
-                            container.id = 'firestore-participants';
-                            container.style.marginTop = '20px';
-                            tab.appendChild(container);
-                        }
-                        const rows = [];
-                        snap.forEach(doc => {
-                            const d = doc.data();
-                            rows.push(`<tr><td>${escapeHTML(d.name || '')}</td><td>${escapeHTML(d.status || '')}</td><td>${escapeHTML(d.assignedProgramId || '')}</td></tr>`);
-                        });
-                        container.innerHTML = `
-                            <h4 style="margin-top: 24px;">Firestore 参加者一覧（最新200件）</h4>
-                            <table class="simple-table">
-                                <thead><tr><th>氏名</th><th>状態</th><th>割当</th></tr></thead>
-                                <tbody>${rows.join('')}</tbody>
-                            </table>`;
-                    });
+    // participantsコレクションのリアルタイムリスナー
+    function listenToParticipants(dbFS) {
+        dbFS.collection('participants').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            const participantsData = [];
+            snapshot.forEach(doc => {
+                participantsData.push({ id: doc.id, ...doc.data() });
             });
-        }
-    } catch (e) { console.error(e); }
+            allParticipants = participantsData;
+            
+            console.log('Participants data updated from Firestore:', allParticipants);
 
-    // 名簿検索イベント
-    const rosterSearchInput = document.getElementById('roster-search-input');
-    if (rosterSearchInput) {
-        rosterSearchInput.addEventListener('input', () => {
-            renderRosterPreview();
+            // データが更新されたら、表示も更新する
+            if (document.getElementById('admin-view').classList.contains('hidden') === false) {
+                updateAdminViewData();
+            }
+        }, error => {
+            console.error("Error listening to participants collection:", error);
         });
     }
+
+    // Firestoreのデータ変更を管理者ビューに反映する
+    function updateAdminViewData() {
+        // 各コンポーネントを再描画
+        updateStatusView();
+        renderRosterTables();
+    }
+
+
 });

@@ -50,7 +50,8 @@
 - フォルダ構成のままPCへ配置（`index.html`, `script.js`, `style.css`, `assets/`, `vendor/` など）。
 - 可能なら簡易ローカルサーバー（任意）で起動:
   - Python: `py -m http.server 8080` → `http://localhost:8080/`
-  - Node: `npm -g i serve && serve -l 8080`
+  - Node: `npm -g
+   i serve && serve -l 8080`
 - ブラウザでポップアップ許可（Excel/PDF書き出し用）。
 
 2) 名簿のインポート（管理画面 → ファイル読み込み）
