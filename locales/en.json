@@ -69,6 +69,7 @@
     "backToReception": "Back to Reception Screen",
     "adminLogin": "Admin Login",
     "password": "Password",
+    "email": "Email Address",
     "login": "Login",
     "logout": "Logout",
     "cancel": "Cancel",
@@ -123,5 +124,10 @@
     "errorAlreadyRegistered": "You are already registered or on the waiting list.",
     "wrongPassword": "Incorrect password.",
     "noChoicesProvided": "You did not provide program preferences with your reservation, so you must select them now.",
-    "noCapstoneBriefingTime": "{name}, your Faculty of Engineering briefing session starts at {time}."
+    "noCapstoneBriefingTime": "{name}, your Faculty of Engineering briefing session starts at {time}.",
+    "languageSelfName": "English",
+    "languageSwitchedTo": "Language switched to {lang}.",
+    "mappingTitle": "Set Column Mapping",
+    "mappingApply": "Apply",
+    "mappingCancel": "Cancel"
 }

@@ -6,11 +6,14 @@
 			console.warn('Firebase SDK not loaded. Online mode disabled.');
 			return;
 		}
-		if (!window.firebaseConfig) {
+		if (window.firebase.apps && window.firebase.apps.length > 0) {
+			// already initialized
+		} else if (window.firebaseConfig) {
+			window.firebase.initializeApp(window.firebaseConfig);
+		} else {
 			console.warn('firebase-config.js not found. Define window.firebaseConfig to enable online mode.');
 			return;
 		}
-		window.firebase.initializeApp(window.firebaseConfig);
 		try {
 			if (window.firebase.firestore) {
 				const db = window.firebase.firestore();

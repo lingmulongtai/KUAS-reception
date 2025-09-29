@@ -68,6 +68,7 @@
     "resetData": "Atur Ulang Data Penerimaan",
     "backToReception": "Kembali ke Layar Penerimaan",
     "adminLogin": "Login Admin",
+    "email": "Alamat Email",
     "password": "Kata Sandi",
     "login": "Login",
     "logout": "Logout",
@@ -123,5 +124,10 @@
     "errorAlreadyRegistered": "Anda sudah terdaftar atau berada dalam daftar tunggu.",
     "wrongPassword": "Kata sandi salah.",
     "noChoicesProvided": "Anda tidak memberikan preferensi program saat reservasi, jadi Anda harus memilihnya sekarang.",
-    "noCapstoneBriefingTime": "{name}, sesi pengarahan Fakultas Teknik Anda dimulai pukul {time}."
+    "noCapstoneBriefingTime": "{name}, sesi pengarahan Fakultas Teknik Anda dimulai pukul {time}.",
+    "languageSelfName": "Bahasa Indonesia",
+    "languageSwitchedTo": "Bahasa diubah ke {lang}.",
+    "mappingTitle": "Atur pemetaan kolom",
+    "mappingApply": "Terapkan",
+    "mappingCancel": "Batal"
 }

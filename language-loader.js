@@ -34,16 +34,18 @@ window.applyTranslations = function(lang) {
 
     document.querySelectorAll('[data-lang-key]').forEach(el => {
         const key = el.dataset.langKey;
-        if (window.translations[langToUse] && typeof window.translations[langToUse][key] === 'string') {
-            el.textContent = window.translations[langToUse][key];
-        }
+        const primary = window.translations[langToUse] && window.translations[langToUse][key];
+        const fallback = window.translations['en'] && window.translations['en'][key];
+        const val = (typeof primary === 'string') ? primary : (typeof fallback === 'string' ? fallback : undefined);
+        if (typeof val === 'string') el.textContent = val;
     });
 
     document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
         const key = el.dataset.langKeyPlaceholder;
-        if (window.translations[langToUse] && typeof window.translations[langToUse][key] === 'string') {
-            el.placeholder = window.translations[langToUse][key];
-        }
+        const primary = window.translations[langToUse] && window.translations[langToUse][key];
+        const fallback = window.translations['en'] && window.translations['en'][key];
+        const val = (typeof primary === 'string') ? primary : (typeof fallback === 'string' ? fallback : undefined);
+        if (typeof val === 'string') el.placeholder = val;
     });
 };
 

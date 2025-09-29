@@ -281,6 +281,16 @@ h1[data-lang-key="mainTitle"] {
     white-space: nowrap;
     word-break: keep-all;
 }
+/* 日本語以外の言語では折り返しを許可し、モーダル/コンテナからはみ出さないように調整 */
+html:not([lang="ja"]) h1[data-lang-key="mainTitle"] {
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.16;
+}
 body.dark-mode h1[data-lang-key="mainTitle"] {
     background: linear-gradient(135deg, #9FE8C1 0%, #B9F2D8 50%, #E5FFB8 100%);
     background-clip: text;
@@ -773,32 +783,33 @@ body.dark-mode .top-bar-btn i { color: var(--text-color); }
     position: absolute;
     top: 55px;
     right: 110px;
-    background-color: var(--background-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     z-index: 1001;
     overflow: hidden;
-    padding: 4px;
+    padding: 6px;
     flex-direction: column;
 }
 
 .lang-menu a {
-    padding: 8px 16px;
+    padding: 10px 14px;
     text-decoration: none;
-    color: var(--text-color);
+    color: #1d1d1f;
     display: block;
-    transition: background-color 0.2s;
-    border-radius: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    border-radius: 6px;
     font-size: 14px;
 }
 
 .lang-menu a:hover {
-    background-color: var(--primary-hover-color);
+    background-color: #f2f2f7;
 }
 
 .lang-menu.visible {
     display: flex;
+    /* JSで fixed/left/top を設定するため既定位置は解除 */
 }
 
 /* --- トップバーのアニメーション --- */

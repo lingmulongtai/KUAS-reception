@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://www.gstatic.com; frame-src 'self' https://www.gstatic.com https://apis.google.com; child-src 'self' https://www.gstatic.com https://apis.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
     <meta name="referrer" content="no-referrer">
     <title>オープンキャンパス受付</title>
     <!-- CSSファイルを読み込み -->
@@ -45,6 +45,9 @@
             <a href="#" data-lang="en">English</a>
             <a href="#" data-lang="es">Español</a>
             <a href="#" data-lang="id">Bahasa Indonesia</a>
+            <a href="#" data-lang="hi">हिन्दी (Hindi)</a>
+            <a href="#" data-lang="zh">中文 (Chinese)</a>
+            <a href="#" data-lang="ko">한국어 (Korean)</a>
         </div>
         <button id="admin-entry-btn" class="top-bar-btn" title="管理画面へ"><i class="ph ph-gear-six"></i></button>
     </div>
@@ -304,7 +307,7 @@
         <div class="modal-content-inner">
             <h2 data-lang-key="adminLogin">管理者ログイン</h2>
             <div class="input-group">
-                <label for="admin-email">メールアドレス</label>
+                <label for="admin-email" data-lang-key="email">メールアドレス</label>
                 <input type="email" id="admin-email" autocomplete="off">
                 <label for="admin-password" data-lang-key="password">パスワード</label>
                 <input type="password" id="admin-password" autocomplete="off">
@@ -325,11 +328,11 @@
     <!-- 列マッピングモーダル -->
     <div id="mapping-modal" class="modal-overlay">
         <div class="modal-content-inner">
-            <h2 id="mapping-title">列の対応を設定</h2>
+            <h2 id="mapping-title" data-lang-key="mappingTitle">列の対応を設定</h2>
             <div id="mapping-form" class="input-group"></div>
             <div class="button-group" style="margin-top: 12px;">
-                <button id="btn-mapping-apply" class="btn btn-primary">適用</button>
-                <button id="btn-mapping-cancel" class="btn btn-secondary">キャンセル</button>
+                <button id="btn-mapping-apply" class="btn btn-primary" data-lang-key="mappingApply">適用</button>
+                <button id="btn-mapping-cancel" class="btn btn-secondary" data-lang-key="mappingCancel">キャンセル</button>
             </div>
         </div>
     </div>

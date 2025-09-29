@@ -92,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    // 安全にイベントを登録するユーティリティ（先に定義しておく）
+    const safeOn = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
+
     // データ保存（保存インジケーターなし）
     async function saveData(storeName, data) {
         try {
@@ -359,248 +362,11 @@ let currentTheme = 'light';
         prioritizeReserved: true,
         prioritizeGrade: true // 予約なしの学年優先（デフォルトON）
     };
+    // 管理者の認証状態（Firebase/フォールバックを統一管理）
+    let isAdminAuthenticated = false;
 // 管理パネル（プログラム編集）の未保存変更フラグ
 let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
-/*
-            grade2: "2nd Year High School",
-            grade3: "3rd Year High School",
-            other: "Other",
-            toProgramSelection: "Select Capstone Experience Program",
-            noCapstoneExperience: "For those attending only the Faculty of Engineering Briefing",
-            selectProgramTitle: "Select Your Preferred Programs",
-            selectProgramDesc: "You can select up to 3 preferences.",
-            confirmChoices: "Confirm Choices",
-            successTitle: "Registration Complete!",
-            successDesc: "You have been confirmed for the following program:",
-            successWaiting: "Your program will be assigned later.",
-            backToHome: "Back to Home",
-            adminPanel: "Admin Panel",
-            tabProgramEdit: "Edit Programs",
-            tabFileLoad: "Load Files",
-            tabRoster: "Roster Preview",
-            tabStatus: "Reception Status",
-            tabSettings: "Settings",
-            showTranslation: "Show English Translation",
-            jsonEditor: "View/Edit JSON",
-            applyJson: "Apply JSON",
-            addProgram: "+ Add Program",
-            saveChanges: "Save Changes",
-            fileUpload1: "① Mini-Capstone Experience Reservation Roster (xlsx)",
-            fileUpload2: "② Faculty of Engineering Briefing Session Roster (xlsx)",
-            loadProgress: "③ Load Progress (.json)",
-            rosterReservations: "Mini-Capstone Experience Reservation Roster",
-            rosterBriefing: "Faculty of Engineering Briefing Session Roster",
-            rosterOthers: "Others",
-            rosterSearchPlaceholder: "Search by Name/Furigana",
-            statusConfirmed: "Confirmed",
-            statusWaiting: "Waiting",
-            statusNotRegistered: "Not Registered",
-            confirmedList: "Confirmed List",
-            waitingList: "Waiting List",
-            assignWaiting: "Assign Waiting Participants",
-            saveProgress: "Save Progress",
-            exportData: "Export",
-            exportSelect: "Select Export Format",
-            exportExcelBtn: "Excel",
-            exportPdfBtn: "PDF",
-            prioritizeReserved: "Prioritize Reserved Participants",
-            prioritizeDesc: "When ON, walk-in participants are set to 'Waiting'. After all registrations, assign them from the 'Reception Status' tab using the 'Assign Waiting Participants' button.",
-            prioritizeGrade: "Prioritize by Grade (for Walk-ins)",
-            prioritizeGradeDesc: "When ON, waiting walk-ins are assigned by grade (3rd yr → 2nd yr → 1st yr → Other). When OFF, it's first-come, first-served.",
-            resetData: "Reset Reception Data",
-            backToReception: "Back to Reception Screen",
-            adminLogin: "Admin Login",
-            password: "Password",
-            login: "Login",
-            logout: "Logout",
-            cancel: "Cancel",
-            choice1: "1st Choice",
-            choice2: "2nd Choice",
-            choice3: "3rd Choice",
-            nameHeader: "Name",
-            programHeader: "Program",
-            statusHeader: "Status (count)",
-            attendeesHeader: "Attendees",
-            waitingHeader: "Waiting for Assignment",
-            furiganaHeader: "Furigana",
-            timeHeader: "Time",
-            noAttendees: "None yet",
-            unselected: "Not selected",
-            titleLabel: "Title",
-            descriptionLabel: "Description",
-            capacityLabel: "Capacity",
-            deleteButton: "Delete",
-            autoTranslate: "Auto-translate to English",
-            titleEnLabel: "Title (English)",
-            descriptionEnLabel: "Description (English)",
-            full: "This program is full",
-            cardView: "Card View",
-            totalConfirmed: "Total Confirmed",
-            totalWaiting: "Total Waiting",
-            totalAttendees: "Total Registered",
-            scheduleTitle: "Schedule",
-            companionsCountLabel: "Number of Companions",
-            noCapstoneTitle: "Registration Complete",
-            noCapstoneDesc: "Your registration for not participating in the capstone experience is complete.",
-            noCapstoneInfo: "If you are only attending the Faculty of Engineering briefing, please register for it separately.",
-            nameSpaceNote: "※ Please put a space between family and given name",
-            errorEnterName: "Please enter your name.",
-            errorNotFound: "Reservation not found. Please check the name or register as a walk-in.",
-            errorAllFields: "Please fill in all required fields.",
-            errorSelectProgram: "Please select at least one program.",
-            errorJsonFormat: "Invalid JSON format.",
-            infoJsonApplied: "Data applied from JSON.",
-            infoChangesSaved: "Changes have been saved.",
-            settingsSaved: "Settings have been saved.",
-            errorProgramFull: "This program is full. Please choose another.",
-            errorInvalidProgram: "Invalid program data. Please choose another.",
-            errorDuplicateChoices: "You cannot select the same program for multiple preferences.",
-            errorUnexpected: "An unexpected error occurred. Please try again.",
-            confirmDelete: (title) => `Are you sure you want to delete "${title}"?`,
-            assignConfirm: (count) => `Assign ${count} people to programs. Are you sure?`,
-            assignComplete: (count) => `Assignment for ${count} people is complete.`,
-            noWaiting: "There are no participants on the waiting list.",
-            noRosterData: "Roster data has not been imported. Please import the roster file from the admin panel.",
-            resetConfirm: "All reception data (confirmed and waiting lists) will be reset. This action cannot be undone. Are you sure?",
-            resetComplete: "Data has been reset. The page will now reload.",
-            reloadDisabled: "Reloading is disabled on this page to prevent data loss.",
-            errorAlreadyRegistered: "You are already registered or on the waiting list.",
-            wrongPassword: "Incorrect password.",
-            noChoicesProvided: "You did not provide program preferences with your reservation, so you must select them now.",
-            noCapstoneBriefingTime: "{name}, your Faculty of Engineering briefing session starts at {time}.",
-        },
-        es: { // Ejemplo de un tercer idioma
-            mainTitle: "Recepción de Experiencia Mini-Capstone de la Facultad de Ingeniería",
-            reserved: "Reservado",
-            walkIn: "Sin reserva",
-            back: "Volver",
-            enterFullName: "Por favor, ingrese su nombre completo",
-            reservedNameInputTitle: "Reservado - Ingrese su nombre",
-            walkInNameInputTitle: "Sin reserva - Ingrese su nombre",
-            namePlaceholder: "Ej: Taro Yamada",
-            checkReservation: "Verificar Reserva",
-            confirmDetails: "Confirmar sus datos",
-            confirmSubmit: "Confirmar",
-            changeReservation: "Cambiar preferencias",
-            name: "Nombre",
-            furigana: "Furigana",
-            furiganaPlaceholder: "Ej: YAMADA TARO",
-            requiredMark: "Wajib",
-            school: "Nama Sekolah",
-            schoolPlaceholder: "Ej: SMA Negeri 1",
-            grade: "Kelas",
-            selectGrade: "Silakan pilih",
-            grade1: "Kelas 1 SMA",
-            grade2: "Kelas 2 SMA",
-            grade3: "Kelas 3 SMA",
-            other: "Lainnya",
-            toProgramSelection: "Pilih Program Pengalaman Capstone",
-            noCapstoneExperience: "Bagi yang hanya menghadiri Pengarahan Fakultas Teknik",
-            selectProgramTitle: "Pilih Program Pilihan Anda",
-            selectProgramDesc: "Anda dapat memilih hingga 3 preferensi.",
-            confirmChoices: "Konfirmasi Pilihan",
-            successTitle: "Pendaftaran Selesai!",
-            successDesc: "Anda telah dikonfirmasi untuk program berikut:",
-            successWaiting: "Program Anda akan ditentukan nanti.",
-            backToHome: "Kembali ke Beranda",
-            adminPanel: "Panel Admin",
-            tabProgramEdit: "Edit Program",
-            tabFileLoad: "Muat File",
-            tabRoster: "Pratinjau Daftar Nama",
-            tabStatus: "Status Penerimaan",
-            tabSettings: "Pengaturan",
-            showTranslation: "Tampilkan Terjemahan Bahasa Inggris",
-            jsonEditor: "Lihat/Edit JSON",
-            applyJson: "Terapkan JSON",
-            addProgram: "+ Tambah Program",
-            saveChanges: "Simpan Perubahan",
-            fileUpload1: "① Daftar Reservasi Pengalaman Mini-Capstone (xlsx)",
-            fileUpload2: "② Daftar Sesi Pengarahan Fakultas Teknik (xlsx)",
-            loadProgress: "③ Muat Progres (.json)",
-            rosterReservations: "Daftar Reservasi Pengalaman Mini-Capstone",
-            rosterBriefing: "Daftar Sesi Pengarahan Fakultas Teknik",
-            rosterOthers: "Lainnya",
-            rosterSearchPlaceholder: "Cari berdasarkan Nama/Furigana",
-            statusConfirmed: "Terkonfirmasi",
-            statusWaiting: "Menunggu",
-            statusNotRegistered: "Belum Terdaftar",
-            confirmedList: "Daftar Terkonfirmasi",
-            waitingList: "Daftar Tunggu",
-            assignWaiting: "Tetapkan Peserta yang Menunggu",
-            saveProgress: "Simpan Progres",
-            exportData: "Ekspor",
-            exportSelect: "Pilih Format Ekspor",
-            exportExcelBtn: "Excel",
-            exportPdfBtn: "PDF",
-            prioritizeReserved: "Prioritaskan Peserta yang Reservasi",
-            prioritizeDesc: "Jika AKTIF, peserta yang datang langsung akan berstatus 'Menunggu'. Setelah semua pendaftaran selesai, tetapkan mereka dari tab 'Status Penerimaan' menggunakan tombol 'Tetapkan Peserta yang Menunggu'.",
-            prioritizeGrade: "Prioritaskan berdasarkan Kelas (untuk yang Langsung Datang)",
-            prioritizeGradeDesc: "Jika AKTIF, peserta yang menunggu akan ditetapkan berdasarkan kelas (Kelas 3 → Kelas 2 → Kelas 1 → Lainnya). Jika NONAKTIF, berdasarkan urutan kedatangan.",
-            resetData: "Atur Ulang Data Penerimaan",
-            backToReception: "Kembali ke Layar Penerimaan",
-            adminLogin: "Login Admin",
-            password: "Kata Sandi",
-            login: "Login",
-            logout: "Logout",
-            cancel: "Batal",
-            choice1: "Pilihan 1",
-            choice2: "Pilihan 2",
-            choice3: "Pilihan 3",
-            nameHeader: "Nama",
-            programHeader: "Program",
-            statusHeader: "Status (jumlah)",
-            attendeesHeader: "Peserta",
-            waitingHeader: "Menunggu Penempatan",
-            furiganaHeader: "Furigana",
-            timeHeader: "Waktu",
-            noAttendees: "Belum ada",
-            unselected: "Tidak dipilih",
-            titleLabel: "Judul",
-            descriptionLabel: "Deskripsi",
-            capacityLabel: "Kapasitas",
-            deleteButton: "Hapus",
-            autoTranslate: "Terjemahkan otomatis ke Bahasa Inggris",
-            titleEnLabel: "Judul (Inggris)",
-            descriptionEnLabel: "Deskripsi (Inggris)",
-            full: "Program ini sudah penuh",
-            cardView: "Tampilan Kartu",
-            totalConfirmed: "Total Terkonfirmasi",
-            totalWaiting: "Total Menunggu",
-            totalAttendees: "Total Terdaftar",
-            scheduleTitle: "Jadwal",
-            companionsCountLabel: "Jumlah Pendamping",
-            noCapstoneTitle: "Pendaftaran Selesai",
-            noCapstoneDesc: "Pendaftaran Anda untuk tidak berpartisipasi dalam pengalaman capstone telah selesai.",
-            noCapstoneInfo: "Jika Anda hanya menghadiri pengarahan Fakultas Teknik, silakan mendaftar secara terpisah.",
-            nameSpaceNote: "※ Harap beri spasi antara nama keluarga dan nama depan",
-            // Alert Messages
-            errorEnterName: "Silakan masukkan nama Anda.",
-            errorNotFound: "Reservasi tidak ditemukan. Silakan periksa nama atau daftar sebagai peserta langsung.",
-            errorAllFields: "Harap isi semua kolom yang wajib diisi.",
-            errorSelectProgram: "Silakan pilih setidaknya satu program.",
-            errorJsonFormat: "Format JSON tidak valid.",
-            infoJsonApplied: "Data diterapkan dari JSON.",
-            infoChangesSaved: "Perubahan telah disimpan.",
-            settingsSaved: "Pengaturan telah disimpan.",
-            errorProgramFull: "Program ini penuh. Silakan pilih yang lain.",
-            errorInvalidProgram: "Data program tidak valid. Silakan pilih yang lain.",
-            errorDuplicateChoices: "Anda tidak dapat memilih program yang sama untuk beberapa preferensi.",
-            errorUnexpected: "Terjadi kesalahan tak terduga. Silakan coba lagi.",
-            confirmDelete: (title) => `Apakah Anda yakin ingin menghapus "${title}"?`,
-            assignConfirm: (count) => `Tetapkan ${count} orang ke program. Apakah Anda yakin?`,
-            assignComplete: (count) => `Penetapan untuk ${count} orang selesai.`,
-            noWaiting: "Tidak ada peserta dalam daftar tunggu.",
-            noRosterData: "Data daftar nama belum diimpor. Silakan impor file dari panel admin.",
-            resetConfirm: "Semua data penerimaan (daftar terkonfirmasi dan menunggu) akan diatur ulang. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin?",
-            resetComplete: "Data telah diatur ulang. Halaman akan dimuat ulang sekarang.",
-            reloadDisabled: "Memuat ulang dinonaktifkan di halaman ini untuk mencegah kehilangan data.",
-            errorAlreadyRegistered: "Anda sudah terdaftar atau berada dalam daftar tunggu.",
-            wrongPassword: "Kata sandi salah.",
-            noChoicesProvided: "Anda tidak memberikan preferensi program saat reservasi, jadi Anda harus memilihnya sekarang.",
-            noCapstoneBriefingTime: "{name}, sesi pengarahan Fakultas Teknik Anda dimulai pukul {time}.",
-        }
-    };*/
 
     async function updateLanguage(lang) {
         await window.loadTranslations(lang);
@@ -793,6 +559,8 @@ let adminEditorDirty = false;
     function showAdminView() {
         receptionView.classList.add('hidden');
         adminView.classList.remove('hidden');
+        // ログインポップアップは確実に閉じる
+        if (adminLoginModal) adminLoginModal.classList.remove('visible');
         // 設定ボタンをアニメーションで右へ退避
         setAdminButtonVisibilityWithAnimation(false);
         try {
@@ -2014,6 +1782,7 @@ function columnLetter(index) {
         currentTheme = theme;
         document.body.classList.toggle('dark-mode', theme === 'dark');
         themeSwitchBtn.innerHTML = theme === 'dark' ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
+        if (themeSwitchBtn) themeSwitchBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
         localStorage.setItem('receptionTheme', theme);
     }
 
@@ -2031,8 +1800,239 @@ function columnLetter(index) {
     const savedTheme = localStorage.getItem('receptionTheme') || 'light';
     setTheme(savedTheme);
 
+    // トップバーのボタン群を初期化
+    function setupTopBarButtons() {
+        const themeSwitchBtn = document.getElementById('theme-switch-btn');
+        const helpBtn = document.getElementById('help-btn');
+        const helpModal = document.getElementById('help-modal');
+        const helpClose = document.getElementById('btn-close-help');
+        const langSwitchBtn = document.getElementById('lang-switch-btn');
+        const langMenu = document.getElementById('lang-menu');
+
+        function showLangMenu() {
+            if (!langMenu || !langSwitchBtn) return;
+            langMenu.classList.add('visible');
+            // 次のフレームで位置計算（サイズ計測後）
+            requestAnimationFrame(() => {
+                const btnRect = langSwitchBtn.getBoundingClientRect();
+                const menuRect = langMenu.getBoundingClientRect();
+                const gap = 8;
+                const top = Math.round(btnRect.bottom + gap);
+                let left = Math.round(btnRect.right - menuRect.width);
+                left = Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8));
+                langMenu.style.position = 'fixed';
+                langMenu.style.top = `${top}px`;
+                langMenu.style.left = `${left}px`;
+                langMenu.style.right = 'auto';
+            });
+        }
+
+        function hideLangMenu() {
+            if (!langMenu) return;
+            langMenu.classList.remove('visible');
+            langMenu.style.top = '';
+            langMenu.style.left = '';
+            langMenu.style.right = '';
+            langMenu.style.position = '';
+        }
+
+        // テーマ切替
+        safeOn(themeSwitchBtn, 'click', () => {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+            const msg = (currentLanguage === 'ja')
+                ? (newTheme === 'dark' ? 'テーマがダークモードに切り替わりました。' : 'テーマがライトモードに切り替わりました。')
+                : (newTheme === 'dark' ? 'Theme switched to Dark mode.' : 'Theme switched to Light mode.');
+            showSaveIndicator(msg);
+        });
+        if (themeSwitchBtn) {
+            themeSwitchBtn.setAttribute('role', 'button');
+            themeSwitchBtn.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
+            safeOn(themeSwitchBtn, 'keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); themeSwitchBtn.click(); }
+            });
+        }
+
+        // ヘルプモーダル
+        safeOn(helpBtn, 'click', () => { if (helpModal) helpModal.classList.add('visible'); });
+        safeOn(helpClose, 'click', () => { if (helpModal) helpModal.classList.remove('visible'); });
+        safeOn(helpModal, 'click', (e) => { if (e.target && e.target.id === 'help-modal') e.currentTarget.classList.remove('visible'); });
+
+        // 言語切替
+        safeOn(langSwitchBtn, 'click', () => {
+            hideLangMenu();
+            const newLang = currentLanguage === 'ja' ? 'en' : 'ja';
+            updateLanguage(newLang);
+            const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
+            const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
+            showSaveIndicator(tmpl.replace('{lang}', langName));
+        });
+        safeOn(langSwitchBtn, 'contextmenu', (e) => { e.preventDefault(); if (!langMenu) return; if (langMenu.classList.contains('visible')) { hideLangMenu(); } else { showLangMenu(); } });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
+                hideLangMenu();
+            }
+        });
+        safeOn(langMenu, 'click', (e) => {
+            e.preventDefault();
+            if (e.target.tagName === 'A') {
+                const newLang = e.target.dataset.lang;
+                if (newLang && newLang !== currentLanguage) {
+                    updateLanguage(newLang);
+                    const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
+                    const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
+                    showSaveIndicator(tmpl.replace('{lang}', langName));
+                }
+                hideLangMenu();
+            }
+        });
+    }
+
+    setupTopBarButtons();
+    // Firebase/Firestore 初期化をキック
+    setTimeout(initializeFirestore, 0);
+
+    // 管理者ログインの初期化を一元化
+    function setupAdminAuth() {
+        const loginBtn = document.getElementById('btn-admin-login');
+        const cancelBtn = document.getElementById('btn-cancel-login');
+        const logoutBtn = document.getElementById('btn-admin-logout');
+        const emailInput = document.getElementById('admin-email');
+        const passwordInput = document.getElementById('admin-password');
+        const emailSpan = document.getElementById('admin-user-email');
+        const errorEl = document.getElementById('password-error');
+
+        let isLoggingIn = false;
+
+        function openAdminLoginModal() {
+            if (!adminLoginModal) return;
+            errorEl.textContent = '';
+            adminLoginModal.classList.add('visible');
+            setTimeout(() => (emailInput && emailInput.focus()), 0);
+        }
+
+        function getFirebaseAuth() {
+            return (window.firebase && window.firebase.auth) ? window.firebase.auth() : null;
+        }
+
+        // エントリーボタン（未ログイン時のみモーダルを表示）
+        safeOn(adminEntryBtn, 'click', () => {
+            const auth = getFirebaseAuth();
+            const user = auth ? auth.currentUser : null;
+            const fallbackSession = (!auth && localStorage.getItem('adminSession') === 'true');
+
+            if (isAdminAuthenticated || user || fallbackSession) {
+                showAdminView();
+                return;
+            }
+
+            openAdminLoginModal();
+        });
+
+        // キャンセル
+        safeOn(cancelBtn, 'click', () => adminLoginModal.classList.remove('visible'));
+
+        // ログイン
+        async function performLogin() {
+            if (isLoggingIn) return;
+            isLoggingIn = true;
+            loginBtn.disabled = true;
+            errorEl.textContent = '';
+            try {
+                const email = (emailInput.value || '').trim();
+                const password = passwordInput.value || '';
+                const auth = getFirebaseAuth();
+                if (auth) {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    // 遷移は onAuthStateChanged に委譲
+                } else {
+                    if (password === 'admin') {
+                        adminLoginModal.classList.remove('visible');
+                        passwordInput.value = '';
+                        try { localStorage.setItem('adminSession', 'true'); } catch (_) {}
+                        showAdminView();
+                        updateAdminEntryVisual(true);
+                        isAdminAuthenticated = true;
+                    } else {
+                        const msg = getTranslation('wrongPassword') || 'Wrong password.';
+                        showCustomAlert('wrongPassword');
+                        errorEl.textContent = msg;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                const msg = (e && e.code === 'auth/wrong-password') || (e && e.code === 'auth/user-not-found')
+                    ? (getTranslation('wrongPassword') || 'Wrong password.')
+                    : (e && e.message) || 'Error';
+                showCustomAlert('wrongPassword');
+                errorEl.textContent = msg;
+            } finally {
+                isLoggingIn = false;
+                loginBtn.disabled = false;
+            }
+        }
+
+        safeOn(loginBtn, 'click', performLogin);
+        safeOn(passwordInput, 'keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); performLogin(); } });
+
+        // ログアウト
+        safeOn(logoutBtn, 'click', async () => {
+            try {
+                const auth = getFirebaseAuth();
+                if (auth) {
+                    await auth.signOut();
+                }
+            } catch (e) { console.error(e); }
+            try { localStorage.removeItem('adminSession'); } catch (_) {}
+            if (emailSpan) emailSpan.textContent = '';
+            showReceptionView();
+            updateAdminEntryVisual(false);
+            isAdminAuthenticated = false;
+        });
+
+        // 状態監視（Firebaseがある場合）
+        try {
+            const auth = getFirebaseAuth();
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    isAdminAuthenticated = !!user;
+                    updateAdminEntryVisual(isAdminAuthenticated);
+                    if (user) {
+                        if (emailSpan) emailSpan.textContent = user.email || '';
+                        adminLoginModal.classList.remove('visible');
+                        showAdminView();
+                    }
+                });
+            } else {
+                const fallbackSession = localStorage.getItem('adminSession') === 'true';
+                isAdminAuthenticated = fallbackSession;
+                updateAdminEntryVisual(isAdminAuthenticated);
+                if (fallbackSession) showAdminView();
+            }
+        } catch (_) {}
+    }
+
+    setupAdminAuth();
+
     // 汎用セーフリスナー
     const addListener = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
+
+    // Firebase 初期化が未完了でも自動で補完する
+    function ensureFirebaseInitialized() {
+        try {
+            const fb = window.firebase;
+            if (!fb || !fb.initializeApp) return false;
+            if (fb.apps && fb.apps.length > 0) return true;
+            if (window.firebaseConfig) {
+                fb.initializeApp(window.firebaseConfig);
+                return true;
+            }
+            return false;
+        } catch (e) {
+            console.error('ensureFirebaseInitialized error', e);
+            return false;
+        }
+    }
 
     // カスタムアラートの閉じるボタン
     addListener(document.getElementById('btn-alert-ok'), 'click', () => {
@@ -2290,114 +2290,7 @@ function columnLetter(index) {
         document.getElementById(id).addEventListener('input', (e) => e.target.classList.remove('input-error'));
     });
 
-    // 管理者フロー
-    document.getElementById('admin-entry-btn').addEventListener('click', () => {
-        try {
-            if (window.firebase && window.firebase.auth) {
-                const userNow = window.firebase.auth().currentUser;
-                if (userNow) {
-                    showAdminView();
-                    return;
-                }
-                // 認証状態がまだ復元中の可能性があるため、短く待ってから再判定（最大1秒まで再試行）
-                let tries = 0;
-                const retry = () => {
-                    const userLater = window.firebase.auth().currentUser;
-                    if (userLater) { showAdminView(); return; }
-                    if (++tries >= 4) { adminLoginModal.classList.add('visible'); return; }
-                    setTimeout(retry, 250);
-                };
-                retry();
-                return;
-            }
-        } catch (_) {}
-        const fallbackSession = localStorage.getItem('adminSession') === 'true';
-        if (fallbackSession) { showAdminView(); return; }
-        adminLoginModal.classList.add('visible');
-    });
-    document.getElementById('btn-cancel-login').addEventListener('click', () => adminLoginModal.classList.remove('visible'));
-    // Firebase Auth でメール/パスワードログイン
-    document.getElementById('btn-admin-login').addEventListener('click', async () => {
-        const emailInput = document.getElementById('admin-email');
-        const passwordInput = document.getElementById('admin-password');
-        const errorEl = document.getElementById('password-error');
-        errorEl.textContent = '';
-        try {
-            if (window.firebase && window.firebase.auth) {
-                await window.firebase.auth().signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
-                // onAuthStateChanged に処理を委譲（確実に状態反映）
-                return;
-            } else {
-                // Firebase未設定の場合は従来パスワード 'admin' でフォールバック
-                if (passwordInput.value === 'admin') {
-                    adminLoginModal.classList.remove('visible');
-                    passwordInput.value = '';
-                    // フォールバックセッションを保持（ログアウトまで有効）
-                    try { localStorage.setItem('adminSession', 'true'); } catch (_) {}
-                    showAdminView();
-                    updateAdminEntryVisual(true);
-                } else {
-                    showCustomAlert('wrongPassword');
-                    errorEl.textContent = getTranslation('wrongPassword') || 'Wrong password.';
-                }
-            }
-        } catch (e) {
-            console.error(e);
-            const msg = (e && e.code === 'auth/wrong-password') || (e && e.code === 'auth/user-not-found') ? (getTranslation('wrongPassword') || 'Wrong password.') : (e && e.message) || 'Error';
-            showCustomAlert('wrongPassword');
-            errorEl.textContent = msg;
-        }
-    });
-    // Enterキーでログイン
-    const adminPasswordInput = document.getElementById('admin-password');
-    if (adminPasswordInput) {
-        adminPasswordInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('btn-admin-login').click();
-            }
-        });
-    }
-    // ログアウト
-    const adminLogoutBtn = document.getElementById('btn-admin-logout');
-    if (adminLogoutBtn) {
-        adminLogoutBtn.addEventListener('click', async () => {
-            try {
-                if (window.firebase && window.firebase.auth) {
-                    await window.firebase.auth().signOut();
-                }
-            } catch (e) { console.error(e); }
-            // フォールバックセッションをクリア
-            try { localStorage.removeItem('adminSession'); } catch (_) {}
-            document.getElementById('admin-user-email').textContent = '';
-            // 受付画面へ戻す
-            showReceptionView();
-            updateAdminEntryVisual(false);
-        });
-    }
-
-    // ページ読み込み時、既存セッションがあれば管理画面を自動表示
-    try {
-        if (window.firebase && window.firebase.auth) {
-            // Firebaseは非同期で状態復元されるため、onAuthStateChangedで遷移
-            window.firebase.auth().onAuthStateChanged(function(user){
-                updateAdminEntryVisual(!!user);
-                if (user) {
-                    const emailSpan = document.getElementById('admin-user-email');
-                    if (emailSpan) emailSpan.textContent = user.email || '';
-                    // ログインが確認できたら必ず管理画面へ遷移し、モーダルを閉じる
-                    adminLoginModal.classList.remove('visible');
-                    showAdminView();
-                }
-            });
-        } else {
-            const fallbackSession = localStorage.getItem('adminSession') === 'true';
-            updateAdminEntryVisual(fallbackSession);
-            if (fallbackSession) {
-                showAdminView();
-            }
-        }
-    } catch (_) {}
+    // 管理者フローは setupAdminAuth で初期化済み
 // 未保存変更がある場合に離脱確認してからタブ切り替え
 document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
@@ -2552,22 +2445,6 @@ if (statusViewToggle) {
     });
     
     document.getElementById('btn-back-to-home').addEventListener('click', showReceptionView);
-    
-    // ヘルプ: 安全にイベント登録
-    safeOn(document.getElementById('help-btn'), 'click', () => {
-        const modal = document.getElementById('help-modal');
-        if (modal) modal.classList.add('visible');
-    });
-    safeOn(document.getElementById('btn-close-help'), 'click', () => {
-        const modal = document.getElementById('help-modal');
-        if (modal) modal.classList.remove('visible');
-    });
-    // ヘルプモーダルの外側をクリックしても閉じる
-    safeOn(document.getElementById('help-modal'), 'click', (e) => {
-        if (e.target && e.target.id === 'help-modal') {
-            e.currentTarget.classList.remove('visible');
-        }
-    });
 
     // 管理者ログインモーダルの外側をクリックしても閉じる
     document.getElementById('admin-login-modal').addEventListener('click', (e) => {
@@ -2576,64 +2453,15 @@ if (statusViewToggle) {
         }
     });
 
-    const langSwitchBtn = document.getElementById('lang-switch-btn');
-    const langMenu = document.getElementById('lang-menu');
-    const safeOn = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
-
-    // Left-click: Toggle Ja/En and ensure menu is hidden.
-    safeOn(langSwitchBtn, 'click', () => {
-        langMenu.classList.remove('visible'); // Hide menu on left-click
-        const newLang = currentLanguage === 'ja' ? 'en' : 'ja';
-        updateLanguage(newLang);
-        const msg = newLang === 'ja' ? '言語が日本語に切り替わりました。' : 'Language switched to English.';
-        showSaveIndicator(msg);
-    });
-
-    // Right-click: Prevent default and toggle menu.
-    safeOn(langSwitchBtn, 'contextmenu', (e) => {
-        e.preventDefault();
-        langMenu.classList.toggle('visible');
-    });
-
-    // Global click: Hide menu if click is outside the button and menu.
-    document.addEventListener('click', (e) => {
-        // Use closest to handle clicks on child elements of the button (like the icon)
-        if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
-            if (langMenu) langMenu.classList.remove('visible');
-        }
-    });
-
-    // Menu click: Select language and hide menu.
-    safeOn(langMenu, 'click', (e) => {
-        e.preventDefault(); // Prevent <a> tag from navigating
-        if (e.target.tagName === 'A') {
-            const newLang = e.target.dataset.lang;
-            if (newLang && newLang !== currentLanguage) { // Only update if language is different
-                updateLanguage(newLang);
-                let msg = '';
-                switch (newLang) {
-                    case 'ja': msg = '言語が日本語に切り替わりました。'; break;
-                    case 'en': msg = 'Language switched to English.'; break;
-                    case 'es': msg = 'Idioma cambiado a Español.'; break;
-                    case 'id': msg = 'Bahasa diubah ke Bahasa Indonesia.'; break;
-                }
-                showSaveIndicator(msg);
-            }
-            langMenu.classList.remove('visible'); // Always hide after click
-        }
-    });
-
-    safeOn(themeSwitchBtn, 'click', () => {
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        const msg = (currentLanguage === 'ja')
-            ? (newTheme === 'dark' ? 'テーマがダークモードに切り替わりました。' : 'テーマがライトモードに切り替わりました。')
-            : (newTheme === 'dark' ? 'Theme switched to Dark mode.' : 'Theme switched to Light mode.');
-        showSaveIndicator(msg);
-    });
+    // トップバーのボタンは setupTopBarButtons で初期化済み
 
     // Firestoreの初期化とリスナー設定
     function initializeFirestore() {
+        if (!ensureFirebaseInitialized()) {
+            console.warn('Firebase app not initialized yet. Retrying...');
+            setTimeout(initializeFirestore, 200);
+            return;
+        }
         if (window.firebase && window.firebase.firestore) {
             const dbFS = window.firebase.firestore();
             listenToParticipants(dbFS);

@@ -68,6 +68,7 @@
     "resetData": "受付データをリセット",
     "backToReception": "受付画面に戻る",
     "adminLogin": "管理者ログイン",
+    "email": "メールアドレス",
     "password": "パスワード",
     "login": "ログイン",
     "logout": "ログアウト",
@@ -123,5 +124,10 @@
     "errorAlreadyRegistered": "あなたはすでに受付済みまたは待機中です。",
     "wrongPassword": "パスワードが間違っています。",
     "noChoicesProvided": "あなたはご予約時にプログラム希望を出していないので、希望を出す必要があります。",
-    "noCapstoneBriefingTime": "{name}様、あなたの工学部説明会は{time}から始まります。"
+    "noCapstoneBriefingTime": "{name}様、あなたの工学部説明会は{time}から始まります。",
+    "languageSelfName": "日本語",
+    "languageSwitchedTo": "言語が{lang}に切り替わりました。",
+    "mappingTitle": "列の対応を設定",
+    "mappingApply": "適用",
+    "mappingCancel": "キャンセル"
 }
