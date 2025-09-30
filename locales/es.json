@@ -129,5 +129,11 @@
     "languageSwitchedTo": "Idioma cambiado a {lang}.",
     "mappingTitle": "Configurar mapeo de columnas",
     "mappingApply": "Aplicar",
-    "mappingCancel": "Cancelar"
+    "mappingCancel": "Cancelar",
+    "themeLight": "Modo claro",
+    "themeDark": "Modo oscuro",
+    "themeLiquid": "Modo Liquid Glass",
+    "liquidActivated": "Modo Liquid Glass activado.",
+    "lightActivated": "Modo claro activado.",
+    "darkActivated": "Modo oscuro activado."
 }

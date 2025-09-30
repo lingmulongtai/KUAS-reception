@@ -129,5 +129,11 @@
     "languageSwitchedTo": "Bahasa diubah ke {lang}.",
     "mappingTitle": "Atur pemetaan kolom",
     "mappingApply": "Terapkan",
-    "mappingCancel": "Batal"
+    "mappingCancel": "Batal",
+    "themeLight": "Mode terang",
+    "themeDark": "Mode gelap",
+    "themeLiquid": "Mode Liquid Glass",
+    "liquidActivated": "Mode Liquid Glass diaktifkan.",
+    "lightActivated": "Mode terang diaktifkan.",
+    "darkActivated": "Mode gelap diaktifkan."
 }

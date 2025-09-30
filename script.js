@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 既存のインジケーターがあれば削除
         const existingIndicator = document.querySelector('.save-indicator');
         if (existingIndicator) {
+            if (typeof existingIndicator._cleanup === 'function') {
+                try { existingIndicator._cleanup(); } catch (err) { console.warn('Indicator cleanup failed', err); }
+            }
             existingIndicator.remove();
         }
         
@@ -52,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         indicator.innerHTML = `<i class="ph ph-check-circle"></i> ${escapeHTML(message)}`;
         indicator.style.cssText = `
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
             background: rgba(15, 140, 82, 0.95);
             color: white;
@@ -66,12 +69,55 @@ document.addEventListener('DOMContentLoaded', () => {
             gap: 10px;
             box-shadow: 0 10px 24px rgba(0,0,0,0.2);
             opacity: 0;
-            transform: translateX(100%);
+            transform: translateY(100%);
             transition: all 0.3s ease;
         `;
         
         document.body.appendChild(indicator);
         
+        let cleanupHandlers = null;
+        if (document.body.classList.contains('liquid-mode')) {
+            const offset = 20;
+            indicator.style.position = 'absolute';
+            indicator.style.bottom = '';
+            indicator.style.right = '';
+            indicator.style.top = '';
+            indicator.style.left = '';
+
+            const computeScrollX = () => window.pageXOffset ?? document.documentElement.scrollLeft ?? document.body.scrollLeft ?? 0;
+            const computeScrollY = () => window.pageYOffset ?? document.documentElement.scrollTop ?? document.body.scrollTop ?? 0;
+
+            const updateIndicatorPosition = () => {
+                const scrollY = computeScrollY();
+                const scrollX = computeScrollX();
+                const availableHeight = window.innerHeight - indicator.offsetHeight - offset;
+                const availableWidth = window.innerWidth - indicator.offsetWidth - offset;
+                const top = Math.max(scrollY + offset, scrollY + Math.max(availableHeight, offset));
+                const left = Math.max(scrollX + offset, scrollX + Math.max(availableWidth, offset));
+                indicator.style.top = `${top}px`;
+                indicator.style.left = `${left}px`;
+            };
+
+            updateIndicatorPosition();
+            requestAnimationFrame(updateIndicatorPosition);
+            const onScroll = () => updateIndicatorPosition();
+            const onResize = () => updateIndicatorPosition();
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', onResize);
+            cleanupHandlers = () => {
+                window.removeEventListener('scroll', onScroll);
+                window.removeEventListener('resize', onResize);
+                indicator.style.top = '';
+                indicator.style.left = '';
+                indicator.style.bottom = '20px';
+                indicator.style.right = '20px';
+                indicator.style.position = 'fixed';
+            };
+            indicator._cleanup = cleanupHandlers;
+        } else {
+            indicator._cleanup = null;
+        }
+
         // アイコンを少し大きく
         const iconEl = indicator.querySelector('i');
         if (iconEl) {
@@ -81,14 +127,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // アニメーション
         setTimeout(() => {
             indicator.style.opacity = '1';
-            indicator.style.transform = 'translateX(0)';
+            indicator.style.transform = 'translateY(0)';
         }, 100);
         
         // 3秒後に消去
         setTimeout(() => {
             indicator.style.opacity = '0';
-            indicator.style.transform = 'translateX(100%)';
-            setTimeout(() => indicator.remove(), 300);
+            indicator.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                if (typeof indicator._cleanup === 'function') {
+                    try { indicator._cleanup(); } catch (err) { console.warn('Indicator cleanup failed', err); }
+                    indicator._cleanup = null;
+                }
+                indicator.remove();
+            }, 300);
         }, 3000);
     }
 
@@ -279,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- データ（本来はExcelから読み込む） ---
     let programs = [
-        { id: 'p1', title: '“紙”技エンジニアリング！', description: '一枚の紙をどれだけ長くできるか？どれだけの重さを支えられるか？切り方一つで変わる紙の可能性を切り拓こう！', capacity: 10, title_en: 'Paper Engineering Tricks!', description_en: 'How long can a single sheet of paper become? How much weight can it hold? Explore the surprising potential of paper with clever cuts and design.' },
+        { id: 'p1', title: '"紙"技エンジニアリング！', description: '一枚の紙をどれだけ長くできるか？どれだけの重さを支えられるか？切り方一つで変わる紙の可能性を切り拓こう！', capacity: 10, title_en: 'Paper Engineering Tricks!', description_en: 'How long can a single sheet of paper become? How much weight can it hold? Explore the surprising potential of paper with clever cuts and design.' },
         { id: 'p2', title: 'ChatGPTを操ろう！', description: 'いま話題の生成AIを使って、難しいコードのプログラミングなしで、楽しくアプリ作りに挑戦！', capacity: 15, title_en: 'Master ChatGPT!', description_en: 'Use trending generative AI to create fun apps without complex coding. Try hands-on building with ChatGPT as your partner.' },
         { id: 'p3', title: '現代の金属魔法？', description: '強靭なピアノ線を素手で折る！曲がった針金を一瞬で真っ直ぐに！身近な金属の不思議な現象を、実験で解き明かそう。', capacity: 10, title_en: 'Modern Metal Magic?', description_en: 'Snap tough piano wire with your bare hands? Straighten bent wire in an instant? Uncover the curious behavior of everyday metals through experiments.' },
         { id: 'p4', title: '電気の不思議を探ろう！', description: '1Vでは光らないLEDが、電気回路を工夫すれば光りだす？！電気の不思議を徹底調査して、謎を解き明かそう！', capacity: 12, title_en: 'Explore the Wonders of Electricity!', description_en: 'An LED won\'t light at 1V—unless you design the circuit cleverly! Investigate the mysteries of electricity and figure out why.' },
@@ -364,6 +416,8 @@ let currentTheme = 'light';
     };
     // 管理者の認証状態（Firebase/フォールバックを統一管理）
     let isAdminAuthenticated = false;
+    let lastReceptionSection = 'initial-selection';
+    let pendingAdminAccess = false;
 // 管理パネル（プログラム編集）の未保存変更フラグ
 let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
@@ -371,7 +425,11 @@ let adminEditorDirty = false;
     async function updateLanguage(lang) {
         await window.loadTranslations(lang);
         currentLanguage = lang;
-        document.documentElement.lang = lang;
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.classList.add('lang-switching');
+        requestAnimationFrame(() => {
+            document.documentElement.classList.remove('lang-switching');
+        });
         document.querySelectorAll('[data-lang-key]').forEach(el => {
             const key = el.dataset.langKey;
             const translation = getTranslation(key);
@@ -453,42 +511,13 @@ let adminEditorDirty = false;
     let isAdminBtnVisible = true;
 
     function setAdminButtonVisibilityWithAnimation(shouldShow) {
-        if (!adminEntryBtn || !topBarButtons) return;
-        if (shouldShow === isAdminBtnVisible) return;
-
-        if (shouldShow) {
-            // Show with slide-in, others move from right (50px) to original
+        if (!adminEntryBtn) return;
             adminEntryBtn.style.display = 'flex';
-            adminEntryBtn.classList.remove('slide-out-right');
-            adminEntryBtn.classList.add('slide-in-right');
-            topBarButtons.classList.remove('shift-right');
-            topBarButtons.classList.remove('shift-left');
-            topBarButtons.classList.add('shift-back');
             adminEntryBtn.style.pointerEvents = 'auto';
             adminEntryBtn.style.opacity = '1';
-            const onEnd = () => {
-                adminEntryBtn.classList.remove('slide-in-right');
-                topBarButtons.classList.remove('shift-back');
-                adminEntryBtn.removeEventListener('animationend', onEnd);
-            };
-            adminEntryBtn.addEventListener('animationend', onEnd);
-        } else {
-            // Hide with slide-out to the right, shift others right by one
-            adminEntryBtn.classList.remove('slide-in-right');
-            adminEntryBtn.classList.add('slide-out-right');
-            topBarButtons.classList.remove('shift-back');
-            topBarButtons.classList.add('shift-right');
-            adminEntryBtn.style.pointerEvents = 'none';
-            adminEntryBtn.style.opacity = '0';
-            const onEnd = () => {
-                adminEntryBtn.style.display = 'none';
-                adminEntryBtn.classList.remove('slide-out-right');
-                topBarButtons.classList.remove('shift-right');
-                adminEntryBtn.removeEventListener('animationend', onEnd);
-            };
-            adminEntryBtn.addEventListener('animationend', onEnd);
-        }
-        isAdminBtnVisible = shouldShow;
+        adminEntryBtn.classList.remove('slide-in-right', 'slide-out-right');
+        topBarButtons?.classList.remove('shift-right', 'shift-back');
+        isAdminBtnVisible = true;
     }
 
     function updateAdminEntryVisual(isLoggedIn) {
@@ -516,6 +545,8 @@ let adminEditorDirty = false;
     }
 
     function showReceptionSection(sectionId) {
+        if (!sectionId) return;
+        lastReceptionSection = sectionId;
         receptionSections.forEach(section => {
             section.classList.toggle('section-hidden', section.id !== sectionId);
         });
@@ -543,7 +574,7 @@ let adminEditorDirty = false;
 
     function navigateTo(targetSectionId) {
         const currentSection = document.querySelector('#reception-sections-wrapper .section:not(.section-hidden)');
-        if (currentSection) {
+        if (currentSection && currentSection.id !== targetSectionId) {
             navigationHistory.push(currentSection.id);
         }
         showReceptionSection(targetSectionId);
@@ -553,16 +584,17 @@ let adminEditorDirty = false;
         if (navigationHistory.length > 0) {
             const previousSectionId = navigationHistory.pop();
             showReceptionSection(previousSectionId);
+        } else {
+            showReceptionSection('initial-selection');
         }
     }
     
     function showAdminView() {
+        const currentSection = document.querySelector('#reception-sections-wrapper .section:not(.section-hidden)');
+        if (currentSection) lastReceptionSection = currentSection.id;
         receptionView.classList.add('hidden');
         adminView.classList.remove('hidden');
-        // ログインポップアップは確実に閉じる
         if (adminLoginModal) adminLoginModal.classList.remove('visible');
-        // 設定ボタンをアニメーションで右へ退避
-        setAdminButtonVisibilityWithAnimation(false);
         try {
             if (window.firebase && window.firebase.auth) {
                 const user = window.firebase.auth().currentUser;
@@ -572,6 +604,7 @@ let adminEditorDirty = false;
         } catch (_) {}
         renderAdminEditor();
         renderStatusTable();
+        navigationHistory = [];
     }
     
     function resetReceptionState() {
@@ -588,12 +621,16 @@ let adminEditorDirty = false;
         deleteData('formData', 'currentForm');
     }
 
-    function showReceptionView() {
+    function showReceptionView({ reset = false } = {}) {
         adminView.classList.add('hidden');
         receptionView.classList.remove('hidden');
         adminEntryBtn.classList.remove('hidden');
+        if (reset) {
         resetReceptionState();
-        showReceptionSection('initial-selection');
+            navigationHistory = [];
+            lastReceptionSection = 'initial-selection';
+        }
+        showReceptionSection(lastReceptionSection || 'initial-selection');
     }
     // --- 割り当てと完了画面 ---
     function assignProgram(user) {
@@ -1778,12 +1815,42 @@ function columnLetter(index) {
 
     // --- テーマ（ダークモード）関連 ---
     const themeSwitchBtn = document.getElementById('theme-switch-btn');
-    function setTheme(theme) {
+    function setTheme(theme, options = {}) {
+        if (!theme) return;
         currentTheme = theme;
-        document.body.classList.toggle('dark-mode', theme === 'dark');
-        themeSwitchBtn.innerHTML = theme === 'dark' ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
-        if (themeSwitchBtn) themeSwitchBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+
+        document.body.classList.remove('dark-mode', 'liquid-mode');
+        if (theme === 'dark') document.body.classList.add('dark-mode');
+        if (theme === 'liquid') document.body.classList.add('liquid-mode');
+
+        if (themeSwitchBtn) {
+            let icon = '<i class="ph ph-moon"></i>';
+            if (theme === 'dark') icon = '<i class="ph ph-sun"></i>';
+            if (theme === 'liquid') icon = '<i class="ph ph-drop"></i>';
+            themeSwitchBtn.innerHTML = icon;
+            themeSwitchBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+        }
+
+        const themeMenuLinks = document.querySelectorAll('#theme-menu a');
+        themeMenuLinks.forEach(link => {
+            const isActive = link.dataset.theme === theme;
+            link.classList.toggle('active', isActive);
+            link.setAttribute('aria-checked', isActive ? 'true' : 'false');
+        });
+
         localStorage.setItem('receptionTheme', theme);
+
+        const announce = options.announce ?? true;
+        if (announce) {
+            let key = 'lightActivated';
+            if (theme === 'dark') key = 'darkActivated';
+            if (theme === 'liquid') key = 'liquidActivated';
+            const translation = getTranslation(key);
+            const fallback = theme === 'liquid'
+                ? 'Liquid Glass mode activated.'
+                : (theme === 'dark' ? 'Dark mode activated.' : 'Light mode activated.');
+            showSaveIndicator(translation || fallback);
+        }
     }
 
     // リロード制御は無効化（F5 / Ctrl+R のブロックを削除）
@@ -1798,11 +1865,12 @@ function columnLetter(index) {
     updateLanguage(savedLang);
 
     const savedTheme = localStorage.getItem('receptionTheme') || 'light';
-    setTheme(savedTheme);
+    setTheme(savedTheme, { announce: false });
 
     // トップバーのボタン群を初期化
     function setupTopBarButtons() {
         const themeSwitchBtn = document.getElementById('theme-switch-btn');
+        const themeMenu = document.getElementById('theme-menu');
         const helpBtn = document.getElementById('help-btn');
         const helpModal = document.getElementById('help-modal');
         const helpClose = document.getElementById('btn-close-help');
@@ -1812,38 +1880,65 @@ function columnLetter(index) {
         function showLangMenu() {
             if (!langMenu || !langSwitchBtn) return;
             langMenu.classList.add('visible');
-            // 次のフレームで位置計算（サイズ計測後）
-            requestAnimationFrame(() => {
-                const btnRect = langSwitchBtn.getBoundingClientRect();
-                const menuRect = langMenu.getBoundingClientRect();
-                const gap = 8;
-                const top = Math.round(btnRect.bottom + gap);
-                let left = Math.round(btnRect.right - menuRect.width);
-                left = Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8));
-                langMenu.style.position = 'fixed';
-                langMenu.style.top = `${top}px`;
-                langMenu.style.left = `${left}px`;
-                langMenu.style.right = 'auto';
-            });
         }
 
         function hideLangMenu() {
             if (!langMenu) return;
             langMenu.classList.remove('visible');
-            langMenu.style.top = '';
-            langMenu.style.left = '';
-            langMenu.style.right = '';
-            langMenu.style.position = '';
+        }
+
+        function showThemeMenu() {
+            if (!themeMenu || !themeSwitchBtn) return;
+            themeMenu.classList.add('visible');
+            requestAnimationFrame(() => {
+                const btnRect = themeSwitchBtn.getBoundingClientRect();
+                const menuRect = themeMenu.getBoundingClientRect();
+                const gap = 8;
+                const top = Math.round(btnRect.bottom + gap);
+                let left = Math.round(btnRect.right - menuRect.width);
+                left = Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8));
+                themeMenu.style.position = 'fixed';
+                themeMenu.style.top = `${top}px`;
+                themeMenu.style.left = `${left}px`;
+                themeMenu.style.right = 'auto';
+            });
+        }
+
+        function hideThemeMenu() {
+            if (!themeMenu) return;
+            themeMenu.classList.remove('visible');
+            themeMenu.style.top = '';
+            themeMenu.style.left = '';
+            themeMenu.style.right = '';
+            themeMenu.style.position = '';
         }
 
         // テーマ切替
         safeOn(themeSwitchBtn, 'click', () => {
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             setTheme(newTheme);
-            const msg = (currentLanguage === 'ja')
-                ? (newTheme === 'dark' ? 'テーマがダークモードに切り替わりました。' : 'テーマがライトモードに切り替わりました。')
-                : (newTheme === 'dark' ? 'Theme switched to Dark mode.' : 'Theme switched to Light mode.');
-            showSaveIndicator(msg);
+        });
+        safeOn(themeSwitchBtn, 'contextmenu', (e) => {
+            e.preventDefault();
+            if (!themeMenu) return;
+            if (themeMenu.classList.contains('visible')) {
+                hideThemeMenu();
+            } else {
+                hideLangMenu();
+                showThemeMenu();
+            }
+        });
+        safeOn(themeMenu, 'click', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('a[data-theme]');
+            if (!target) return;
+            const newTheme = target.dataset.theme;
+            if (newTheme && newTheme !== currentTheme) {
+                setTheme(newTheme);
+                hideThemeMenu();
+            } else if (newTheme) {
+                hideThemeMenu();
+            }
         });
         if (themeSwitchBtn) {
             themeSwitchBtn.setAttribute('role', 'button');
@@ -1871,6 +1966,9 @@ function columnLetter(index) {
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
                 hideLangMenu();
+            }
+            if (!e.target.closest('#theme-switch-btn') && !(themeMenu && themeMenu.contains(e.target))) {
+                hideThemeMenu();
             }
         });
         safeOn(langMenu, 'click', (e) => {
@@ -1917,6 +2015,12 @@ function columnLetter(index) {
 
         // エントリーボタン（未ログイン時のみモーダルを表示）
         safeOn(adminEntryBtn, 'click', () => {
+            const isInAdmin = adminView && !adminView.classList.contains('hidden');
+            if (isInAdmin) {
+                showReceptionView();
+                return;
+            }
+
             const auth = getFirebaseAuth();
             const user = auth ? auth.currentUser : null;
             const fallbackSession = (!auth && localStorage.getItem('adminSession') === 'true');
@@ -1926,11 +2030,15 @@ function columnLetter(index) {
                 return;
             }
 
+            pendingAdminAccess = true;
             openAdminLoginModal();
         });
 
         // キャンセル
-        safeOn(cancelBtn, 'click', () => adminLoginModal.classList.remove('visible'));
+        safeOn(cancelBtn, 'click', () => {
+            pendingAdminAccess = false;
+            adminLoginModal.classList.remove('visible');
+        });
 
         // ログイン
         async function performLogin() {
@@ -1953,6 +2061,7 @@ function columnLetter(index) {
                         showAdminView();
                         updateAdminEntryVisual(true);
                         isAdminAuthenticated = true;
+                        setTheme(currentTheme || 'light', { announce: false });
                     } else {
                         const msg = getTranslation('wrongPassword') || 'Wrong password.';
                         showCustomAlert('wrongPassword');
@@ -1984,6 +2093,7 @@ function columnLetter(index) {
                 }
             } catch (e) { console.error(e); }
             try { localStorage.removeItem('adminSession'); } catch (_) {}
+            pendingAdminAccess = false;
             if (emailSpan) emailSpan.textContent = '';
             showReceptionView();
             updateAdminEntryVisual(false);
@@ -2000,14 +2110,16 @@ function columnLetter(index) {
                     if (user) {
                         if (emailSpan) emailSpan.textContent = user.email || '';
                         adminLoginModal.classList.remove('visible');
-                        showAdminView();
+                        if (pendingAdminAccess) {
+                            pendingAdminAccess = false;
+                            showAdminView();
+                        }
                     }
                 });
             } else {
                 const fallbackSession = localStorage.getItem('adminSession') === 'true';
                 isAdminAuthenticated = fallbackSession;
                 updateAdminEntryVisual(isAdminAuthenticated);
-                if (fallbackSession) showAdminView();
             }
         } catch (_) {}
     }
@@ -2292,15 +2404,35 @@ function columnLetter(index) {
 
     // 管理者フローは setupAdminAuth で初期化済み
 // 未保存変更がある場合に離脱確認してからタブ切り替え
+    const adminTabsContainer = document.querySelector('.admin-tabs');
+    const indicator = document.createElement('div');
+    indicator.className = 'indicator';
+    adminTabsContainer?.appendChild(indicator);
+
+    function moveIndicatorToTab(tabEl) {
+        if (!indicator || !tabEl || !adminTabsContainer) return;
+        const tabRect = tabEl.getBoundingClientRect();
+        const parentRect = adminTabsContainer.getBoundingClientRect();
+        const width = tabRect.width;
+        const offsetLeft = tabRect.left - parentRect.left;
+        indicator.style.width = `${width}px`;
+        indicator.style.transform = `translateX(${offsetLeft}px)`;
+    }
+
 document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
         const targetTabName = e.currentTarget.dataset.tab;
+            const targetContent = document.getElementById(`tab-${targetTabName}`);
+
         const switchTab = () => {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
             e.currentTarget.classList.add('active');
+                moveIndicatorToTab(e.currentTarget);
+
             document.querySelectorAll('.admin-tab-content').forEach(content => {
-                content.classList.toggle('active', content.id === `tab-${targetTabName}`);
+                    content.classList.toggle('active', content === targetContent);
             });
+
             if (targetTabName === 'status') {
                 renderStatusTable();
             }
@@ -2309,10 +2441,11 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
                 renderRosterPreview();
             }
         };
+
         const isEditorActive = document.getElementById('tab-editor')?.classList.contains('active');
         if (isEditorActive && adminEditorDirty && targetTabName !== 'editor') {
             if (confirm('変更を保存していません。本当に離れますか？')) {
-                adminEditorDirty = false; // 破棄
+                    adminEditorDirty = false;
                 switchTab();
             }
         } else {
@@ -2320,6 +2453,11 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
         }
     });
 });
+
+    const initialActiveTab = document.querySelector('.admin-tab.active');
+    if (initialActiveTab) {
+        moveIndicatorToTab(initialActiveTab);
+    }
 
     document.getElementById('translation-toggle-checkbox').addEventListener('change', (e) => {
         document.getElementById('tab-editor').classList.toggle('show-en', e.target.checked);
@@ -2354,7 +2492,7 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
         if (!confirm('変更を保存していません。本当に離れますか？')) return;
         adminEditorDirty = false; // 破棄
     }
-    showReceptionView();
+    showReceptionView({ reset: false });
 });
 	// ヘッダーロゴクリックでホームへ戻る
     const headerLogo = document.querySelector('.header-logo');
@@ -2366,7 +2504,7 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
                 if (!confirm('変更を保存していません。本当に離れますか？')) return;
                 adminEditorDirty = false; // 破棄
             }
-            showReceptionView();
+            showReceptionView({ reset: true });
         });
     }
 	
@@ -2498,5 +2636,19 @@ if (statusViewToggle) {
         renderRosterTables();
     }
 
+    document.querySelectorAll('[data-lang-key]').forEach(el => {
+        const key = el.dataset.langKey;
+        const translation = getTranslation(key);
+        if (translation) el.textContent = translation;
+    });
 
+    document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+        const key = el.dataset.langKeyPlaceholder;
+        const translation = getTranslation(key);
+        if (translation) el.placeholder = translation;
+    });
+
+    requestAnimationFrame(() => {
+        document.documentElement.classList.remove('lang-switching');
+    });
 });

@@ -129,5 +129,11 @@
     "languageSwitchedTo": "भाषा {lang} में बदल दी गई है।",
     "mappingTitle": "स्तंभ मैपिंग सेट करें",
     "mappingApply": "लागू करें",
-    "mappingCancel": "रद्द करें"
+    "mappingCancel": "रद्द करें",
+    "themeLight": "लाइट मोड",
+    "themeDark": "डार्क मोड",
+    "themeLiquid": "लिक्विड ग्लास मोड",
+    "liquidActivated": "लिक्विड ग्लास मोड सक्रिय किया गया है।",
+    "lightActivated": "लाइट मोड सक्रिय किया गया है।",
+    "darkActivated": "डार्क मोड सक्रिय किया गया है।"
 }

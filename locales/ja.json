@@ -129,5 +129,11 @@
     "languageSwitchedTo": "言語が{lang}に切り替わりました。",
     "mappingTitle": "列の対応を設定",
     "mappingApply": "適用",
-    "mappingCancel": "キャンセル"
+    "mappingCancel": "キャンセル",
+    "themeLight": "ライトモード",
+    "themeDark": "ダークモード",
+    "themeLiquid": "リキッドグラスモード",
+    "liquidActivated": "リキッドグラスモードに切り替わりました。",
+    "lightActivated": "ライトモードに切り替わりました。",
+    "darkActivated": "ダークモードに切り替わりました。"
 }

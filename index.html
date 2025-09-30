@@ -33,24 +33,29 @@
     <header class="header-bar">
         <div class="header-content">
             <img src="public/kuas_logo.jpg" alt="KUAS Logo" class="header-logo" decoding="async" fetchpriority="high">
+            <div class="header-buttons">
+                <button id="help-btn" class="header-btn" title="ヘルプ"><i class="ph ph-question"></i></button>
+                <button id="theme-switch-btn" class="header-btn" title="Toggle Theme"><i class="ph ph-moon"></i></button>
+                <div id="theme-menu" class="theme-menu">
+                    <a href="#" data-theme="light" data-lang-key="themeLight">Light Mode</a>
+                    <a href="#" data-theme="dark" data-lang-key="themeDark">Dark Mode</a>
+                    <a href="#" data-theme="liquid" data-lang-key="themeLiquid">Liquid Glass Mode</a>
+                </div>
+                <button id="lang-switch-btn" class="header-btn" title="Switch Language"><i class="ph ph-translate"></i></button>
+                <div id="lang-menu" class="lang-menu">
+                    <a href="#" data-lang="ja">日本語</a>
+                    <a href="#" data-lang="en">English</a>
+                    <a href="#" data-lang="es">Español</a>
+                    <a href="#" data-lang="id">Bahasa Indonesia</a>
+                    <a href="#" data-lang="hi">हिन्दी (Hindi)</a>
+                    <a href="#" data-lang="ne">नेपाली (Nepali)</a>
+                    <a href="#" data-lang="zh">中文 (Chinese)</a>
+                    <a href="#" data-lang="ko">한국어 (Korean)</a>
+                </div>
+                <button id="admin-entry-btn" class="header-btn" title="管理画面へ"><i class="ph ph-gear-six"></i></button>
+            </div>
         </div>
     </header>
-
-    <div class="top-bar-buttons">
-        <button id="help-btn" class="top-bar-btn" title="ヘルプ"><i class="ph ph-question"></i></button>
-        <button id="theme-switch-btn" class="top-bar-btn" title="Toggle Theme"><i class="ph ph-moon"></i></button>
-        <button id="lang-switch-btn" class="top-bar-btn" title="Switch Language"><i class="ph ph-translate"></i></button>
-        <div id="lang-menu" class="lang-menu">
-            <a href="#" data-lang="ja">日本語</a>
-            <a href="#" data-lang="en">English</a>
-            <a href="#" data-lang="es">Español</a>
-            <a href="#" data-lang="id">Bahasa Indonesia</a>
-            <a href="#" data-lang="hi">हिन्दी (Hindi)</a>
-            <a href="#" data-lang="zh">中文 (Chinese)</a>
-            <a href="#" data-lang="ko">한국어 (Korean)</a>
-        </div>
-        <button id="admin-entry-btn" class="top-bar-btn" title="管理画面へ"><i class="ph ph-gear-six"></i></button>
-    </div>
 
     <!-- 受付画面用のコンテナ -->
     <div id="reception-view" class="view-container">

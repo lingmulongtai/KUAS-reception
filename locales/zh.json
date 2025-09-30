@@ -129,5 +129,11 @@
     "languageSwitchedTo": "语言已切换为 {lang}。",
     "mappingTitle": "设置列映射",
     "mappingApply": "应用",
-    "mappingCancel": "取消"
+    "mappingCancel": "取消",
+    "themeLight": "浅色模式",
+    "themeDark": "深色模式",
+    "themeLiquid": "Liquid Glass 模式",
+    "liquidActivated": "已启用 Liquid Glass 模式。",
+    "lightActivated": "已启用浅色模式。",
+    "darkActivated": "已启用深色模式。"
 }

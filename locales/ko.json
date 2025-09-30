@@ -129,5 +129,11 @@
     "languageSwitchedTo": "언어가 {lang}(으)로 변경되었습니다.",
     "mappingTitle": "열 매핑 설정",
     "mappingApply": "적용",
-    "mappingCancel": "취소"
+    "mappingCancel": "취소",
+    "themeLight": "라이트 모드",
+    "themeDark": "다크 모드",
+    "themeLiquid": "리퀴드 글라스 모드",
+    "liquidActivated": "리퀴드 글라스 모드가 활성화되었습니다.",
+    "lightActivated": "라이트 모드가 활성화되었습니다.",
+    "darkActivated": "다크 모드가 활성화되었습니다."
 }
