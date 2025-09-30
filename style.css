@@ -237,6 +237,7 @@ body.liquid-mode #initial-selection {
     position: relative;
     isolation: isolate;
     overflow: visible;
+    padding-top: 60px;
 }
 
 body.liquid-mode #initial-selection::before {
@@ -273,10 +274,15 @@ body.liquid-mode #initial-selection .btn-large {
 }
 
 body.liquid-mode .header-bar {
-    background: rgba(20, 30, 45, 0.45);
+    background: rgba(20, 30, 45, 0.55);
     border-bottom: 1px solid rgba(140, 190, 255, 0.2);
     backdrop-filter: blur(18px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1400;
 }
 
 body.liquid-mode .header-logo {
@@ -317,6 +323,7 @@ body.liquid-mode .content-wrapper {
     border: 1px solid rgba(150, 210, 255, 0.35);
     box-shadow: 0 50px 80px rgba(5, 10, 25, 0.65);
     backdrop-filter: blur(18px);
+    padding-top: calc(140px + clamp(44px, 5.5vw, 64px));
 }
 
 body.liquid-mode .btn {
@@ -440,11 +447,11 @@ body.liquid-mode .chip {
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
     padding: 20px 0;
-    position: sticky;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 1200;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -641,7 +648,7 @@ body.dark-mode .header-logo { content: url('public/kuas_logo_darkmode.png'); }
     align-items: center; /* 縦方向中央揃えに変更 */
     min-height: var(--initial-viewport-height);
     max-width: var(--initial-viewport-width);
-    padding: 120px 15px 40px 15px; /* fixed header高さ分の上部パディング */
+    padding: 140px 15px 40px 15px; /* fixed header高さ分の上部パディング */
     box-sizing: border-box;
     position: relative;
     /* 近未来コンテナエフェクト */
@@ -1824,11 +1831,20 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .header-logo { height: 80px; margin: 10px; }
     .header-btn { width: 44px; height: 44px; font-size: 24px; }
     .header-buttons { gap: 8px; margin-right: 30px; }
-    .view-container { padding: 92px 12px 28px 12px; max-width: calc(var(--initial-viewport-width) - 24px); }
+    .view-container { padding: 120px 12px 28px 12px; max-width: calc(var(--initial-viewport-width) - 24px); }
     .content-wrapper { border-radius: 20px; }
     h2 { font-size: 22px; }
     h3 { font-size: 18px; }
     .button-group { gap: 18px; }
+    #initial-selection h1[data-lang-key="mainTitle"] {
+        max-width: 100%;
+        margin: 0 auto 12px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.3;
+        text-align: center;
+    }
 }
 
 /* 小型スマートフォン向け（幅480px以下） */
@@ -1839,10 +1855,18 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .header-logo { height: 64px; margin: 6px; }
     .header-btn { width: 38px; height: 38px; font-size: 20px; }
     .header-buttons { gap: 6px; margin-right: 20px; }
-    .view-container { padding: 78px 8px 20px 8px; max-width: calc(var(--initial-viewport-width) - 16px); }
+    .view-container { padding: 100px 8px 20px 8px; max-width: calc(var(--initial-viewport-width) - 16px); }
     .content-wrapper { padding: 18px 12px; border-radius: 16px; }
     h1 { font-size: 22px; }
-    h1[data-lang-key="mainTitle"] { font-size: clamp(20px, 7vw, 28px); }
+    h1[data-lang-key="mainTitle"] {
+        font-size: clamp(20px, 7vw, 28px);
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+        margin: 0 auto 14px;
+        padding: 0 4px;
+    }
     h2 { font-size: 20px; }
     h3 { font-size: 17px; }
     .button-group { gap: 12px; }
@@ -1856,7 +1880,10 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .program-choice-btns button { font-size: 10px; padding: 6px; }
     .input-group label { font-size: 14px; }
     .input-group input, .input-group textarea, .input-group select { padding: 12px; font-size: 14px; }
-    .modal-content-inner { width: 96%; padding: 18px 14px; max-width: 360px; }
+    .modal-content-inner {
+        padding: 72px 18px 24px 18px;
+        gap: 14px;
+    }
     .back-btn { bottom: 12px; padding: 10px 16px; font-size: 15px; }
 }
 
@@ -1880,10 +1907,18 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .header-logo { height: 72px; margin: 8px; }
     .header-btn { width: 42px; height: 42px; font-size: 22px; }
     .header-buttons { gap: 8px; margin-right: 25px; }
-    .view-container { padding: 84px 10px 24px 10px; align-items: flex-start; max-width: calc(var(--initial-viewport-width) - 20px); }
+    .view-container { padding: 110px 10px 24px 10px; align-items: flex-start; max-width: calc(var(--initial-viewport-width) - 20px); }
     .content-wrapper { padding: 22px 16px; border-radius: 18px; }
     h1 { font-size: 24px; }
-    h1[data-lang-key="mainTitle"] { font-size: clamp(22px, 6vw, 32px); white-space: normal; }
+    h1[data-lang-key="mainTitle"] {
+        font-size: clamp(22px, 6vw, 32px);
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+        margin: 0 auto 14px;
+        padding: 0 6px;
+    }
     .button-group { gap: 16px; }
     .btn-large { height: 140px; width: 200px; padding: 18px 16px; font-size: 18px; border-radius: 16px; }
     .btn-large i { font-size: 36px; }
@@ -1891,9 +1926,63 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .program-card { padding: 16px; }
     .program-choice-btns { gap: 8px; }
     .program-choice-btns button { font-size: 11px; padding: 8px; }
-    .modal-content-inner { width: 94%; padding: 22px 16px; }
-    .help-content { max-width: 96vw !important; max-height: 90vh !important; }
-    .help-image-container { height: calc(90vh - 72px); }
+    .modal-overlay {
+        background: rgba(8, 12, 18, 0.78);
+        align-items: stretch;
+    }
+    .modal-content-inner {
+        width: 100vw;
+        max-width: 100vw;
+        min-height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        padding: 68px 22px 28px 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        text-align: left;
+        transform: translateY(40px);
+    }
+    .modal-overlay.visible .modal-content-inner {
+        transform: translateY(0);
+    }
+    .modal-content-inner h1,
+    .modal-content-inner h2,
+    .modal-content-inner h3 {
+        text-align: left;
+        margin: 0;
+    }
+    .modal-content-inner .input-group,
+    .modal-content-inner .button-group,
+    .modal-content-inner p {
+        width: 100%;
+    }
+    .modal-content-inner .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: auto;
+    }
+    .modal-content-inner .button-group .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .modal-content-inner .close-btn,
+    .modal-content-inner #btn-close-help,
+    .modal-content-inner .close-btn {
+        align-self: flex-end;
+    }
+    .help-content {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    .help-image-container {
+        height: auto;
+        max-height: calc(100vh - 140px);
+    }
     .back-btn { bottom: 14px; padding: 12px 18px; font-size: 16px; }
 
     /* ホーム: 予約あり/予約なし を縦並びに */
@@ -1928,6 +2017,9 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     .button-group { gap: 12px; }
     .btn-large { height: 128px; width: 180px; font-size: 16px; }
     .btn-large i { font-size: 32px; }
+    .modal-content-inner {
+        padding: 68px 16px 18px 16px;
+    }
 }
 
 /* --- キャップストーン体験に参加しないセクションのスタイル --- */
@@ -2062,6 +2154,7 @@ body.liquid-mode .btn-large::after {
 
 body.liquid-mode .view-container {
     backdrop-filter: blur(18px);
+    padding-top: 160px;
 }
 
 body.liquid-mode .modal-content-inner {
@@ -2226,7 +2319,7 @@ body.home-locked #reception-view {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 60px 20px;
+    padding: 80px 20px;
     overflow-y: auto;
     overflow-x: hidden;
 }

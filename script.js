@@ -2170,7 +2170,11 @@ function columnLetter(index) {
         // ヘルプモーダル
         safeOn(helpBtn, 'click', () => { if (helpModal) helpModal.classList.add('visible'); });
         safeOn(helpClose, 'click', () => { if (helpModal) helpModal.classList.remove('visible'); });
-        safeOn(helpModal, 'click', (e) => { if (e.target && e.target.id === 'help-modal') e.currentTarget.classList.remove('visible'); });
+        safeOn(helpModal, 'click', (e) => {
+            if (!helpModal) return;
+            if (window.innerWidth <= 600) return; // モバイルでは全画面のため閉じ処理は明示ボタンのみ
+            if (e.target && e.target.id === 'help-modal') e.currentTarget.classList.remove('visible');
+        });
 
         // 言語切替
         let langPressTimer = null;
