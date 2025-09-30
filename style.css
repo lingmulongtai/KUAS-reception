@@ -126,6 +126,57 @@ body {
     position: relative;
 }
 
+html[lang="ar"] body {
+    direction: ltr;
+    text-align: left;
+}
+
+html[lang="ar"] .content-wrapper,
+html[lang="ar"] .input-group,
+html[lang="ar"] .input-group label,
+html[lang="ar"] .input-group p,
+html[lang="ar"] #status-summary,
+html[lang="ar"] .status-summary,
+html[lang="ar"] .status-toggle-wrapper {
+    text-align: inherit;
+}
+
+html[lang="ar"] .form-row {
+    flex-direction: row;
+    gap: 12px;
+}
+
+html[lang="ar"] .form-row .form-col {
+    text-align: inherit;
+}
+
+html[lang="ar"] input,
+html[lang="ar"] textarea,
+html[lang="ar"] select {
+    direction: ltr;
+    text-align: left;
+}
+
+html[lang="ar"] .button-group {
+    flex-direction: row;
+}
+
+html[lang="ar"] .lang-menu,
+html[lang="ar"] .theme-menu {
+    direction: ltr;
+    text-align: left;
+}
+
+html[lang="ar"] .header-buttons {
+    flex-direction: row;
+    gap: 12px;
+}
+
+html[lang="ar"] #lang-menu a,
+html[lang="ar"] #theme-menu a {
+    text-align: left;
+}
+
 body.offline {
     pointer-events: none;
 }
@@ -586,18 +637,20 @@ body.dark-mode .header-logo { content: url('public/kuas_logo_darkmode.png'); }
 .content-wrapper {
     text-align: center;
     background-color: var(--content-bg);
-    padding: 50px 40px;
+    padding: clamp(44px, 5.5vw, 64px) clamp(42px, 9vw, 92px);
     border-radius: 24px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 900px;
+    width: clamp(720px, 72vw, 1200px);
+    max-width: 96vw;
     position: relative;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, width 0.3s;
     border: 3px solid transparent;
     background: 
         linear-gradient(var(--content-bg), var(--content-bg)) padding-box,
         linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color)) border-box;
     border-radius: 24px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 
@@ -803,16 +856,16 @@ html[lang="en"] h1[data-lang-key="mainTitle"] {
 
 /* --- 初期画面の大きいボタン --- */
 .btn-large {
-    padding: 32px 28px;
-    font-size: 25px;
+    padding: clamp(24px, 4vw, 34px) clamp(26px, 4vw, 34px);
+    font-size: clamp(18px, 2.8vw, 26px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 16px;
     flex: 0 0 auto;
-    height: 235px;
-    width: 420px;
+    height: clamp(220px, 28vw, 280px);
+    width: clamp(380px, 40vw, 460px);
     border-radius: 20px;
     position: relative;
     overflow: hidden;
@@ -865,8 +918,83 @@ html[lang="en"] h1[data-lang-key="mainTitle"] {
 }
 
 #initial-selection .button-group {
-    gap: 45px;
-    margin-top: 30px;
+    gap: clamp(16px, 3vw, 32px);
+    margin-top: clamp(20px, 3.5vw, 32px);
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+#initial-selection .btn-large {
+    min-width: clamp(280px, 40vw, 400px);
+    max-width: clamp(320px, 44vw, 460px);
+    margin: 0 clamp(8px, 1.5vw, 16px);
+}
+
+@media (max-width: 1024px) {
+    .content-wrapper {
+        width: clamp(680px, 78vw, 1050px);
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(280px, 46vw, 400px);
+        margin: 0 clamp(8px, 1.6vw, 16px);
+    }
+}
+
+@media (max-width: 900px) {
+    .content-wrapper {
+        width: clamp(640px, 85vw, 980px);
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(280px, 48vw, 380px);
+        margin: 0 clamp(8px, 2vw, 16px);
+    }
+}
+
+@media (max-width: 768px) {
+    .button-group {
+        gap: 18px;
+        flex-wrap: nowrap;
+    }
+    .content-wrapper {
+        width: min(94vw, 720px);
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(260px, 54vw, 360px);
+        margin: 0 clamp(8px, 2.2vw, 14px);
+    }
+}
+
+@media (max-width: 600px) {
+    .button-group {
+        gap: 16px;
+        flex-wrap: nowrap;
+    }
+    .content-wrapper {
+        width: min(96vw, 640px);
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(240px, 58vw, 320px);
+        margin: 0 clamp(6px, 2.6vw, 12px);
+    }
+}
+
+@media (max-width: 480px) {
+    .button-group {
+        gap: 12px;
+        flex-wrap: nowrap;
+    }
+    .content-wrapper {
+        width: min(96vw, 600px);
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(220px, 64vw, 300px);
+        margin: 0 clamp(6px, 3vw, 10px);
+    }
+}
+
+@media (max-width: 400px) {
+    .button-group { gap: 12px; flex-wrap: nowrap; }
+    .btn-large { height: 138px; width: min(88vw, 280px); font-size: 17px; margin: 0 clamp(6px, 3vw, 10px); }
 }
 
 /* --- 初期選択画面の特別なスタイル --- */
@@ -1068,12 +1196,49 @@ body.dark-mode .full-overlay { background-color: rgba(0, 0, 0, 0.7); }
 #success-program-card { cursor: default; margin-top: 15px; }
 
 /* --- モーダルの共通スタイル --- */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.modal-overlay.visible { opacity: 1; pointer-events: auto; }
-.modal-content-inner { background: var(--content-bg); padding: 30px 40px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; transform: scale(0.9); transition: transform 0.3s, background-color 0.3s; }
-.modal-overlay.visible .modal-content-inner { transform: scale(1); }
-.modal-overlay.visible .modal-content-inner { transform: scale(1); }
+/* --- モーダルの共通スタイル --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content-inner {
+    background: var(--content-bg);
+    padding: 30px 40px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 540px;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+.modal-overlay.visible .modal-content-inner {
+    transform: scale(1);
+}
+
+.modal-overlay.alert .modal-content-inner {
+    max-width: 420px;
+}
+
 .modal-message { margin-top: 0; margin-bottom: 25px; font-size: 16px; color: var(--text-color); }
+
 /* 管理者ログインのエラーメッセージ */
 #password-error { color: #d32f2f; font-weight: 700; margin: 8px 0 0; min-height: 1.2em; }
 
@@ -2009,4 +2174,69 @@ html {
 html.lang-switching {
     transition: none !important;
     background-attachment: scroll;
+}
+
+body.home-locked {
+    overflow: hidden;
+}
+
+body.home-locked #reception-view {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body.home-locked #reception-view .content-wrapper {
+    width: clamp(720px, 72vw, 1120px);
+    max-width: 96vw;
+    padding: clamp(48px, 5.5vw, 66px) clamp(44px, 8.5vw, 92px);
+}
+
+.modal-overlay .modal-content-inner {
+    max-width: 540px;
+    width: min(90vw, 540px);
+    margin: 0;
+}
+
+.modal-overlay.alert-overlay .modal-content-inner {
+    max-width: 420px;
+}
+
+@media (max-width: 768px) {
+    .button-group {
+        gap: 18px;
+        flex-wrap: nowrap;
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(220px, 45vw, 280px);
+    }
+}
+
+@media (max-width: 480px) {
+    .button-group {
+        gap: 12px;
+        flex-wrap: nowrap;
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(200px, 44vw, 260px);
+    }
+}
+
+@media (max-width: 600px) {
+    .button-group {
+        gap: 16px;
+        flex-wrap: nowrap;
+    }
+    #initial-selection .button-group .btn-large {
+        min-width: clamp(210px, 44vw, 270px);
+    }
+}
+
+@media (max-width: 400px) {
+    .button-group { gap: 12px; flex-wrap: nowrap; }
+    .btn-large { height: 128px; width: min(82vw, 240px); font-size: 16px; }
 }

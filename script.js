@@ -571,6 +571,7 @@ let adminEditorDirty = false;
         const message = translations[currentLanguage][messageKey] || messageKey;
         document.getElementById('alert-message').textContent = message;
         customAlertModal.classList.add('visible');
+        customAlertModal.classList.add('alert');
         // OKボタンの処理を一旦リセット
         const oldOkBtn = document.getElementById('btn-alert-ok');
         const newOkBtn = oldOkBtn.cloneNode(true);
@@ -578,6 +579,7 @@ let adminEditorDirty = false;
 
         newOkBtn.addEventListener('click', () => {
             customAlertModal.classList.remove('visible');
+            customAlertModal.classList.remove('alert');
             if (onConfirm) onConfirm();
         });
     }
@@ -614,6 +616,11 @@ let adminEditorDirty = false;
         });
         btnBack.classList.toggle('hidden', sectionId === 'initial-selection' || sectionId === 'success-section');
         setAdminButtonVisibilityWithAnimation(sectionId === 'initial-selection');
+        if (sectionId === 'initial-selection') {
+            document.body.classList.add('home-locked');
+        } else {
+            document.body.classList.remove('home-locked');
+        }
         
         // セクション変更時にデータを保存
         setTimeout(saveFormData, 100);
@@ -644,6 +651,9 @@ let adminEditorDirty = false;
         // 初期選択画面に入ったとき、自動フォーカスは行わない（ロゴクリック時の誤選択を防止）
         if (sectionId === 'initial-selection') {
             homeSelection = null;
+            document.body.classList.add('home-locked');
+        } else {
+            document.body.classList.remove('home-locked');
         }
     }
 
@@ -670,6 +680,7 @@ let adminEditorDirty = false;
         receptionView.classList.add('hidden');
         adminView.classList.remove('hidden');
         if (adminLoginModal) adminLoginModal.classList.remove('visible');
+        document.body.classList.remove('home-locked');
         try {
             if (window.firebase && window.firebase.auth) {
                 const user = window.firebase.auth().currentUser;
