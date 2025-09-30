@@ -1,0 +1,49 @@
+# .github/workflows/firebase-deploy.yml
+
+name: Deploy to Firebase
+
+# ワークフローが実行されるトリガーを指定
+on:
+  push:
+    branches:
+      - main  # mainブランチにpushされた時のみ実行
+
+jobs:
+  build_and_deploy:
+    # 実行環境を指定
+    runs-on: ubuntu-latest
+
+    steps:
+      # ステップ1: ソースコードのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ステップ2: Node.js環境のセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # プロジェクトに合わせたバージョンを指定
+          cache: 'npm'
+
+      # ステップ3: 依存パッケージのインストール
+      - name: Install dependencies
+        run: npm ci
+
+      # ステップ4: Firebase Emulatorsを使った自動テストの実行
+      - name: Run unit tests with Firebase Emulators
+        run: npx firebase-tools emulators:exec "npm test" --only firestore,functions
+
+      # ステップ5: Google Cloudへの認証
+      - name: Authenticate with Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
+
+      # ステップ6: Firebaseへのデプロイ
+      - name: Deploy to Firebase
+        run: |
+          npx firebase-tools deploy \
+            --project ${{ secrets.FIREBASE_PROJECT_ID }} \
+            --only hosting,functions,firestore:rules \
+            --non-interactive \
+            --force
