@@ -215,6 +215,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(cleanup, 800);
     }
 
+    function lockInitialViewportSize() {
+        const width = Math.min(window.innerWidth || document.documentElement.clientWidth, screen.width || window.innerWidth);
+        const height = Math.min(window.innerHeight || document.documentElement.clientHeight, screen.height || window.innerHeight);
+        const root = document.documentElement;
+        root.style.setProperty('--initial-viewport-width', `${width}px`);
+        root.style.setProperty('--initial-viewport-height', `${height}px`);
+    }
+
     // 安全にイベントを登録するユーティリティ（先に定義しておく）
     const safeOn = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
 
@@ -411,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // アプリケーション開始時にデータベースを初期化
     initializeApp();
+    lockInitialViewportSize();
 
     // フォント読み込み完了後にクラスを解除
     loadInitialFonts().catch(err => {
@@ -2103,12 +2112,8 @@ function columnLetter(index) {
         }
 
         // テーマ切替
-        safeOn(themeSwitchBtn, 'click', () => {
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        });
-        safeOn(themeSwitchBtn, 'contextmenu', (e) => {
-            e.preventDefault();
+        let themePressTimer = null;
+        const triggerThemeMenu = () => {
             if (!themeMenu) return;
             if (themeMenu.classList.contains('visible')) {
                 hideThemeMenu();
@@ -2116,6 +2121,33 @@ function columnLetter(index) {
                 hideLangMenu();
                 showThemeMenu();
             }
+        };
+        const handleThemeTap = () => {
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        };
+        safeOn(themeSwitchBtn, 'click', () => {
+            if (themePressTimer) return;
+            handleThemeTap();
+        });
+        safeOn(themeSwitchBtn, 'contextmenu', (e) => e.preventDefault());
+        const startThemePress = () => {
+            if (themePressTimer) clearTimeout(themePressTimer);
+            themePressTimer = setTimeout(() => {
+                themePressTimer = null;
+                triggerThemeMenu();
+            }, 500);
+        };
+        const clearThemePress = () => {
+            if (themePressTimer) {
+                clearTimeout(themePressTimer);
+                themePressTimer = null;
+            }
+        };
+        safeOn(themeSwitchBtn, 'touchstart', startThemePress, { passive: true });
+        safeOn(themeSwitchBtn, 'mousedown', (e) => { if (e.button === 0) startThemePress(); });
+        ['touchend', 'touchcancel', 'mouseup', 'mouseleave', 'blur'].forEach(evt => {
+            safeOn(themeSwitchBtn, evt, clearThemePress, { passive: true });
         });
         safeOn(themeMenu, 'click', (e) => {
             e.preventDefault();
@@ -2124,16 +2156,14 @@ function columnLetter(index) {
             const newTheme = target.dataset.theme;
             if (newTheme && newTheme !== currentTheme) {
                 setTheme(newTheme);
-                hideThemeMenu();
-            } else if (newTheme) {
-                hideThemeMenu();
             }
+            hideThemeMenu();
         });
         if (themeSwitchBtn) {
             themeSwitchBtn.setAttribute('role', 'button');
             themeSwitchBtn.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
             safeOn(themeSwitchBtn, 'keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); themeSwitchBtn.click(); }
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleThemeTap(); }
             });
         }
 
@@ -2143,15 +2173,47 @@ function columnLetter(index) {
         safeOn(helpModal, 'click', (e) => { if (e.target && e.target.id === 'help-modal') e.currentTarget.classList.remove('visible'); });
 
         // 言語切替
-        safeOn(langSwitchBtn, 'click', () => {
+        let langPressTimer = null;
+        const triggerLangMenu = () => {
+            if (!langMenu) return;
+            if (langMenu.classList.contains('visible')) {
+                hideLangMenu();
+            } else {
+                hideThemeMenu();
+                showLangMenu();
+            }
+        };
+        const handleLangTap = () => {
             hideLangMenu();
             const newLang = currentLanguage === 'ja' ? 'en' : 'ja';
             updateLanguage(newLang).catch(console.error);
             const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
             const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
             showSaveIndicator(tmpl.replace('{lang}', langName));
+        };
+        safeOn(langSwitchBtn, 'click', () => {
+            if (langPressTimer) return;
+            handleLangTap();
         });
-        safeOn(langSwitchBtn, 'contextmenu', (e) => { e.preventDefault(); if (!langMenu) return; if (langMenu.classList.contains('visible')) { hideLangMenu(); } else { showLangMenu(); } });
+        safeOn(langSwitchBtn, 'contextmenu', (e) => e.preventDefault());
+        const startLangPress = () => {
+            if (langPressTimer) clearTimeout(langPressTimer);
+            langPressTimer = setTimeout(() => {
+                langPressTimer = null;
+                triggerLangMenu();
+            }, 500);
+        };
+        const clearLangPress = () => {
+            if (langPressTimer) {
+                clearTimeout(langPressTimer);
+                langPressTimer = null;
+            }
+        };
+        safeOn(langSwitchBtn, 'touchstart', startLangPress, { passive: true });
+        safeOn(langSwitchBtn, 'mousedown', (e) => { if (e.button === 0) startLangPress(); });
+        ['touchend', 'touchcancel', 'mouseup', 'mouseleave', 'blur'].forEach(evt => {
+            safeOn(langSwitchBtn, evt, clearLangPress, { passive: true });
+        });
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
                 hideLangMenu();
@@ -2162,16 +2224,16 @@ function columnLetter(index) {
         });
         safeOn(langMenu, 'click', (e) => {
             e.preventDefault();
-            if (e.target.tagName === 'A') {
-                const newLang = e.target.dataset.lang;
-                if (newLang && newLang !== currentLanguage) {
-                    updateLanguage(newLang).catch(console.error);
-                    const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
-                    const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
-                    showSaveIndicator(tmpl.replace('{lang}', langName));
-                }
-                hideLangMenu();
+            const anchor = e.target.closest('a[data-lang]');
+            if (!anchor) return;
+            const newLang = anchor.dataset.lang;
+            if (newLang && newLang !== currentLanguage) {
+                updateLanguage(newLang).catch(console.error);
+                const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
+                const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
+                showSaveIndicator(tmpl.replace('{lang}', langName));
             }
+            hideLangMenu();
         });
     }
 
