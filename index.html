@@ -201,13 +201,7 @@
                         </label>
                     </div>
                     <ul id="program-editor-list"></ul>
-                    <details class="json-editor-container">
-                        <summary data-lang-key="jsonEditor">JSON表示/編集</summary>
-                        <div class="input-group">
-                            <textarea id="json-editor"></textarea>
-                            <button id="btn-apply-json" class="btn btn-secondary btn-sm" style="align-self: flex-end;" data-lang-key="applyJson">JSONを適用</button>
-                        </div>
-                    </details>
+                    
                     <div class="button-group" style="margin-top: 20px;">
                         <button id="btn-add-program" class="btn btn-secondary" data-lang-key="addProgram">＋ プログラムを追加</button>
                         <button id="btn-save-programs" class="btn btn-primary" data-lang-key="saveChanges">変更を保存</button>
@@ -223,10 +217,6 @@
                     <div class="file-upload-wrapper">
                         <p data-lang-key="fileUpload2">② 工学部説明会 予約者名簿 (xlsx)</p>
                         <input type="file" id="briefing-session-file-input" accept=".xlsx">
-                    </div>
-                    <div class="file-upload-wrapper">
-                        <p data-lang-key="loadProgress">③ 進行状況を読み込む (.json)</p>
-                        <input type="file" id="progress-file-input" accept=".json">
                     </div>
                     <div id="file-upload-status"></div>
                 </div>
@@ -268,7 +258,7 @@
                     <h3 data-lang-key="waitingList" style="margin-top: 30px;">待機者リスト</h3>
                     <table id="waiting-list-table"></table>
                     <div class="button-group" style="margin-top: 20px;">
-                        <button id="btn-save-progress" class="btn btn-secondary" data-lang-key="saveProgress">進行状況を保存</button>
+                        
                         <button id="btn-export-excel" class="btn btn-primary" data-lang-key="exportData">書き出し</button>
                     </div>
                 </div>

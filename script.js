@@ -242,8 +242,20 @@ document.addEventListener('DOMContentLoaded', () => {
             reservations: reservations,
             briefingSessionAttendees: briefingSessionAttendees
         };
-        
+
         saveData('userData', rosterData);
+        writeRostersToFirestore();
+    }
+
+    // データ削除
+    async function deleteData(storeName, id) {
+        try {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            await store.delete(id);
+        } catch (error) {
+            console.error('データ削除エラー:', error);
+        }
     }
 
     // フォームデータ復元
@@ -364,6 +376,68 @@ document.addEventListener('DOMContentLoaded', () => {
     let sortable = null;
     let navigationHistory = [];
 let currentLanguage = window.currentLanguage || 'ja';
+    let allParticipants = [];
+
+    let offlineOverlay = null;
+    let offlineToast = null;
+    let offlineTitleEl = null;
+    let offlineMessageEl = null;
+    let offlineToastTextEl = null;
+
+    const isOnline = () => (typeof navigator.onLine === 'boolean' ? navigator.onLine : true);
+
+    function ensureNetworkNoticeElements() {
+        if (!offlineOverlay) {
+            offlineOverlay = document.createElement('div');
+            offlineOverlay.id = 'offline-overlay';
+            offlineOverlay.innerHTML = `
+                <div class="offline-overlay-content">
+                    <i class="ph ph-wifi-slash"></i>
+                    <h2 class="offline-title"></h2>
+                    <p class="offline-message"></p>
+                </div>
+            `;
+            document.body.appendChild(offlineOverlay);
+            offlineTitleEl = offlineOverlay.querySelector('.offline-title');
+            offlineMessageEl = offlineOverlay.querySelector('.offline-message');
+        }
+        if (!offlineToast) {
+            offlineToast = document.createElement('div');
+            offlineToast.id = 'offline-toast';
+            offlineToast.innerHTML = `
+                <i class="ph ph-warning-circle"></i>
+                <span class="offline-toast-text"></span>
+            `;
+            document.body.appendChild(offlineToast);
+            offlineToastTextEl = offlineToast.querySelector('.offline-toast-text');
+        }
+        updateOfflineNoticeTexts();
+    }
+
+    function updateOfflineNoticeTexts() {
+        const lang = currentLanguage || document.documentElement.getAttribute('lang') || 'ja';
+        const title = getTranslation('offlineRequiredTitle') || (lang === 'ja' ? 'ネットワークに接続してください' : 'Please connect to the network');
+        const message = getTranslation('offlineRequiredDesc') || (lang === 'ja' ? 'このアプリを利用するにはインターネット接続が必要です。接続状況を確認してください。' : 'This app requires an internet connection. Check your connection and try again.');
+        const toast = getTranslation('offlineToastMessage') || (lang === 'ja' ? 'ネットワークに接続できません' : 'Network connection lost');
+        if (offlineTitleEl) offlineTitleEl.textContent = title;
+        if (offlineMessageEl) offlineMessageEl.textContent = message;
+        if (offlineToastTextEl) offlineToastTextEl.textContent = toast;
+    }
+
+    function setOfflineState(forceOffline) {
+        ensureNetworkNoticeElements();
+        const isOffline = forceOffline;
+        document.body.classList.toggle('offline', isOffline);
+        if (offlineOverlay) offlineOverlay.classList.toggle('visible', isOffline);
+        if (offlineToast) offlineToast.classList.toggle('visible', isOffline);
+    }
+
+    function refreshNetworkState() {
+        setOfflineState(!isOnline());
+    }
+
+    window.addEventListener('online', refreshNetworkState);
+    window.addEventListener('offline', refreshNetworkState);
 
 // Bridge: mimic old `translations[currentLanguage].key` API using locales in window.translations
 const translations = new Proxy({}, {
@@ -449,6 +523,7 @@ let adminEditorDirty = false;
             updateStatusView();
             renderRosterPreview();
         }
+        refreshNetworkState();
         if (currentUser) {
             showConfirmation(currentUser);
         }
@@ -626,7 +701,7 @@ let adminEditorDirty = false;
         receptionView.classList.remove('hidden');
         adminEntryBtn.classList.remove('hidden');
         if (reset) {
-        resetReceptionState();
+            resetReceptionState();
             navigationHistory = [];
             lastReceptionSection = 'initial-selection';
         }
@@ -859,7 +934,7 @@ let adminEditorDirty = false;
         // 自動英訳機能は削除
     }
     
-    function saveChangesFromUI() {
+    async function saveChangesFromUI() {
         const editorList = document.getElementById('program-editor-list');
         const newPrograms = [];
         const itemIds = Array.from(editorList.children).map(item => item.dataset.id);
@@ -871,19 +946,20 @@ let adminEditorDirty = false;
             const newTitleEn = itemElement.querySelector(`#title-en-${id}`).value;
             const newDescEn = itemElement.querySelector(`#desc-en-${id}`).value;
             const newCapacity = parseInt(itemElement.querySelector(`#capacity-${id}`).value, 10);
-            newPrograms.push({ 
-                id: id, 
-                title: newTitle, 
-                description: newDesc, 
+            newPrograms.push({
+                id: id,
+                title: newTitle,
+                description: newDesc,
                 title_en: newTitleEn,
                 description_en: newDescEn,
-                capacity: newCapacity || 10 
+                capacity: newCapacity || 10
             });
         });
         programs = newPrograms;
         saveStateToLocalStorage();
-    adminEditorDirty = false; // 保存完了で未保存状態を解消
-    showCustomAlert('infoChangesSaved');
+        await saveProgramsToFirestore();
+        adminEditorDirty = false; // 保存完了で未保存状態を解消
+        showCustomAlert('infoChangesSaved');
         renderAdminEditor();
     }
 
@@ -891,6 +967,9 @@ let adminEditorDirty = false;
 
     function renderProgramGrid() {
         const grid = document.getElementById('program-grid');
+        if (grid) {
+            grid.classList.toggle('disabled', document.body.classList.contains('offline'));
+        }
         grid.innerHTML = '';
         programs.forEach(p => {
             const card = document.createElement('div');
@@ -1120,7 +1199,7 @@ let adminEditorDirty = false;
     }
     
     // --- Excel 関連の処理 ---
-    let pendingMappingContext = null; // { type, headerRow, jsonData }
+    let pendingMappingContext = null; // { type, headerRow, rows }
 
     function detectTimeHeaderIndex(headerRow) {
         const lower = headerRow.map(h => (h || '').toString().toLowerCase());
@@ -1158,7 +1237,8 @@ let adminEditorDirty = false;
 
     function openMappingModal(context) {
         pendingMappingContext = context;
-        const { type, headerRow } = context;
+        const { type } = context;
+        const { headerRow } = context;
         const options = buildColumnOptions(headerRow);
         const mappingModal = document.getElementById('mapping-modal');
         const mappingTitle = document.getElementById('mapping-title');
@@ -1214,7 +1294,8 @@ let adminEditorDirty = false;
     }
     function onApplyMapping() {
         if (!pendingMappingContext) return;
-        const { type, jsonData } = pendingMappingContext;
+        const { type } = pendingMappingContext;
+        const { rows } = pendingMappingContext;
         const mappingModal = document.getElementById('mapping-modal');
         const getIdx = (id) => parseInt(document.getElementById(id)?.value ?? '-1', 10);
         const nameSingle = getIdx('map-name-single');
@@ -1235,7 +1316,6 @@ let adminEditorDirty = false;
                 companionsIdx: compIdx
             };
             rosterMappingInfo.reservations = map;
-            const rows = jsonData.slice(1);
             const get = (row, idx) => (idx != null && idx >= 0 ? String(row[idx] ?? '').trim() : '');
             const parsed = rows
                 .map(row => {
@@ -1268,7 +1348,6 @@ let adminEditorDirty = false;
                 companionsIdx: compIdx
             };
             rosterMappingInfo.briefing = map;
-            const rows = jsonData.slice(1);
             const get = (row, idx) => (idx != null && idx >= 0 ? String(row[idx] ?? '').trim() : '');
             const parsed = rows
                 .map(row => {
@@ -1312,13 +1391,14 @@ let adminEditorDirty = false;
             const workbook = XLSX.read(data, {type: 'array'});
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-            
+            const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
             const statusEl = document.getElementById('file-upload-status');
             try {
-            const headerRow = (jsonData[0] || []).map(v => (v == null ? '' : String(v).trim()));
-            openMappingModal({ type, headerRow, jsonData });
+                const headerRow = (rawData[0] || []).map(v => (v == null ? '' : String(v).trim()));
+                const rows = rawData.slice(1);
+                openMappingModal({ type, headerRow, rows });
             } catch (error) {
+                console.error('File parsing error', error);
                 showCustomAlert('errorJsonFormat');
             }
         };
@@ -1788,22 +1868,16 @@ function columnLetter(index) {
     // --- LocalStorage 関連 ---
     function saveStateToLocalStorage() {
         const state = {
-            programs,
-            reservations,
-            briefingSessionAttendees,
             settings
         };
         localStorage.setItem('receptionData', JSON.stringify(state));
     }
 
-    function loadStateFromLocalStorage() {
+    async function loadStateFromLocalStorage() {
         const savedState = localStorage.getItem('receptionData');
         if (savedState) {
             try {
                 const state = JSON.parse(savedState);
-                programs = state.programs || programs;
-                reservations = state.reservations || reservations;
-                briefingSessionAttendees = state.briefingSessionAttendees || [];
                 if (state.settings) {
                     settings = state.settings;
                 }
@@ -1811,6 +1885,7 @@ function columnLetter(index) {
                 console.error("Failed to parse saved state:", e);
             }
         }
+        await Promise.all([loadProgramsFromFirestore(), loadRostersFromFirestore()]);
     }
 
     // --- テーマ（ダークモード）関連 ---
@@ -2334,6 +2409,12 @@ function columnLetter(index) {
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
     document.getElementById('btn-no-capstone-complete').addEventListener('click', async () => {
+        if (!isOnline()) {
+            refreshNetworkState();
+            showCustomAlert('errorNetworkUnavailable');
+            return;
+        }
+
         try {
             if (currentUser && window.firebase && window.firebase.firestore) {
                 const db = window.firebase.firestore();
@@ -2349,7 +2430,11 @@ function columnLetter(index) {
                     createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            showCustomAlert('errorDatabaseWriteFailed');
+            return;
+        }
         // 最初の画面に戻る
         navigateTo('initial-selection');
         document.querySelector('.content-wrapper').classList.remove('has-back-btn');
@@ -2471,19 +2556,6 @@ document.getElementById('btn-add-program').addEventListener('click', () => {
     });
 
     document.getElementById('btn-save-programs').addEventListener('click', saveChangesFromUI);
-    
-document.getElementById('btn-apply-json').addEventListener('click', () => {
-        const jsonEditor = document.getElementById('json-editor');
-        try {
-            const newPrograms = JSON.parse(jsonEditor.value);
-            if (Array.isArray(newPrograms)) {
-                programs = newPrograms;
-                showCustomAlert('infoJsonApplied');
-                renderAdminEditor();
-            adminEditorDirty = true;
-            } else { throw new Error('データは配列形式である必要があります。'); }
-        } catch (e) { showCustomAlert('errorJsonFormat'); }
-    });
 
 // 管理画面から受付へ戻る際に未保存確認
 document.getElementById('btn-exit-admin').addEventListener('click', () => {
@@ -2551,35 +2623,66 @@ if (statusViewToggle) {
 }
     // 完了処理
     document.getElementById('btn-confirm-reservation').addEventListener('click', () => {
-        const isReserved = reservations.some(r => r.name === currentUser.name);
-        const finalizeLocal = (assignedProgram) => {
-            showSuccessScreen(currentUser.name, assignedProgram, !assignedProgram);
-        };
-        const writeToFirestore = async (assignedProgramId) => {
-            try {
-                if (window.firebase && window.firebase.firestore) {
-                    const db = window.firebase.firestore();
-                    const doc = {
-                        name: currentUser.name,
-                        furigana: currentUser.furigana || '',
-                        school: currentUser.school || '',
-                        grade: currentUser.grade || '',
-                        companions: currentUser.companions || 0,
-                        choices: currentUser.choices || [],
-                        assignedProgramId: assignedProgramId || null,
-                        status: assignedProgramId ? 'assigned' : (settings.prioritizeReserved && !isReserved ? 'waiting' : 'registered'),
-                        createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
-                    };
-                    await db.collection('participants').add(doc);
-                }
-            } catch (e) { console.error('Firestore write error', e); }
-        };
-        if (settings.prioritizeReserved && !isReserved) {
-            writeToFirestore(null).finally(() => finalizeLocal(null));
-        } else {
-            const assignedProgram = assignProgram(currentUser);
-            writeToFirestore(assignedProgram ? assignedProgram.id : null).finally(() => finalizeLocal(assignedProgram));
+        if (!currentUser) {
+            showCustomAlert('errorUnexpected');
+            return;
         }
+
+        if (!isOnline()) {
+            refreshNetworkState();
+            showCustomAlert('errorNetworkUnavailable');
+            return;
+        }
+
+        const isReserved = reservations.some(r => r.name === currentUser.name);
+        const shouldHold = settings.prioritizeReserved && !isReserved;
+        const assignedProgram = shouldHold ? null : assignProgram(currentUser);
+        if (!shouldHold && assignedProgram === null) {
+            showCustomAlert('errorProgramFull');
+            return;
+        }
+
+        const finalizeLocal = (program, wasWaiting) => {
+            showSuccessScreen(currentUser.name, program, wasWaiting);
+            showSaveIndicator(translations[currentLanguage]?.notificationDatabaseSaved || 'データを保存しました');
+            writeRostersToFirestore();
+        };
+
+        const writeToFirestore = async (assignedProgramId, wasWaiting) => {
+            try {
+                if (!window.firebase || !window.firebase.firestore) {
+                    throw new Error('Firestore is not available');
+                }
+
+                const db = window.firebase.firestore();
+                const doc = {
+                    name: currentUser.name,
+                    furigana: currentUser.furigana || '',
+                    school: currentUser.school || '',
+                    grade: currentUser.grade || '',
+                    companions: currentUser.companions || 0,
+                    choices: currentUser.choices || [],
+                    assignedProgramId: assignedProgramId || null,
+                    status: assignedProgramId ? 'assigned' : (wasWaiting ? 'waiting' : 'registered'),
+                    createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                const result = await db.collection('participants').add(doc);
+                if (!result || !result.id) {
+                    throw new Error('Firestore returned no document reference');
+                }
+            } catch (e) {
+                console.error('Firestore write error', e);
+                throw e;
+            }
+        };
+
+        writeToFirestore(assignedProgram ? assignedProgram.id : null, shouldHold)
+            .then(() => finalizeLocal(assignedProgram, shouldHold))
+            .catch(() => {
+                showCustomAlert('errorDatabaseWriteFailed');
+                navigateTo('reservation-confirmation-section');
+            });
     });
     
     document.getElementById('btn-back-to-home').addEventListener('click', showReceptionView);
@@ -2651,4 +2754,148 @@ if (statusViewToggle) {
     requestAnimationFrame(() => {
         document.documentElement.classList.remove('lang-switching');
     });
+
+    async function ensureFirestore() {
+        if (!ensureFirebaseInitialized()) return null;
+        if (window.firebase && window.firebase.firestore) {
+            return window.firebase.firestore();
+        }
+        return null;
+    }
+
+    async function loadProgramsFromFirestore() {
+        try {
+            const db = await ensureFirestore();
+            if (!db) return;
+            const snapshot = await db.collection('programs').orderBy('order', 'asc').get();
+            if (snapshot.empty) return;
+            const fetched = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                fetched.push({
+                    id: doc.id,
+                    title: data.title || '',
+                    description: data.description || '',
+                    title_en: data.title_en || '',
+                    description_en: data.description_en || '',
+                    capacity: data.capacity || 0,
+                    order: typeof data.order === 'number' ? data.order : fetched.length
+                });
+            });
+            programs = fetched.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            renderProgramGrid();
+            renderAdminEditor();
+            saveStateToLocalStorage();
+        } catch (error) {
+            console.error('Failed to load programs from Firestore', error);
+        }
+    }
+
+    async function saveProgramsToFirestore() {
+        try {
+            const db = await ensureFirestore();
+            if (!db) return;
+            const batch = db.batch();
+            const collectionRef = db.collection('programs');
+            const snapshot = await collectionRef.get();
+            snapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            programs.forEach((program, index) => {
+                const docRef = collectionRef.doc(program.id);
+                batch.set(docRef, {
+                    title: program.title,
+                    description: program.description,
+                    title_en: program.title_en || '',
+                    description_en: program.description_en || '',
+                    capacity: program.capacity || 0,
+                    order: index
+                });
+            });
+            await batch.commit();
+        } catch (error) {
+            console.error('Failed to save programs to Firestore', error);
+            showCustomAlert('errorDatabaseWriteFailed');
+        }
+    }
+
+    async function loadRostersFromFirestore() {
+        try {
+            const db = await ensureFirestore();
+            if (!db) return;
+            const reservationSnapshot = await db.collection('reservations').get();
+            const briefingSnapshot = await db.collection('briefings').get();
+            const reservationsData = [];
+            reservationSnapshot.forEach(doc => {
+                const data = doc.data();
+                reservationsData.push({
+                    id: doc.id,
+                    name: data.name || '',
+                    furigana: data.furigana || '',
+                    choices: Array.isArray(data.choices) ? data.choices : [],
+                    companions: data.companions || 0
+                });
+            });
+            const briefingData = [];
+            briefingSnapshot.forEach(doc => {
+                const data = doc.data();
+                briefingData.push({
+                    id: doc.id,
+                    name: data.name || '',
+                    furigana: data.furigana || '',
+                    time: data.time || '',
+                    companions: data.companions || 0
+                });
+            });
+            if (reservationsData.length > 0) {
+                reservations = reservationsData;
+            }
+            if (briefingData.length > 0) {
+                briefingSessionAttendees = briefingData;
+            }
+            renderRosterPreview();
+            renderStatusTable();
+        } catch (error) {
+            console.error('Failed to load rosters from Firestore', error);
+        }
+    }
+
+    async function writeRostersToFirestore() {
+        try {
+            const db = await ensureFirestore();
+            if (!db) return;
+            const reservationsRef = db.collection('reservations');
+            const briefingRef = db.collection('briefings');
+            const reservationsBatch = db.batch();
+            const briefingBatch = db.batch();
+            const [reservationsSnapshot, briefingSnapshot] = await Promise.all([
+                reservationsRef.get(),
+                briefingRef.get()
+            ]);
+            reservationsSnapshot.forEach(doc => reservationsBatch.delete(doc.ref));
+            briefingSnapshot.forEach(doc => briefingBatch.delete(doc.ref));
+            reservations.forEach(reservation => {
+                const docRef = reservationsRef.doc(reservation.id || undefined);
+                reservationsBatch.set(docRef, {
+                    name: reservation.name,
+                    furigana: reservation.furigana || '',
+                    choices: Array.isArray(reservation.choices) ? reservation.choices : [],
+                    companions: reservation.companions || 0
+                });
+            });
+            briefingSessionAttendees.forEach(attendee => {
+                const docRef = briefingRef.doc(attendee.id || undefined);
+                briefingBatch.set(docRef, {
+                    name: attendee.name,
+                    furigana: attendee.furigana || '',
+                    time: attendee.time || '',
+                    companions: attendee.companions || 0
+                });
+            });
+            await Promise.all([reservationsBatch.commit(), briefingBatch.commit()]);
+        } catch (error) {
+            console.error('Failed to save rosters to Firestore', error);
+            showCustomAlert('errorDatabaseWriteFailed');
+        }
+    }
 });

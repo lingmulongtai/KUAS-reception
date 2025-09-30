@@ -126,6 +126,15 @@ body {
     position: relative;
 }
 
+body.offline {
+    pointer-events: none;
+}
+
+body.offline #offline-toast,
+body.offline #offline-overlay {
+    pointer-events: auto;
+}
+
 body.liquid-mode {
     --primary-color: rgba(0, 120, 255, 0.6);
     --secondary-color: rgba(0, 180, 255, 0.5);
@@ -390,6 +399,88 @@ body.liquid-mode .chip {
     margin: 15px;
     display: block;
     cursor: pointer;
+}
+
+#offline-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 20px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+}
+
+#offline-overlay.visible {
+    display: flex;
+}
+
+#offline-overlay .offline-overlay-content {
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode #offline-overlay .offline-overlay-content,
+body.liquid-mode #offline-overlay .offline-overlay-content {
+    background: rgba(24, 36, 48, 0.92);
+    color: #f7f9fb;
+}
+
+#offline-overlay i {
+    font-size: 64px;
+    color: var(--danger-color);
+    display: block;
+    margin-bottom: 16px;
+}
+
+#offline-overlay h2 {
+    margin: 0 0 12px;
+    font-size: 28px;
+}
+
+#offline-overlay p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+#offline-toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 3001;
+    background: rgba(220, 53, 69, 0.96);
+    color: #fff;
+    padding: 14px 18px;
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+}
+
+#offline-toast.visible {
+    display: flex;
+}
+
+#offline-toast i {
+    font-size: 22px;
+}
+
+body.liquid-mode #offline-toast {
+    background: rgba(255, 115, 0, 0.92);
+}
+
+body.dark-mode #offline-toast {
+    background: rgba(220, 53, 69, 0.92);
 }
 
 /* --- ヘッダー内のボタン --- */
@@ -1396,10 +1487,6 @@ body.dark-mode .ios-switch .slider { background-color: #3d5a4c; }
 body.dark-mode .ios-switch input:checked + .slider { background-color: #68c09b; }
 
 /* --- JSONエディタのスタイル --- */
-.json-editor-container { margin-top: 20px; border-top: 1px solid var(--light-gray); padding-top: 20px; }
-.json-editor-container summary { cursor: pointer; font-weight: bold; color: var(--text-secondary-color); margin-bottom: 10px; }
-#json-editor { width: 100%; height: 200px; font-family: monospace; font-size: 14px; resize: vertical; }
-body.dark-mode #json-editor { background-color: #1f3328; color: #f0f3f2; border: 1px solid #5a8d77; border-radius: 8px; }
 
 /* --- ライトモード: プログラム編集の視認性向上（枠のコントラスト/太さUP） --- */
 body:not(.dark-mode) .program-editor-item {
@@ -1416,12 +1503,6 @@ body:not(.dark-mode) .editor-item-row textarea:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(15, 140, 82, 0.15);
-}
-body:not(.dark-mode) #json-editor {
-    background-color: #f7faf8;
-    color: var(--text-color);
-    border: 2px solid #8aa59a;
-    border-radius: 8px;
 }
 
 /* --- 管理パネル: 受付画面に戻るボタン（おしゃれデザイン） --- */
@@ -1899,11 +1980,6 @@ body.liquid-mode .editor-item-row textarea {
     box-shadow: none;
 }
 
-body.liquid-mode #json-editor {
-    background: rgba(25, 45, 70, 0.28);
-    border: 1px solid rgba(150, 210, 255, 0.32);
-    color: rgba(225, 240, 255, 0.95);
-}
 
 body.liquid-mode .admin-tab {
     color: rgba(200, 225, 255, 0.75);

@@ -2,8 +2,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    function isStaff() {
+      return request.auth != null;
+    }
+
+    match /participants/{id} {
+      allow create: if true; // 本番では reCAPTCHA / App Check なども検討
+      allow read, update, delete: if isStaff();
+    }
+
+    match /programs/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    match /reservations/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /briefings/{id} {
+      allow read, write: if isStaff();
     }
   }
 }
