@@ -1,12 +1,12 @@
 <!-- Language: JA | EN -->
 [日本語 (JA)](README.md) | [English (EN)](README_ENG.md)
 
-## KUAS Reception App (Online/CDN)
+## KUAS Reception App (Local-first + Optional Online)
 
 ### Overview
 This is a browser-based reception app for the Faculty of Engineering Open Campus at Kyoto University of Advanced Science. It covers reception for reserved and walk-in attendees, preference selection, admin-side editing/assignment/roster preview, status visualization, and export — all locally in the browser.
 
-This project loads fonts/icons/libs from CDNs, while images are served locally from the `public/` folder.
+This project is designed to run fully in the browser with local persistence, while optionally integrating with Firebase (Auth/Firestore) and Firebase Data Connect (beta). Fonts/icons/libs are loaded from CDNs, images are served from the local `public/` folder, and translations are loaded on-demand from `locales/*.json`.
 
 ## Table of Contents
 - [Environment](#environment)
@@ -21,6 +21,7 @@ This project loads fonts/icons/libs from CDNs, while images are served locally f
 - [Export](#export)
 - [Directory Structure](#directory-structure)
 - [Notes](#notes)
+- [Online Integration (Optional)](#online-integration-optional)
 - [Libraries](#libraries)
 - [Troubleshooting](#troubleshooting)
 
@@ -41,7 +42,7 @@ This project loads fonts/icons/libs from CDNs, while images are served locally f
 
 ## How to Run
 1. Place this folder anywhere locally.
-2. Open `index.html` in your browser.
+2. Open `index.html` at the repository root in your browser (note: `public/index.html` is the Firebase Hosting default page).
 3. On first run, a notice may appear for missing rosters. Import rosters from the Admin panel.
 
 ## Operational Flow (Event Day)
@@ -167,26 +168,28 @@ Import expects the following fixed columns (see samples in `register_of_names/`)
   - PDF export similarly shows additional `Companions` columns.
 
 ## Directory Structure
-- `index.html`: Entry page (CDN loading, images from `public/`)
+- `index.html`: Entry page (CDN loading, uses `locales/*.json` for i18n)
 - `style.css`: Styles (light/dark, animations)
 - `script.js`: Logic (reception, roster import, persistence, i18n, admin, etc.)
+- `language-loader.js`: i18n loader (lazy-loads `locales/*.json` and applies to UI)
+- `locales/`: Translation JSON files (`ja.json`, `en.json`, `es.json`, and more)
 - `firebase-init.js`: Firebase initialization
-- `public/`: Local images and optional `public/index.html`
+- `public/`: Static images and a sample Firebase Hosting `index.html`
 - `register_of_names/`: Sample rosters (xlsx)
 
 (Note) Local fonts/vendor folders are no longer necessary. You may delete `assets/fonts/` and `vendor/` to reduce size.
 
 ## Notes
-- The app is fully local. If something is missing, verify the `assets/` and `vendor/` folders are intact.
+- Core libraries are fetched from CDNs. There is no offline fallback for those bundles in this repo.
 - Admin password default is `admin`. To change, update the corresponding part in `script.js`.
 - Names are matched using half-width space between family and given names. Full-width spaces are normalized to half-width.
 
-## Firebase Setup (optional online mode)
-If you want to run with Firebase (Email/Password admin login and Firestore persistence), follow:
+## Online Integration (Optional)
+You can enable Firebase for admin Email/Password login and Firestore persistence (the app still functions locally without it). Data Connect (beta) and App Hosting configuration are included as well.
 
 1) Create a Firebase project. Enable Authentication (Email/Password) and Cloud Firestore.
 
-2) Create `firebase-config.js` in project root:
+2) Create `firebase-config.js` in the project root:
 
 ```html
 // Define before firebase-init.js

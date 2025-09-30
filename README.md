@@ -1,12 +1,12 @@
 <!-- Language: JA | EN -->
 [日本語 (JA)](README.md) | [English (EN)](README_ENG.md)
 
-## KUAS Reception アプリ（オンライン/CDN 対応）
+## KUAS Reception アプリ（ローカル優先 + オンライン対応）
 
 ### 概要
 京都先端科学大学 工学部オープンキャンパス向けの「ミニキャップストーン体験」受付アプリです。予約者・当日参加者の受付、希望プログラム選択、管理用の編集・割り当て・名簿プレビュー、進行表示、エクスポートまでをブラウザだけで完結します。
 
-本プロジェクトはオンライン/CDN 対応です。フォント・アイコン・主要ライブラリは CDN から読み込み、画像は `public/` 配下のローカル資産を使用します。
+本プロジェクトは「ブラウザだけで完結するローカル運用」を基本にしつつ、必要に応じて Firebase 連携（Auth/Firestore）や Data Connect（β）を併用できる構成にしました。フォント・アイコン・主要ライブラリは CDN から読み込み、画像は `public/` 配下のローカル資産を使用します。多言語文言は `locales/*.json` をオンデマンドで読み込みます。
 
 ## 目次
 - [動作環境](#動作環境)
@@ -21,6 +21,7 @@
 - [出力（エクスポート）](#出力エクスポート)
 - [ディレクトリ構成](#ディレクトリ構成)
 - [既知の注意点](#既知の注意点)
+- [オンライン連携（任意）](#オンライン連携任意)
 - [ライブラリ](#ライブラリ)
 - [トラブルシュート](#トラブルシュート)
 
@@ -41,7 +42,7 @@
 
 ## 起動方法（ローカル）
 1. このフォルダを任意の場所に配置。
-2. ブラウザで `index.html`（リポジトリ直下）を開くか、`public/index.html` を開きます。
+2. ブラウザで `index.html`（リポジトリ直下）を開きます（`public/index.html` は Firebase Hosting デフォルトページです）。
 3. 初回は名簿未読込みの通知が出ます。管理画面から名簿を読み込んでください。
 
 ## 当日の使用方法
@@ -167,20 +168,23 @@
   - PDF出力も同様に `Companions` 列群を追加して表示します。
 
 ## ディレクトリ構成
-- `index.html`: アプリ本体（CDN読み込みに変更）
+- `index.html`: アプリ本体（CDN読み込み、`locales/*.json` を使用）
 - `style.css`: スタイル（ライト/ダーク対応、アニメーション含む）
 - `script.js`: 機能実装（受付ロジック、名簿読み込み、保存/復元、多言語、管理画面など）
+- `language-loader.js`: 多言語ローダ（`locales/*.json` を遅延読込して UI に適用）
+- `locales/`: 言語 JSON（`ja.json`, `en.json`, `es.json`, ほか）
 - `register_of_names/`: 名簿サンプル（xlsx）
+ - `public/`: 画像資産と Firebase Hosting のサンプル `index.html`
   
 （注）ローカルのフォント/ベンダーファイルは不要です。容量削減のため `assets/fonts/` と `vendor/` は削除可能です。
 
 ## 既知の注意点
-- 完全ローカル対応のため、外部CDNを利用していません。必要ファイルが不足している場合は `assets/` / `vendor/` 配下の構成をご確認ください。
+- 主要ライブラリは CDN から取得します。ネットワーク遮断時はオフライン用の代替を用意していません。
 - 管理者パスワードの初期値は `admin` です。変更する場合は `script.js` 内の該当箇所を修正してください。
 - 氏名入力は「姓 名」の半角スペース区切りで照合します（全角スペースは自動で半角に正規化）。
 
-## Firebase 設定（任意のオンライン運用）
-Firebase を利用して、管理者のメール/パスワードログインと Firestore への保存を行う場合：
+## オンライン連携（任意）
+Firebase を利用して、管理者のメール/パスワードログインと Firestore への保存を行うことができます（未設定でもアプリはローカルで動作します）。Data Connect（β）と App Hosting の構成も同梱しています。
 
 1) Firebase プロジェクトを作成し、Authentication（Email/Password）と Cloud Firestore を有効化。
 
@@ -217,6 +221,25 @@ service cloud.firestore {
   }
 }
 ```
+
+### Firebase Emulator/Hosting/App Hosting
+- `firebase.json` にエミュレータと Hosting ヘッダ設定を含みます（`index.html`/`firebase-config.js`/`firebase-init.js` は no-cache）。
+- App Hosting 用の `apphosting.yaml` を同梱（Cloud Run 最小構成）。
+
+### Firebase Data Connect（β、任意）
+- 設定: `dataconnect/dataconnect.yaml`（リージョン、Cloud SQL 接続）、`dataconnect/schema/`、`dataconnect/connector/`
+- 生成 SDK: `dataconnect-generated/js/default-connector`（`@firebasegen/default-connector` としてローカル参照）
+- エミュレータ接続例（フロントエンド）：
+
+```js
+import { getDataConnect, connectDataConnectEmulator } from 'firebase/data-connect';
+import { connectorConfig } from '@firebasegen/default-connector';
+
+const dc = getDataConnect(connectorConfig);
+connectDataConnectEmulator(dc, 'localhost', 9399);
+```
+
+（注）現状、スキーマ/クエリはテンプレート状態です。実運用前に貴学の要件に合わせて設計してください。
 
 ## ライブラリ
 - SortableJS（ドラッグ&ドロップ）
