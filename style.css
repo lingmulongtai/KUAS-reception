@@ -124,6 +124,11 @@ body {
     transition: background-color 0.3s, color 0.3s;
     min-height: 100vh;
     position: relative;
+    font-display: swap;
+}
+
+body.fonts-loading {
+    font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', Arial, sans-serif;
 }
 
 html[lang="ar"] body {
@@ -229,7 +234,7 @@ body.liquid-mode::after {
 body.liquid-mode #initial-selection {
     position: relative;
     isolation: isolate;
-    overflow: hidden;
+    overflow: visible;
 }
 
 body.liquid-mode #initial-selection::before {
@@ -240,7 +245,7 @@ body.liquid-mode #initial-selection::before {
     background: radial-gradient(circle at 30% 30%, rgba(160, 220, 255, 0.45), transparent 65%);
     animation: liquidGlassPulse 9s ease-in-out infinite;
     pointer-events: none;
-    z-index: -2;
+    z-index: 0;
 }
 
 body.liquid-mode #initial-selection::after {
@@ -252,7 +257,17 @@ body.liquid-mode #initial-selection::after {
     filter: blur(28px);
     animation: liquidGlassFlow 22s ease-in-out infinite reverse;
     pointer-events: none;
-    z-index: -2;
+    z-index: 0;
+}
+
+body.liquid-mode #initial-selection .button-group {
+    position: relative;
+    z-index: 10;
+}
+
+body.liquid-mode #initial-selection .btn-large {
+    position: relative;
+    z-index: 11;
 }
 
 body.liquid-mode .header-bar {
@@ -930,6 +945,15 @@ html[lang="en"] h1[data-lang-key="mainTitle"] {
     margin: 0 clamp(8px, 1.5vw, 16px);
 }
 
+body.liquid-mode #initial-selection .button-group {
+    padding-inline: clamp(8px, 2vw, 18px);
+}
+
+body.liquid-mode #initial-selection .btn-large {
+    min-width: clamp(280px, 40vw, 400px);
+    max-width: clamp(320px, 44vw, 460px);
+}
+
 @media (max-width: 1024px) {
     .content-wrapper {
         width: clamp(680px, 78vw, 1050px);
@@ -993,7 +1017,6 @@ html[lang="en"] h1[data-lang-key="mainTitle"] {
 }
 
 @media (max-width: 400px) {
-    .button-group { gap: 12px; flex-wrap: nowrap; }
     .btn-large { height: 138px; width: min(88vw, 280px); font-size: 17px; margin: 0 clamp(6px, 3vw, 10px); }
 }
 
@@ -2043,6 +2066,17 @@ body.liquid-mode .modal-content-inner {
 body.liquid-mode .modal-overlay.visible .modal-content-inner {
     transform: scale(1.02);
     transition: transform 0.35s ease, background-color 0.35s ease;
+}
+
+/* Disable animations in Liquid Glass mode */
+body.liquid-mode::before,
+body.liquid-mode::after,
+body.liquid-mode #initial-selection::before,
+body.liquid-mode #initial-selection::after,
+body.liquid-mode .btn-large,
+body.liquid-mode .btn-large::before,
+body.liquid-mode .btn-large::after {
+    animation: none !important;
 }
 
 body.liquid-mode .input-group input::placeholder,

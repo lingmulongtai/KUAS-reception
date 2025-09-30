@@ -144,6 +144,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    function prepareHeightAnimation(element) {
+        if (!element || typeof element.getClientRects !== 'function') return null;
+        const rects = element.getClientRects();
+        if (!rects || rects.length === 0) return null;
+        const previousHeight = element.offsetHeight;
+        if (!previousHeight) return null;
+        const previousInlineTransition = element.style.transition;
+        let computedTransition = '';
+        try {
+            computedTransition = window.getComputedStyle(element).transition || '';
+        } catch (_) {
+            computedTransition = '';
+        }
+        return {
+            element,
+            previousHeight,
+            previousInlineTransition,
+            computedTransition
+        };
+    }
+
+    function animateHeightTransition(context) {
+        if (!context || !context.element) return;
+        const { element, previousHeight, previousInlineTransition, computedTransition } = context;
+        const newHeight = element.offsetHeight;
+        if (!newHeight || Math.abs(newHeight - previousHeight) < 0.5) return;
+
+        const hasExistingTransition = computedTransition && computedTransition !== 'all 0s ease 0s';
+        const transitionIncludesHeight = hasExistingTransition && /height(?![^,]*\bnone\b)/.test(computedTransition);
+        const targetTransition = transitionIncludesHeight
+            ? computedTransition
+            : hasExistingTransition
+                ? `${computedTransition}, height 0.4s ease`
+                : 'height 0.4s ease';
+
+        const originalInline = previousInlineTransition;
+        element.style.transition = 'none';
+        element.style.height = `${previousHeight}px`;
+        void element.offsetHeight;
+
+        let cleaned = false;
+        const cleanup = () => {
+            if (cleaned) return;
+            cleaned = true;
+            if (originalInline) {
+                element.style.transition = originalInline;
+            } else {
+                element.style.removeProperty('transition');
+            }
+            element.style.removeProperty('height');
+            element.removeEventListener('transitionend', onTransitionEnd);
+            element.removeEventListener('transitioncancel', onTransitionEnd);
+        };
+
+        const onTransitionEnd = (event) => {
+            if (!event || event.propertyName === 'height') {
+                cleanup();
+            }
+        };
+
+        element.addEventListener('transitionend', onTransitionEnd);
+        element.addEventListener('transitioncancel', onTransitionEnd);
+
+        requestAnimationFrame(() => {
+            element.style.transition = targetTransition;
+            element.style.height = `${newHeight}px`;
+        });
+
+        setTimeout(cleanup, 800);
+    }
+
     // 安全にイベントを登録するユーティリティ（先に定義しておく）
     const safeOn = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
 
@@ -341,6 +412,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // アプリケーション開始時にデータベースを初期化
     initializeApp();
 
+    // フォント読み込み完了後にクラスを解除
+    loadInitialFonts().catch(err => {
+        console.warn('Font preload fallback:', err);
+        document.body.classList.remove('fonts-loading');
+    });
+
     // --- データ（本来はExcelから読み込む） ---
     let programs = [
         { id: 'p1', title: '"紙"技エンジニアリング！', description: '一枚の紙をどれだけ長くできるか？どれだけの重さを支えられるか？切り方一つで変わる紙の可能性を切り拓こう！', capacity: 10, title_en: 'Paper Engineering Tricks!', description_en: 'How long can a single sheet of paper become? How much weight can it hold? Explore the surprising potential of paper with clever cuts and design.' },
@@ -497,6 +574,9 @@ let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
 
     async function updateLanguage(lang) {
+        const wrapper = document.querySelector('#reception-view .content-wrapper');
+        const heightContext = prepareHeightAnimation(wrapper);
+
         await window.loadTranslations(lang);
         currentLanguage = lang;
         document.documentElement.setAttribute('lang', lang);
@@ -538,6 +618,29 @@ let adminEditorDirty = false;
             }
         }
         localStorage.setItem('receptionLang', lang);
+
+        animateHeightTransition(heightContext);
+    }
+
+    async function loadInitialFonts() {
+        try {
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            } else if (document.fonts && document.fonts.check) {
+                const interReady = document.fonts.check('1em Inter');
+                const notoReady = document.fonts.check('1em "Noto Sans JP"');
+                const zenReady = document.fonts.check('1em "Zen Maru Gothic"');
+                if (!(interReady && notoReady && zenReady)) {
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                }
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 400));
+            }
+        } catch (error) {
+            console.warn('Font readiness check failed:', error);
+        } finally {
+            document.body.classList.remove('fonts-loading');
+        }
     }
 
     // --- 要素の取得 ---
@@ -2043,7 +2146,7 @@ function columnLetter(index) {
         safeOn(langSwitchBtn, 'click', () => {
             hideLangMenu();
             const newLang = currentLanguage === 'ja' ? 'en' : 'ja';
-            updateLanguage(newLang);
+            updateLanguage(newLang).catch(console.error);
             const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
             const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
             showSaveIndicator(tmpl.replace('{lang}', langName));
@@ -2062,7 +2165,7 @@ function columnLetter(index) {
             if (e.target.tagName === 'A') {
                 const newLang = e.target.dataset.lang;
                 if (newLang && newLang !== currentLanguage) {
-                    updateLanguage(newLang);
+                    updateLanguage(newLang).catch(console.error);
                     const langName = (window.translations[newLang] && window.translations[newLang].languageSelfName) || newLang;
                     const tmpl = (window.translations[newLang] && window.translations[newLang].languageSwitchedTo) || 'Language switched to {lang}';
                     showSaveIndicator(tmpl.replace('{lang}', langName));
