@@ -14,6 +14,7 @@
 - Admin panel for program editing, roster preview, and status visualization
 - Excel (`reception_status.xlsx`) and PDF export of final assignments
 - Japanese/English UI toggle, light/dark theme switch, automatic persistence via IndexedDB and localStorage
+- **Mobile-first visitor journey** (`mobile/index.html`): smartphone-optimized UI that guides attendees from entry type to confirmation, integrates with Firestore (programs/reservations/participants), surfaces offline detection, toast feedback, and auto resume
 
 ## Requirements
 - Browsers: Latest Microsoft Edge or Google Chrome (verified on Windows)
@@ -34,6 +35,16 @@
 2. Create `firebase-config.js` at the project root and define `window.firebaseConfig = { ... }`
 3. Serve or open `index.html`, then sign in via the gear icon using a Firebase Auth account
 4. Adjust security rules based on `firestore.rules`; update the contents under `dataconnect/` if using Data Connect beta
+
+### Using the smartphone reception flow
+1. Complete the Firebase setup above (Firestore enabled and `firebase-config.js` available)
+2. Host or open `mobile/index.html`
+3. Seed the `programs` collection with documents containing `id`, `title`, `description`, `capacity`, and `order`
+4. Populate the `reservations` collection with `name`, `furigana`, `school`, `grade`, `companions`, `choices[]` for reserved guests
+5. Field staff launch the mobile UI so visitors can choose “Reserved” or “Walk-in”, enter minimal details, pick programs, review, and confirm
+   - Each submission writes to the `participants` collection with a `status` (`waiting`, `registered`, or `briefing_only`)
+   - Form progress persists in localStorage to resume after accidental refreshes or app switching
+6. Connectivity feedback appears in the top banner; sync failures display toast messages with recovery prompts
 
 ## Event-Day Workflow
 1. **Preparation**: Update OS/browser, gather the latest roster files, allow pop-ups

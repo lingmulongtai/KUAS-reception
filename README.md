@@ -14,6 +14,7 @@
 - 管理画面でのプログラム編集、名簿プレビュー、ステータス可視化
 - Excel（`reception_status.xlsx`）および PDF へのエクスポート
 - 日本語/英語 UI 切り替え、ライト/ダークテーマ切り替え、IndexedDB・localStorage による自動保存
+- **スマホ専用受付画面**（`mobile/index.html`）: 予約有無から受付完了までをモバイル最適化 UI で実行。Firestore からプログラム一覧/参加者を読み書きし、オフライン検知・トースト通知・フォーム再開に対応。
 
 ## システム要件
 - ブラウザ: 最新の Microsoft Edge または Google Chrome（Windows で検証済み）
@@ -34,6 +35,16 @@
 2. ルートに `firebase-config.js` を作成し、`window.firebaseConfig = { ... }` を定義
 3. `index.html` をホスティングまたはローカルサーバー経由で開き、管理画面からメール/パスワードでサインイン
 4. `firestore.rules` を参考に権限を調整。Data Connect β を使う場合は `dataconnect/` 配下の設定を更新
+
+### スマホ受付フローを使う
+1. 上記の Firebase 設定（Firestore 有効化と `firebase-config.js` 配置）を完了させる
+2. `mobile/index.html` をブラウザまたはホスティング経由で開く
+3. Firestore の `programs` コレクションに `id / title / description / capacity / order` を持つドキュメントを登録
+4. 予約受付の場合は `reservations` コレクションへ `name / furigana / school / grade / companions / choices[]` を保存
+5. スマホ来場者は「予約あり」「予約なし」を選択し、フォーム入力 → プログラム選択 → 内容確認 → 受付確定を行う
+   - 受付結果は `participants` コレクションに `status`（`waiting` / `registered` / `briefing_only`）付きで追加
+   - 同伴者・フォーム入力値は localStorage に自動保存され、中断後も再開可能
+6. オンライン/オフラインの変化は画面上部のバナーに表示。通信失敗時はトースト通知でリトライを促す
 
 ## 当日の運用フロー
 1. **事前準備**: PC・ブラウザの更新、名簿ファイルの最新版を用意、ポップアップ許可
