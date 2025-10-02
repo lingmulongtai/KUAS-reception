@@ -4,6 +4,27 @@
     const NETWORK_BANNER_ID = 'network-banner';
     const STORAGE_KEY = 'kuas-mobile-state-v1';
 
+    const clone = (value) => {
+        if (typeof window !== 'undefined' && typeof window.structuredClone === 'function') {
+            return window.structuredClone(value);
+        }
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (error) {
+            console.warn('Fallback clone failed', error);
+            return value;
+        }
+    };
+
+    const getStorage = () => {
+        try {
+            return window.localStorage;
+        } catch (error) {
+            console.warn('localStorage not available', error);
+            return null;
+        }
+    };
+
     const Steps = {
         LANDING: 'landing',
         RESERVED_NAME: 'reserved-name',
@@ -37,13 +58,15 @@
 
     const loadPersistedState = () => {
         try {
-            const raw = window.localStorage?.getItem(STORAGE_KEY);
-            if (!raw) return structuredClone(initialState);
+            const storage = getStorage();
+            if (!storage) return clone(initialState);
+            const raw = storage.getItem(STORAGE_KEY);
+            if (!raw) return clone(initialState);
             const parsed = JSON.parse(raw);
-            return { ...structuredClone(initialState), ...parsed };
+            return { ...clone(initialState), ...parsed };
         } catch (error) {
             console.warn('Failed to restore mobile state', error);
-            return structuredClone(initialState);
+            return clone(initialState);
         }
     };
 
@@ -63,7 +86,7 @@
 
     const setNestedState = (path, value) => {
         const segments = path.split('.');
-        const nextState = structuredClone(state);
+        const nextState = clone(state);
         let target = nextState;
         for (let i = 0; i < segments.length - 1; i++) {
             const key = segments[i];
@@ -85,7 +108,10 @@
                 currentUser: state.currentUser,
                 choices: state.choices
             };
-            window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(payload));
+            const storage = getStorage();
+            if (storage) {
+                storage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            }
         } catch (error) {
             console.warn('Failed to persist mobile state', error);
         }
@@ -654,7 +680,7 @@
         const backHomeBtn = root.querySelector('[data-action="back-home"]');
         if (backHomeBtn) {
             backHomeBtn.addEventListener('click', () => {
-                setState(structuredClone(initialState));
+                setState(clone(initialState));
                 render();
             });
         }
