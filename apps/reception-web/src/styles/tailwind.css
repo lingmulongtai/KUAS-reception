@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --glass-border-light: rgba(255, 255, 255, 0.4);
+  --glass-border-dark: rgba(148, 163, 184, 0.35);
+}
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-900 transition-colors duration-300 ease-out;
+  }
+
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-glass-light/80 dark:bg-glass-dark/60 backdrop-blur-lg border border-white/40 dark:border-white/10 shadow-glass rounded-3xl;
+  }
+
+  .glass-outline {
+    @apply border border-white/50 dark:border-white/10 shadow-glassInset;
+  }
+
+  .gradient-orb {
+    background: radial-gradient(circle at 25% 25%, rgba(129, 140, 248, 0.35), transparent 55%),
+      radial-gradient(circle at 75% 75%, rgba(217, 249, 157, 0.35), transparent 55%);
+  }
+}

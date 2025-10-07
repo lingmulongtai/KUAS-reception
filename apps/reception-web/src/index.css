@@ -1,0 +1,38 @@
+:root {
+  font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body,
+html,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+}
