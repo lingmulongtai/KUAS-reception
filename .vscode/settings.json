@@ -1,0 +1,9 @@
+{
+  "livePreview.defaultPreviewPath": "apps/reception-web/index.html",
+  "liveServer.settings.root": "apps/reception-web",
+  "liveServer.settings.ignoreFiles": [
+    "**/firebase-debug.log",
+    "**/node_modules/**",
+    "legacy/**"
+  ]
+}

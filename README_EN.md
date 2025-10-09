@@ -2,94 +2,107 @@
 
 [日本語 README](README.md)
 
-## Concept
-- Browser-based single-page app that handles reception and seating for KUAS Faculty of Engineering Open Campus
-- Runs locally end-to-end: roster import, reception, program assignment, progress tracking, and export
-- Optional Firebase integration (Auth / Firestore / Data Connect beta) when an internet connection is available
+## Overview
+- Modern reception platform for KUAS Faculty of Engineering Open Campus rebuilt with a React + TypeScript SPA under `apps/reception-web/`
+- Offline-first experience for the reception desk, with optional integration to Firebase (Auth / Firestore / Cloud Functions)
+- Includes liquid-glass themed light/dark modes, admin dashboards, and DeepL-powered translations
 
-## Core Features
-- Reception flow for reserved and walk-in attendees (name, school, grade, companions)
-- Program selection UI for 1st–3rd choices with capacity-aware validation
-- Auto-assignment, waiting list management, and color strap guidance screens
-- Admin panel for program editing, roster preview, and status visualization
-- Excel (`reception_status.xlsx`) and PDF export of final assignments
-- Japanese/English UI toggle, light/dark theme switch, automatic persistence via IndexedDB and localStorage
-- **Mobile-first visitor journey** (`mobile/index.html`): smartphone-optimized UI that guides attendees from entry type to confirmation, integrates with Firestore (programs/reservations/participants), surfaces offline detection, toast feedback, and auto resume
+## Key Capabilities
+- **Reception flow**: select reserved vs walk-in → attendee details → program preference (1st–3rd) → confirmation ticket
+- **Program management**: real-time remaining capacity, waiting list summary, and admin metrics
+- **Translation gateway**: `/api/translate` backed by DeepL API with rule-based fallback when the key is missing
+- **Theme & language**: persistent light/dark mode, Japanese/English toggle saved per device
 
-## Requirements
-- Browsers: Latest Microsoft Edge or Google Chrome (verified on Windows)
-- OS: Windows 10/11 recommended; macOS supported
-- Network: Online recommended (fonts, icons, major libraries retrieved from CDNs)
-- Optional: Enable relevant Firebase services when using online features
+## Architecture
+```
+KUAS Reception app/
+├─ apps/
+│  └─ reception-web/        # React + Vite SPA
+│     ├─ public/            # Static assets (logos, background images)
+│     ├─ src/
+│     │  ├─ components/     # Shared layout/UI primitives
+│     │  ├─ features/
+│     │  │  ├─ reception/   # Reception experience screens & logic
+│     │  │  └─ admin/       # Admin dashboard views
+│     │  ├─ services/       # API & Firebase helpers
+│     │  ├─ theme/ styles/  # Tailwind & design tokens
+│     │  └─ hooks/ types/   # Reusable hooks and TS definitions
+│     ├─ package.json       # SPA dependencies
+│     └─ vite.config.ts     # Vite config (alias `@` → `src`)
+├─ functions/               # Firebase Cloud Functions (Node.js)
+│  ├─ index.js              # REST-like API endpoints with CORS
+│  └─ package.json
+└─ legacy/                  # Archived HTML/JS implementation & artifacts
+```
 
-## Setup
-### Local Usage
-1. Place the repository anywhere on your machine
-2. Open `index.html` directly or start a lightweight local server
-   - PowerShell: `py -m http.server 8080`
-   - Node.js: `npx serve -l 8080`
-3. On first launch, you will see a notice about missing rosters; import them via the Admin panel
+## Getting Started
+### 1. Clone & install
+```bash
+npm install
+```
+- The root `package.json` is preserved under `legacy/`. The modern app lives in `apps/reception-web/`.
 
-### Firebase Integration (Optional)
-1. Create a Firebase project and enable Authentication (Email/Password) and Cloud Firestore
-2. Create `firebase-config.js` at the project root and define `window.firebaseConfig = { ... }`
-3. Serve or open `index.html`, then sign in via the gear icon using a Firebase Auth account
-4. Adjust security rules based on `firestore.rules`; update the contents under `dataconnect/` if using Data Connect beta
+### 2. Install SPA dependencies
+```bash
+cd apps/reception-web
+npm install
+```
 
-### Using the smartphone reception flow
-1. Complete the Firebase setup above (Firestore enabled and `firebase-config.js` available)
-2. Host or open `mobile/index.html`
-3. Seed the `programs` collection with documents containing `id`, `title`, `description`, `capacity`, and `order`
-4. Populate the `reservations` collection with `name`, `furigana`, `school`, `grade`, `companions`, `choices[]` for reserved guests
-5. Field staff launch the mobile UI so visitors can choose “Reserved” or “Walk-in”, enter minimal details, pick programs, review, and confirm
-   - Each submission writes to the `participants` collection with a `status` (`waiting`, `registered`, or `briefing_only`)
-   - Form progress persists in localStorage to resume after accidental refreshes or app switching
-6. Connectivity feedback appears in the top banner; sync failures display toast messages with recovery prompts
+### 3. Configure environment variables
+Create `apps/reception-web/.env` if you need to override defaults.
+```
+VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_APP_ID=
+VITE_USE_FIREBASE_EMULATOR=true
+```
+- Set `VITE_API_BASE_URL` to your Functions endpoint (local emulator or production). When running locally, enabling the emulator is recommended.
 
-## Event-Day Workflow
-1. **Preparation**: Update OS/browser, gather the latest roster files, allow pop-ups
-2. **Import Rosters**: Admin → File Load; import the reservation roster and briefing roster (xlsx) and complete column mapping
-3. **Reception**
-   - Reserved: match by name → confirm details → finalize with companions count
-   - Walk-in: input name/school/grade/companions → choose preferences → confirm
-4. **Auto Assignment**: Configure “Prioritize Reserved” and “Prioritize Grade (Walk-ins)” in Settings; run batch assignment for waiting attendees
-5. **Status Monitoring**: Use the Status tab (cards/table) to review program enrollment and waiting list
-6. **Export**: Generate Excel/PDF outputs and archive final results
+### 4. Prepare Firebase Functions
+```bash
+cd functions
+npm install
+```
+- Provide `DEEPL_API_KEY` as a Functions environment variable if you want DeepL translations.
 
-## Data Specification
-### Excel Rosters
-| File | Required Columns (example) | Parsed Fields |
-| --- | --- | --- |
-| Capstone Reservation Roster | No, FamilyName, GivenName, Furigana, 1st–3rd, (opt) Companions | `name`, `furigana`, `choices[]`, `companions` |
-| Briefing Session Roster | No, Time, FamilyName, GivenName, Furigana, (opt) Companions | `name`, `furigana`, `time`, `companions` |
+### 5. Run locally
+#### Web client (Vite)
+```bash
+cd apps/reception-web
+npm run dev -- --host
+```
+- Prefer Vite for development. If you need a simple preview, VS Code’s Live Server can open `apps/reception-web/index.html`.
 
-### Local Persistence
-- IndexedDB: stores form inputs, reception status, roster data, and program settings
-- localStorage: stores theme, language, and lightweight preferences
-- Use “Reset Reception Data” in the Admin panel to clear both stores
+#### Functions emulator
+```bash
+firebase emulators:start --only functions
+```
+API endpoints (examples):
+- `GET /getPrograms`
+- `POST /addReceptionRecord`
+- `GET /getReceptionStats`
+- `POST /translateText`
 
-## Directory Highlights
-- `index.html` / `script.js` / `style.css`: main app shell and UI logic
-- `language-loader.js` & `locales/*.json`: lazy-loaded multilingual assets
-- `public/`: static images and sample Firebase Hosting assets
-- `register_of_names/`: sample roster spreadsheets
-- `firebase-init.js`, `firebase-config.js`: Firebase setup files (optional)
-- `dataconnect/`, `dataconnect-generated/`: Firebase Data Connect beta templates
+## Project Highlights
+- `apps/reception-web/src/components`: glass-themed `AppShell`, `Button`, `Badge`, etc.
+- `apps/reception-web/src/features/reception`: Landing → AttendeeForm → ProgramSelection → Confirmation
+- `apps/reception-web/src/features/admin`: Admin dashboard cards and program table
+- `apps/reception-web/src/services/api.ts`: Fetch wrapper pointing to Functions
+- `apps/reception-web/src/services/firebase.ts`: Firestore listeners & writers
+- `functions/index.js`: API implementation (CORS, DeepL fallback, Firestore access)
+- `legacy/`: previous HTML/JS implementation, Firebase hosting configs, Data Connect templates, sample rosters
 
-## Troubleshooting
-- **Reservation not found**: Re-import rosters and verify name spacing/notation
-- **Program full**: Move attendee to waiting list and run batch assignment later
-- **Layout issues / need reset**: Use the admin reset action and reload the page
-- **Icons missing**: Check internet connectivity and confirm CDN requests succeed
-- **Firebase write errors**: Confirm authentication status and security rule settings
+## Translation Workflow
+- `/translateText` uses DeepL when available; otherwise falls back to simple dictionary rules
+- You can expand dictionary terms or add other providers as needed
 
-## Developer Notes
-- Program definitions and reception logic live in `script.js`
-- UI strings are managed in `locales/ja.json` and `locales/en.json`; add new languages with matching keys
-- Section navigation is controlled by `showSection()` to avoid relying on browser history
-- SheetJS handles Excel parsing; SortableJS powers drag-and-drop; Phosphor Icons supply iconography
+## Future Enhancements
+- Sync admin UI with Firestore in real time
+- Add admin CRUD for programs and rosters
+- Integrate Firebase Auth for staff permissions and audit trails
 
----
-
-© KUAS Reception App Team. All rights reserved.
+## License
+© KUAS Reception App Team
 

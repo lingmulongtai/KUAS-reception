@@ -1,10 +1,5 @@
 {
-  "scripts": {
-    "test": "echo \"No tests defined\""
-  },
   "dependencies": {
-    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
-    "firebase": "^12.1.0",
-    "firebase-functions": "^6.4.0"
+    "deepl-node": "^1.20.0"
   }
 }

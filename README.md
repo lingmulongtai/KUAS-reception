@@ -2,94 +2,113 @@
 
 [English README](README_EN.md)
 
-## コンセプト
-- 京都先端科学大学 工学部オープンキャンパスの受付と配席業務をブラウザだけで完結するシングルページアプリ
-- 名簿インポートから受付、プログラム割り当て、進行管理、エクスポートまでをローカル優先で実行
-- ネットワークに接続できる場合は Firebase（Auth / Firestore / Data Connect β）と連携可能
+## 概要
+- 京都先端科学大学 工学部オープンキャンパスの受付業務を「受付スタッフ」「来場者」「管理者」が共通で利用できるモダンウェブアプリに再構築
+- React + TypeScript + Vite をベースとした SPA（`apps/reception-web/`）と Firebase Functions で構成
+- オフラインでも運用できるローカル優先設計。オンライン時は Firebase（Auth / Firestore / Cloud Functions）とシームレスに連携
+- デザインテーマはライト/ダーク＋リキッドグラス（Liquid Glass）をサポート
 
-## 基本機能
-- 予約者・当日参加者の受付と検索（氏名、学校、学年、同伴者情報）
-- 第1〜第3希望が選べるプログラム選択 UI と満員判定
-- 自動割り当て、待機リスト管理、色分けストラップ案内表示
-- 管理画面でのプログラム編集、名簿プレビュー、ステータス可視化
-- Excel（`reception_status.xlsx`）および PDF へのエクスポート
-- 日本語/英語 UI 切り替え、ライト/ダークテーマ切り替え、IndexedDB・localStorage による自動保存
-- **スマホ専用受付画面**（`mobile/index.html`）: 予約有無から受付完了までをモバイル最適化 UI で実行。Firestore からプログラム一覧/参加者を読み書きし、オフライン検知・トースト通知・フォーム再開に対応。
+## 主な機能
+- **受付フロー**: 予約/当日来場を選択 → 参加者情報入力 → プログラム第1〜3希望の選択 → 内容確認・受付確定
+- **プログラム管理**: リアルタイム残席表示、待機者・割り当て状況の可視化
+- **翻訳**: DeepL API を利用した `/api/translate` エンドポイント（キー未設定時は簡易ルールベースでフォールバック）
+- **テーマ/言語**: ライト/ダーク切り替え、日本語/英語 UI 切り替えをパーソナル設定として保存
 
-## システム要件
-- ブラウザ: 最新の Microsoft Edge または Google Chrome（Windows で検証済み）
-- OS: Windows 10/11 推奨。macOS でも動作
-- ネットワーク: オンラインを推奨（フォント・アイコン・主要ライブラリを CDN から取得）
-- オプション: Firebase を利用する場合は該当サービスの有効化が必要
+## システム構成
+```
+KUAS Reception app/
+├─ apps/
+│  └─ reception-web/        # Web クライアント（React + Vite）
+│     ├─ public/            # アプリで使用する画像などのアセット
+│     ├─ src/
+│     │  ├─ components/     # 共通レイアウト・UIコンポーネント
+│     │  ├─ features/
+│     │  │  ├─ reception/   # 受付フローに関わる画面/ロジック
+│     │  │  └─ admin/       # 管理ダッシュボード関連
+│     │  ├─ services/       # API/Firebase 通信まわり
+│     │  ├─ theme/          # テーマトークン、スタイル
+│     │  └─ hooks/ types/   # 再利用フックと型定義
+│     ├─ package.json       # Web アプリ用依存関係
+│     └─ vite.config.ts     # Vite 設定（別名 @ を src に割り当て）
+├─ functions/               # Firebase Functions（Node.js）
+│  ├─ index.js              # API エンドポイント実装
+│  └─ package.json
+└─ legacy/                  # 旧来の HTML/JS 実装や資料（バックアップ）
+```
 
 ## セットアップ
-### ローカルで試す
-1. 本リポジトリを任意の場所に配置
-2. そのまま `index.html` をブラウザで開くか、任意のローカルサーバーを起動
-   - PowerShell: `py -m http.server 8080`
-   - Node.js: `npx serve -l 8080`
-3. 初回起動時は名簿未読込みの通知が表示されるので、管理画面から名簿を読み込む
+### 1. リポジトリを取得
+```bash
+npm install
+```
+- ルート `package.json` は legacy バックアップ用です。モダン SPA は `apps/reception-web/` 内で管理されています。
 
-### Firebase 連携（任意）
-1. Firebase プロジェクトを作成し、Authentication（Email/Password）と Cloud Firestore を有効化
-2. ルートに `firebase-config.js` を作成し、`window.firebaseConfig = { ... }` を定義
-3. `index.html` をホスティングまたはローカルサーバー経由で開き、管理画面からメール/パスワードでサインイン
-4. `firestore.rules` を参考に権限を調整。Data Connect β を使う場合は `dataconnect/` 配下の設定を更新
+### 2. Web クライアントを準備
+```bash
+cd apps/reception-web
+npm install
+```
+- Tailwind CSS / React Query / React Hook Form / Firebase SDK 等の依存関係がインストールされます。
 
-### スマホ受付フローを使う
-1. 上記の Firebase 設定（Firestore 有効化と `firebase-config.js` 配置）を完了させる
-2. `mobile/index.html` をブラウザまたはホスティング経由で開く
-3. Firestore の `programs` コレクションに `id / title / description / capacity / order` を持つドキュメントを登録
-4. 予約受付の場合は `reservations` コレクションへ `name / furigana / school / grade / companions / choices[]` を保存
-5. スマホ来場者は「予約あり」「予約なし」を選択し、フォーム入力 → プログラム選択 → 内容確認 → 受付確定を行う
-   - 受付結果は `participants` コレクションに `status`（`waiting` / `registered` / `briefing_only`）付きで追加
-   - 同伴者・フォーム入力値は localStorage に自動保存され、中断後も再開可能
-6. オンライン/オフラインの変化は画面上部のバナーに表示。通信失敗時はトースト通知でリトライを促す
+### 3. 環境変数を設定
+`apps/reception-web/.env` を作成して以下を設定（必要に応じて）
+```
+VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_APP_ID=
+VITE_USE_FIREBASE_EMULATOR=true
+```
+- Firebase プロジェクトを利用しない場合は `VITE_API_BASE_URL` を左記のローカル Functions URL に設定し、エミュレータを使用します。
 
-## 当日の運用フロー
-1. **事前準備**: PC・ブラウザの更新、名簿ファイルの最新版を用意、ポップアップ許可
-2. **名簿インポート**: 管理画面 → 「ファイル読み込み」で予約者名簿、説明会名簿（どちらも xlsx）を読み込み。列マッピングを設定
-3. **受付**
-   - 予約者: 氏名で照合 → 内容確認 → 同伴者人数を含めて確定
-   - 当日参加: 氏名/学校/学年/同伴者を入力 → 希望選択 → 確定
-4. **自動割り当て**: 設定タブで「予約者優先」「学年優先（当日）」を切り替え、待機者を一括割り当て
-5. **進行管理**: 受付状況タブでカード/表表示を切り替え、プログラム別の人数や待機者を確認
-6. **エクスポート**: Excel / PDF 出力を実行し、最終状態を保存
+### 4. Firebase Functions を準備
+```bash
+cd functions
+npm install
+```
+- DeepL API を利用する場合は Functions の環境変数に `DEEPL_API_KEY` を設定してください。
 
-## データ仕様
-### Excel 名簿
-| ファイル | 必須列 (例) | 読み込み時のフィールド |
-| --- | --- | --- |
-| ミニキャップストーン体験 予約者名簿 | No, 姓, 名, フリガナ, 第1〜第3希望, (任意) 同伴者 | `name`, `furigana`, `choices[]`, `companions` |
-| 工学部説明会 参加者名簿 | No, 時間, 姓, 名, フリガナ, (任意) 同伴者 | `name`, `furigana`, `time`, `companions` |
+### 5. ローカル開発の起動
+#### Web アプリ（Vite）
+```bash
+cd apps/reception-web
+npm run dev -- --host
+```
+- VS Code の Live Server を利用する場合、`apps/reception-web/index.html` を右クリック → "Open with Live Server" で SPA バンドルを確認できます。
 
-### ローカル保存
-- IndexedDB: フォーム入力、受付ステータス、名簿データ、プログラム設定を保存
-- localStorage: テーマ、言語設定など軽量データを保存
-- 管理画面の「受付データをリセット」で両方のストアを削除可能
+#### Firebase Functions エミュレータ
+```bash
+firebase emulators:start --only functions
+```
+- エンドポイント例
+  - `GET http://localhost:5001/.../getPrograms`
+  - `POST http://localhost:5001/.../addReceptionRecord`
+  - `GET http://localhost:5001/.../getReceptionStats`
+  - `POST http://localhost:5001/.../translateText`
 
-## ディレクトリ構成（主要）
-- `index.html` / `script.js` / `style.css`: メインアプリと UI ロジック
-- `language-loader.js` と `locales/*.json`: 多言語リソースの遅延読み込み
-- `public/`: 画像や Firebase Hosting 用サンプル
-- `register_of_names/`: サンプル名簿（xlsx）
-- `firebase-init.js`, `firebase-config.js`: Firebase 設定（任意）
-- `dataconnect/`, `dataconnect-generated/`: Firebase Data Connect β 関連テンプレート
+## ディレクトリの詳細
+- `apps/reception-web/src/components`: Glass UI に対応した `AppShell`, `Button`, `Badge` など共通コンポーネント
+- `apps/reception-web/src/features/reception`: 受付ワークフロー（Landing → Form → Program → Confirmation）
+- `apps/reception-web/src/features/admin`: 管理用ダッシュボード（残席やメトリクスの表示）
+- `apps/reception-web/src/services/api.ts`: Functions と通信するための API クライアント
+- `apps/reception-web/src/services/firebase.ts`: Firestore 監視/書き込みのユーティリティ
+- `functions/index.js`: Cloud Functions で提供する REST 風 API。CORS 対応済み
+- `legacy/`: 旧版の HTML、Firebase Hosting 設定、Data Connect の設定など
 
-## トラブルシュート
-- **予約が見つからない**: 名簿インポートを再確認し、氏名のスペースや表記揺れをチェック
-- **プログラムが定員超過**: 待機リストへ回し、後で「待機者を一括割り当て」を実行
-- **表示崩れやリセット**: 管理画面のリセットを実行 → ページ再読み込み
-- **アイコンが表示されない**: ネットワーク接続と CDN 読み込みを確認
-- **Firebase 書き込みが失敗**: 認証状態と Firestore ルールを確認
+## 旧来資産について
+- 旧 `script.js` / `style.css` / `index.html` は `legacy/` フォルダーに退避しています。
+- 過去資料やサンプル名簿（`register_of_names/`）も同フォルダーに移動済みで、必要に応じて参照・復旧できます。
 
-## 開発メモ
-- プログラム定義や各種ステータス管理は `script.js` 内に実装
-- UI テキストは `locales/ja.json` と `locales/en.json` で管理。新言語を追加する場合は同じキー構成で JSON を用意
-- ブラウザ履歴に依存しないナビゲーションのため、セクション表示は `showSection()` を経由
-- Excel 読み込みは SheetJS、ドラッグ&ドロップは SortableJS、アイコンは Phosphor Icons を利用
+## 翻訳機能
+- Functions の `/translateText` を経由して DeepL API を呼び出し、多言語表示を提供
+- API キー未設定時や失敗時には簡易的なルールベース翻訳でフォールバック
 
----
+## 今後の拡張例
+- Firestore 実データとフロント UI のリアルタイム同期
+- 管理画面での編集、エクスポート機能のアップデート
+- Firebase Auth を利用したスタッフ権限管理
 
-© KUAS Reception App Team. All rights reserved.
+## ライセンス
+© KUAS Reception App Team
 
