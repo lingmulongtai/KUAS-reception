@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "kuas-reception"
-  }
+  },
+  "targets": {
+    "kuas-reception": {
+      "hosting": {
+        "reception-web": [
+          "kuas-reception"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
