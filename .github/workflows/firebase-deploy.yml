@@ -39,6 +39,14 @@ jobs:
         with:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
 
+      - name: Install functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      # Optional diagnostic: confirm hosting site configuration
+      - name: Show hosting sites
+        run: npx firebase-tools hosting:sites:list --project ${{ secrets.FIREBASE_PROJECT_ID }}
+
       # ステップ6: Firebaseへのデプロイ
       - name: Deploy to Firebase
         run: |
