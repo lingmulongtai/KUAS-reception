@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "test": "echo \"No tests defined\" && exit 0"
+  },
   "dependencies": {
     "deepl-node": "^1.20.0"
   }
