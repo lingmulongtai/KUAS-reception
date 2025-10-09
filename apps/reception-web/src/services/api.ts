@@ -1,3 +1,5 @@
+import i18n from '@/i18n'
+
 export interface ApiClientOptions {
   baseUrl?: string
   headers?: Record<string, string>
@@ -23,8 +25,8 @@ export class ApiClient {
 
   private async parseResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}))
-      const message = errorBody?.error ?? 'APIリクエストに失敗しました'
+  const errorBody = await response.json().catch(() => ({}))
+  const message = errorBody?.error ?? i18n.t('messages.api.defaultError')
       throw new Error(message)
     }
     return (await response.json()) as T

@@ -1,8 +1,13 @@
 {
   "scripts": {
-    "test": "echo \"No tests defined\" && exit 0"
+    "test": "echo \"No tests defined\" && exit 0",
+    "build:reception-web": "npm run build --prefix apps/reception-web",
+    "deploy:reception-web": "npm run build:reception-web && npx firebase deploy --only hosting:reception-web"
   },
   "dependencies": {
     "deepl-node": "^1.20.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
   }
 }

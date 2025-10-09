@@ -1,11 +1,12 @@
 import { z } from 'zod'
+import i18n from '@/i18n'
 
 export const attendeeSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, 'お名前を入力してください'),
-  furigana: z.string().min(1, 'フリガナを入力してください'),
+  name: z.string().min(1, i18n.t('validation.attendee.nameRequired')),
+  furigana: z.string().min(1, i18n.t('validation.attendee.furiganaRequired')),
   school: z.string().optional(),
-  grade: z.enum(['高校1年生', '高校2年生', '高校3年生', 'その他']),
+  grade: z.enum(['grade1', 'grade2', 'grade3', 'other']),
   companions: z.number().int().min(0).max(5),
   reserved: z.boolean(),
 })

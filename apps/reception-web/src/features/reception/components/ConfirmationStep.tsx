@@ -3,6 +3,7 @@ import { Button, Card } from '@/components/ui'
 import { type ProgramChoice } from '../types'
 import { apiClient } from '@/services'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmationStepProps {
   attendeeName: string
@@ -22,6 +23,7 @@ export function ConfirmationStep({
   onPrintTicket,
 }: ConfirmationStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { t } = useTranslation()
 
   const handleConfirm = async () => {
     setIsSubmitting(true)
@@ -39,12 +41,12 @@ export function ConfirmationStep({
   return (
     <div className="flex flex-col gap-4">
       <Card
-        title="受付内容の確認"
-        description="プログラムの割り当てを確定する前に内容を確認してください。"
+        title={t('confirmation.title')}
+        description={t('confirmation.description')}
       >
         <div className="glass-panel glass-outline flex flex-col gap-3 rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">参加者</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('common.labels.participant')}</p>
             <p className="text-lg font-semibold text-brand-600 dark:text-brand-300">{attendeeName}</p>
           </div>
           <div className="grid gap-3">
@@ -53,7 +55,8 @@ export function ConfirmationStep({
                 key={program.id}
                 className="rounded-2xl border border-white/40 bg-white/50 px-4 py-3 text-sm text-slate-700 shadow-inner dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200"
               >
-                第{index + 1}希望：{program.title}（残り {program.remaining}）
+                {t('common.labels.choiceOrderWithProgram', { order: index + 1, program: program.title })}
+                （{t('common.labels.remainingSeats', { count: program.remaining })}）
               </div>
             ))}
           </div>
@@ -61,33 +64,31 @@ export function ConfirmationStep({
       </Card>
 
       <Card
-        title="チケット発行"
-        description="完了後、連携ディスプレイに待機情報が表示されます。必要に応じてPDFも出力できます。"
+        title={t('confirmation.ticketTitle')}
+        description={t('confirmation.ticketDescription')}
         footerSlot={
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" size="sm" icon={<Share className="h-4 w-4" />} onClick={onShareTicket}>
-              QR共有
+              {t('common.actions.shareQr')}
             </Button>
             <Button variant="secondary" size="sm" icon={<Printer className="h-4 w-4" />} onClick={onPrintTicket}>
-              印刷
+              {t('common.actions.print')}
             </Button>
             <Button variant="primary" size="sm" icon={<BadgeCheck className="h-4 w-4" />} onClick={handleConfirm} loading={isSubmitting}>
-              受付を確定
+              {t('common.actions.confirmReception')}
             </Button>
           </div>
         }
       >
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          確定すると、自動的にFirebaseに同期され、管理パネルからリアルタイムで状況確認が可能です。
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t('confirmation.syncNote')}</p>
       </Card>
 
       <div className="flex justify-between gap-3">
         <Button variant="ghost" size="md" icon={<ArrowLeft className="h-4 w-4" />} onClick={onBack}>
-          もどる
+          {t('common.actions.back')}
         </Button>
         <Button variant="primary" size="md" icon={<BadgeCheck className="h-4 w-4" />} onClick={handleConfirm} loading={isSubmitting}>
-          確定する
+          {t('common.actions.confirm')}
         </Button>
       </div>
     </div>

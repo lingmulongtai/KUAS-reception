@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { LoaderCircle } from 'lucide-react'
-import { type ButtonHTMLAttributes } from 'react'
+import { type ButtonHTMLAttributes, type ReactNode } from 'react'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
@@ -10,7 +10,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
   loading?: boolean
-  icon?: React.ReactNode
+  icon?: ReactNode
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -43,7 +43,7 @@ export function Button({
     <button
       type="button"
       className={clsx(
-        'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold tracking-wide transition-all disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex min-w-0 flex-wrap items-center justify-center gap-2 rounded-2xl font-semibold tracking-wide text-center transition-all whitespace-normal break-words disabled:cursor-not-allowed disabled:opacity-60',
         'backdrop-blur-md',
         variantClasses[variant],
         sizeClasses[size],
@@ -52,8 +52,12 @@ export function Button({
       disabled={disabled || loading}
       {...rest}
     >
-      {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : icon}
-      <span>{children}</span>
+      {loading || icon ? (
+        <span className="flex-shrink-0">
+          {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : icon}
+        </span>
+      ) : null}
+      <span className="max-w-full whitespace-normal break-words leading-snug">{children}</span>
     </button>
   )
 }

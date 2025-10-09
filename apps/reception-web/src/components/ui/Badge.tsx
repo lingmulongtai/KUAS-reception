@@ -16,11 +16,11 @@ export function Badge({ children, variant = 'subtle' }: BadgeProps) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide shadow-sm backdrop-blur',
+        'inline-flex min-w-0 max-w-full flex-wrap items-center rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide shadow-sm backdrop-blur whitespace-normal break-words',
         variants[variant]
       )}
     >
-      {children}
+      <span className="max-w-full whitespace-normal break-words leading-tight">{children}</span>
     </span>
   )
 }

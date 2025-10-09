@@ -13,7 +13,7 @@ export function EmptyState({ title, description, icon: Icon, action, className }
   return (
     <div
       className={clsx(
-        'glass-panel glass-outline flex flex-col items-center gap-4 px-8 py-12 text-center shadow-md',
+        'glass-panel glass-outline flex flex-col items-center gap-4 px-8 py-12 text-center shadow-md whitespace-normal break-words',
         className
       )}
     >
@@ -21,10 +21,10 @@ export function EmptyState({ title, description, icon: Icon, action, className }
         <Icon className="h-6 w-6 text-brand-500" />
       </div>
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
+        <h3 className="text-lg font-semibold text-slate-800 break-words dark:text-slate-100">{title}</h3>
+        <p className="text-sm text-slate-500 break-words dark:text-slate-400">{description}</p>
       </div>
-      {action}
+      {action ? <div className="w-full break-words">{action}</div> : null}
     </div>
   )
 }

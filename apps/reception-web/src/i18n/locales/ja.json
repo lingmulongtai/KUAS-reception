@@ -1,0 +1,255 @@
+{
+  "languages": {
+    "ja": "日本語",
+    "en": "英語",
+    "id": "インドネシア語"
+  },
+  "common": {
+    "status": {
+      "live": "LIVE"
+    },
+    "actions": {
+      "back": "もどる",
+      "next": "次へ進む",
+      "confirm": "確定する",
+      "login": "ログイン",
+      "logout": "ログアウト",
+      "shareQr": "QR共有",
+      "print": "印刷",
+      "confirmReception": "受付を確定",
+      "adminLogin": "管理者ログイン",
+      "viewDetails": "詳細を見る",
+      "showDemo": "デモ用のアカウント",
+      "hideDemo": "デモ情報を閉じる"
+    },
+    "labels": {
+      "choiceOrder": "第{{order}}希望",
+      "choiceOrderWithProgram": "第{{order}}希望：{{program}}",
+      "remainingSeats": "残り {{count}}",
+      "capacityWithCount": "定員 {{count}} 名",
+      "selected": "選択中",
+      "participant": "参加者",
+      "program": "プログラム",
+      "mode": "モード",
+      "required": "必須"
+    },
+    "table": {
+      "program": "プログラム",
+      "capacity": "定員",
+      "remaining": "残り",
+      "loading": "ローディング..."
+    }
+  },
+  "layout": {
+    "brand": {
+      "title": "Reception System",
+      "subtitle": "Engineering Faculty Open Campus"
+    },
+    "modeToggle": "Mode",
+    "themeToggleLight": "ライトテーマ",
+    "themeToggleDark": "ダークテーマ",
+    "languageToggle": "言語",
+    "sidebar": {
+      "receptionSection": "Reception",
+      "adminSection": "Admin",
+      "items": {
+        "landing": "受付トップ",
+        "attendee": "参加者情報",
+        "programs": "プログラム選択",
+        "confirm": "確認と発行",
+        "dashboard": "ダッシュボード",
+        "login": "ログイン",
+        "programSettings": "プログラム設定",
+        "dataExport": "データエクスポート"
+      },
+      "badges": {
+        "live": "LIVE",
+        "comingSoon": "準備中"
+      }
+    },
+    "topStatusBar": {
+      "label": "Reception Ops",
+      "badge": "LIVE"
+    }
+  },
+  "header": {
+    "remainingPrograms": "残りプログラム {{count}}",
+    "operator": "担当: {{name}}",
+    "adminWithName": "管理者: {{name}}",
+    "completed": "受付完了 {{count}}",
+    "login": "管理者ログイン",
+    "logout": "ログアウト",
+    "defaultAdminLabel": "未ログイン",
+    "defaultOperatorName": "鈴木"
+  },
+  "modes": {
+    "reserved": "予約受付モード",
+    "walkIn": "当日受付モード"
+  },
+  "messages": {
+    "admin": {
+      "demoAuthFailed": "デモ用アカウントの認証に失敗しました",
+      "loginFailed": "ログインに失敗しました"
+    },
+    "api": {
+      "defaultError": "APIリクエストに失敗しました"
+    },
+    "emptyStates": {
+      "adminLoginRequired": {
+        "title": "管理者ログインが必要です",
+        "description": "管理者ダッシュボードを開くには、先にログインしてください。",
+        "action": "ログイン画面へ戻る"
+      }
+    }
+  },
+  "landing": {
+    "title": "工学部オープンキャンパス 受付",
+    "description": "予約者・当日参加の受付をタッチで進められます。手順は3ステップ、リアルタイムに状況が更新されます。",
+    "staffMode": "スタッフモード",
+    "flowTitle": "受付の流れ",
+    "flowSteps": [
+      "1. モード選択（予約あり／予約なし）",
+      "2. 情報入力とプログラム希望の選択",
+      "3. ステータス確認と完了チケット表示"
+    ],
+    "currentQueue": "現在の待機",
+    "averageTime": "平均所要時間",
+    "queueCount": "{{count}}名",
+    "averageDuration": "{{minutes}}分",
+    "reservedButton": "予約済みの方はこちら",
+    "walkInButton": "当日参加の受付",
+    "statusCardTitle": "リアルタイムステータス",
+    "statusCardDescription": "施設内のプログラム残席や動線案内を常に更新します。",
+    "statusItems": {
+      "capstone": {
+        "title": "ミニキャップストーン",
+        "value": "残り 8/32",
+        "status": "余裕あり"
+      },
+      "briefing": {
+        "title": "工学部説明会",
+        "value": "残り 15/40",
+        "status": "受付中"
+      },
+      "tour": {
+        "title": "キャンパスツアー",
+        "value": "残り 2/20",
+        "status": "まもなく満席"
+      }
+    }
+  },
+  "programs": {
+    "mock": {
+      "aiLab": {
+        "title": "AI ラボ体験セッション",
+        "description": "最新のAI研究を体験し、ミニプロジェクトを実施します。"
+      },
+      "briefing": {
+        "title": "工学部説明会",
+        "description": "教員・在学生によるガイダンスと質疑応答をご案内します。"
+      },
+      "tour": {
+        "title": "キャンパスラボツアー",
+        "description": "研究設備や実験スペースを巡る限定ツアーです。"
+      },
+      "defaultDescription": "ミニプロジェクト体験と研究室ツアーを組み合わせた人気プログラムです。"
+    }
+  },
+  "programSelection": {
+    "title": "プログラム選択",
+    "description": "第1希望から第3希望まで選択できます。優先順位はあとで変更できます。",
+    "hint": "最大 {{count}} 件まで選択可能です。",
+    "resultsTitle": "選択結果",
+    "resultsDescription": "現在選択されているプログラムです。順番が希望順位になります。",
+    "emptySelection": "まだプログラムが選択されていません。希望のプログラムを選択してください。",
+    "back": "もどる",
+    "next": "次へ進む"
+  },
+  "confirmation": {
+    "title": "受付内容の確認",
+    "description": "プログラムの割り当てを確定する前に内容を確認してください。",
+    "ticketTitle": "チケット発行",
+    "ticketDescription": "完了後、連携ディスプレイに待機情報が表示されます。必要に応じてPDFも出力できます。",
+    "syncNote": "確定すると、自動的にFirebaseに同期され、管理パネルからリアルタイムで状況確認が可能です。"
+  },
+  "attendeeForm": {
+    "title": "参加者情報",
+    "description": "基本情報を入力してください",
+    "nameLabel": "氏名",
+    "namePlaceholder": "山田 太郎",
+    "furiganaLabel": "フリガナ",
+    "furiganaPlaceholder": "ヤマダ タロウ",
+    "schoolLabel": "学校名",
+    "schoolPlaceholder": "〇〇高校",
+    "gradeLabel": "学年",
+    "gradeOptions": {
+      "grade1": "高校1年生",
+      "grade2": "高校2年生",
+      "grade3": "高校3年生",
+      "other": "その他"
+    },
+    "companionsLabel": "同伴者人数",
+    "companionsDescription": "保護者・ご友人の人数を入力してください",
+    "back": "もどる",
+    "next": "次へ進む"
+  },
+  "admin": {
+    "login": {
+      "title": "管理者ログイン",
+      "description": "イベント運営管理ツールへのアクセスには認証が必要です。スタッフ用のアカウントでログインしてください。",
+      "emailLabel": "メールアドレス",
+      "emailDescription": "運営スタッフのGoogleアカウントを入力してください",
+      "passwordLabel": "パスワード",
+      "passwordDescription": "初回ログイン時は管理者から共有されたパスワードを使用してください",
+      "demoTitle": "デモ用ログイン情報",
+      "demoDescription": "テスト環境では以下のアカウントを使用できます。実際の運用ではFirebase Authenticationで管理します。",
+      "emailFieldLabel": "Email",
+      "passwordFieldLabel": "Password",
+      "placeholders": {
+        "email": "staff@example.com",
+        "password": "••••••••"
+      }
+    },
+    "dashboard": {
+      "highlightsTitle": "運営ハイライト",
+      "highlightsDescription": "リアルタイムでイベント状況を確認できます。",
+      "viewDetails": "詳細を見る",
+      "metrics": {
+        "capacity": {
+          "title": "総定員",
+          "badge": "Capacity",
+          "value": "{{count}} 名"
+        },
+        "remaining": {
+          "title": "残り枠",
+          "badge": "Remaining",
+          "value": "残り {{count}} 名"
+        },
+        "completed": {
+          "title": "受付完了",
+          "badge": "Completed",
+          "value": "{{count}} 名"
+        },
+        "waiting": {
+          "title": "待機者",
+          "badge": "Waiting",
+          "value": "{{count}} 名"
+        }
+      },
+      "seatsTitle": "プログラム残席",
+      "seatsDescription": "各プログラムの最新状況を確認し、必要に応じて調整できます。"
+    }
+  },
+  "validation": {
+    "attendee": {
+      "nameRequired": "お名前を入力してください",
+      "furiganaRequired": "フリガナを入力してください"
+    },
+    "adminLogin": {
+      "emailRequired": "メールアドレスを入力してください",
+      "emailInvalid": "有効なメールアドレス形式で入力してください",
+      "passwordMin": "6文字以上のパスワードを入力してください",
+      "passwordMax": "64文字以内で入力してください"
+    }
+  }
+}

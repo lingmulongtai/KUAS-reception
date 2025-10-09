@@ -87,6 +87,27 @@ firebase emulators:start --only functions
   - `GET http://localhost:5001/.../getReceptionStats`
   - `POST http://localhost:5001/.../translateText`
 
+## Firebase Hosting へのデプロイ
+本番/プレビュー環境へのデプロイには、Firebase CLI (`firebase-tools`) を使用します。
+
+1. Firebase CLI へログイン
+  ```bash
+  npx firebase login
+  ```
+
+2. ビルドとデプロイ（ルートディレクトリで実行）
+  ```bash
+  npm run deploy:reception-web
+  ```
+  - `apps/reception-web` のビルドを実行後、Hosting ターゲット `reception-web`（サイト ID: `kuas-reception`）にデプロイします。
+
+3. プレビュー用チャネルを作成したい場合（任意）
+  ```bash
+  npm run build:reception-web
+  npx firebase hosting:channel:deploy preview --only hosting:reception-web
+  ```
+  - 一時 URL が生成されるため、レビュー用途の共有に便利です。
+
 ## ディレクトリの詳細
 - `apps/reception-web/src/components`: Glass UI に対応した `AppShell`, `Button`, `Badge` など共通コンポーネント
 - `apps/reception-web/src/features/reception`: 受付ワークフロー（Landing → Form → Program → Confirmation）

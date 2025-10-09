@@ -1,0 +1,255 @@
+{
+  "languages": {
+    "ja": "Japanese",
+    "en": "English",
+    "id": "Indonesian"
+  },
+  "common": {
+    "status": {
+      "live": "LIVE"
+    },
+    "actions": {
+      "back": "Back",
+      "next": "Next",
+      "confirm": "Confirm",
+      "login": "Log in",
+      "logout": "Log out",
+      "shareQr": "Share QR",
+      "print": "Print",
+      "confirmReception": "Confirm check-in",
+      "adminLogin": "Admin sign-in",
+      "viewDetails": "View details",
+      "showDemo": "Demo account",
+      "hideDemo": "Hide demo info"
+    },
+    "labels": {
+      "choiceOrder": "Choice {{order}}",
+      "choiceOrderWithProgram": "Choice {{order}}: {{program}}",
+      "remainingSeats": "{{count}} seats left",
+      "capacityWithCount": "Capacity {{count}}",
+      "selected": "Selected",
+      "participant": "Participant",
+      "program": "Program",
+      "mode": "Mode",
+      "required": "Required"
+    },
+    "table": {
+      "program": "Program",
+      "capacity": "Capacity",
+      "remaining": "Remaining",
+      "loading": "Loading..."
+    }
+  },
+  "layout": {
+    "brand": {
+      "title": "Reception System",
+      "subtitle": "Engineering Faculty Open Campus"
+    },
+    "modeToggle": "Mode",
+    "themeToggleLight": "Light theme",
+    "themeToggleDark": "Dark theme",
+    "languageToggle": "Language",
+    "sidebar": {
+      "receptionSection": "Reception",
+      "adminSection": "Admin",
+      "items": {
+        "landing": "Reception home",
+        "attendee": "Attendee info",
+        "programs": "Program selection",
+        "confirm": "Review & tickets",
+        "dashboard": "Dashboard",
+        "login": "Sign-in",
+        "programSettings": "Program settings",
+        "dataExport": "Data export"
+      },
+      "badges": {
+        "live": "LIVE",
+        "comingSoon": "Coming soon"
+      }
+    },
+    "topStatusBar": {
+      "label": "Reception ops",
+      "badge": "LIVE"
+    }
+  },
+  "header": {
+    "remainingPrograms": "Programs remaining {{count}}",
+    "operator": "Operator: {{name}}",
+    "adminWithName": "Admin: {{name}}",
+    "completed": "Completed check-ins {{count}}",
+    "login": "Admin sign-in",
+    "logout": "Log out",
+    "defaultAdminLabel": "Signed out",
+    "defaultOperatorName": "Suzuki"
+  },
+  "modes": {
+    "reserved": "Reserved mode",
+    "walkIn": "Walk-in mode"
+  },
+  "messages": {
+    "admin": {
+      "demoAuthFailed": "Demo account authentication failed",
+      "loginFailed": "Failed to sign in"
+    },
+    "api": {
+      "defaultError": "Failed to complete the API request."
+    },
+    "emptyStates": {
+      "adminLoginRequired": {
+        "title": "Admin sign-in required",
+        "description": "Please sign in first to open the admin dashboard.",
+        "action": "Back to sign-in"
+      }
+    }
+  },
+  "landing": {
+    "title": "Engineering Open Campus Reception",
+    "description": "Check in reserved and walk-in visitors in three guided steps with real-time status updates.",
+    "staffMode": "Staff mode",
+    "flowTitle": "How check-in works",
+    "flowSteps": [
+      "1. Choose mode (reserved / walk-in)",
+      "2. Enter info and select programs",
+      "3. Review status and show the ticket"
+    ],
+    "currentQueue": "Queue right now",
+    "averageTime": "Average time",
+    "queueCount": "{{count}} people",
+    "averageDuration": "{{minutes}} min",
+    "reservedButton": "Reserved visitors",
+    "walkInButton": "Walk-in check-in",
+    "statusCardTitle": "Live status",
+    "statusCardDescription": "Keep an eye on seats and wayfinding guidance across the venue.",
+    "statusItems": {
+      "capstone": {
+        "title": "Mini Capstone",
+        "value": "Seats left 8/32",
+        "status": "Plenty of room"
+      },
+      "briefing": {
+        "title": "Engineering briefing",
+        "value": "Seats left 15/40",
+        "status": "Open"
+      },
+      "tour": {
+        "title": "Campus lab tour",
+        "value": "Seats left 2/20",
+        "status": "Almost full"
+      }
+    }
+  },
+  "programs": {
+    "mock": {
+      "aiLab": {
+        "title": "AI lab immersion",
+        "description": "Dive into the latest AI research and tackle a mini project."
+      },
+      "briefing": {
+        "title": "Engineering faculty briefing",
+        "description": "Faculty and students host a guided session with live Q&A."
+      },
+      "tour": {
+        "title": "Campus lab tour",
+        "description": "A guided walk through labs and research facilities."
+      },
+      "defaultDescription": "A popular program combining a mini project with a lab tour."
+    }
+  },
+  "programSelection": {
+    "title": "Choose programs",
+    "description": "Pick up to three preferences. You can reorder them later.",
+    "hint": "You can select up to {{count}} choices.",
+    "resultsTitle": "Selected programs",
+    "resultsDescription": "Your current selections in order of preference.",
+    "emptySelection": "You haven't selected any programs yet. Choose your preferred sessions.",
+    "back": "Back",
+    "next": "Next"
+  },
+  "confirmation": {
+    "title": "Review check-in details",
+    "description": "Confirm everything before finalizing the program allocation.",
+    "ticketTitle": "Issue ticket",
+    "ticketDescription": "Show wait info on the shared display and export a PDF if needed.",
+    "syncNote": "Once confirmed, data syncs to Firebase so the admin panel updates in real time."
+  },
+  "attendeeForm": {
+    "title": "Attendee details",
+    "description": "Enter the attendee's basic information.",
+    "nameLabel": "Full name",
+    "namePlaceholder": "e.g. Taro Yamada",
+    "furiganaLabel": "Furigana",
+    "furiganaPlaceholder": "e.g. YAMADA TARO",
+    "schoolLabel": "School",
+    "schoolPlaceholder": "e.g. Example High School",
+    "gradeLabel": "Grade",
+    "gradeOptions": {
+      "grade1": "1st year (HS)",
+      "grade2": "2nd year (HS)",
+      "grade3": "3rd year (HS)",
+      "other": "Other"
+    },
+    "companionsLabel": "Number of companions",
+    "companionsDescription": "Enter guardians or friends joining the visit.",
+    "back": "Back",
+    "next": "Continue"
+  },
+  "admin": {
+    "login": {
+      "title": "Admin sign-in",
+      "description": "Only authenticated staff can access the operations console.",
+      "emailLabel": "Email address",
+      "emailDescription": "Use the Google account assigned to staff.",
+      "passwordLabel": "Password",
+      "passwordDescription": "Use the password shared by the administrator for first sign-in.",
+      "demoTitle": "Demo credentials",
+      "demoDescription": "Use this account in test environments. Production relies on Firebase Authentication.",
+      "emailFieldLabel": "Email",
+      "passwordFieldLabel": "Password",
+      "placeholders": {
+        "email": "staff@example.com",
+        "password": "••••••••"
+      }
+    },
+    "dashboard": {
+      "highlightsTitle": "Operations highlights",
+      "highlightsDescription": "Monitor live event metrics at a glance.",
+      "viewDetails": "View details",
+      "metrics": {
+        "capacity": {
+          "title": "Total capacity",
+          "badge": "Capacity",
+          "value": "{{count}} seats"
+        },
+        "remaining": {
+          "title": "Seats remaining",
+          "badge": "Remaining",
+          "value": "{{count}} seats left"
+        },
+        "completed": {
+          "title": "Checked in",
+          "badge": "Completed",
+          "value": "{{count}} attendees"
+        },
+        "waiting": {
+          "title": "Waiting list",
+          "badge": "Waiting",
+          "value": "{{count}} attendees"
+        }
+      },
+      "seatsTitle": "Program availability",
+      "seatsDescription": "Review each program and make adjustments as needed."
+    }
+  },
+  "validation": {
+    "attendee": {
+      "nameRequired": "Please enter a name.",
+      "furiganaRequired": "Please enter the furigana."
+    },
+    "adminLogin": {
+      "emailRequired": "Please enter an email address.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordMin": "Passwords must be at least 6 characters.",
+      "passwordMax": "Passwords must be 64 characters or fewer."
+    }
+  }
+}

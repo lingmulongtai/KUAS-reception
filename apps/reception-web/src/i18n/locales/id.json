@@ -1,0 +1,255 @@
+{
+  "languages": {
+    "ja": "Jepang",
+    "en": "Inggris",
+    "id": "Indonesia"
+  },
+  "common": {
+    "status": {
+      "live": "LIVE"
+    },
+    "actions": {
+      "back": "Kembali",
+      "next": "Lanjut",
+      "confirm": "Konfirmasi",
+      "login": "Masuk",
+      "logout": "Keluar",
+      "shareQr": "Bagikan QR",
+      "print": "Cetak",
+      "confirmReception": "Selesaikan check-in",
+      "adminLogin": "Masuk admin",
+      "viewDetails": "Lihat detail",
+      "showDemo": "Akun demo",
+      "hideDemo": "Sembunyikan info demo"
+    },
+    "labels": {
+      "choiceOrder": "Pilihan {{order}}",
+      "choiceOrderWithProgram": "Pilihan {{order}}: {{program}}",
+      "remainingSeats": "Sisa {{count}}",
+      "capacityWithCount": "Kapasitas {{count}}",
+      "selected": "Dipilih",
+      "participant": "Peserta",
+      "program": "Program",
+      "mode": "Mode",
+      "required": "Wajib"
+    },
+    "table": {
+      "program": "Program",
+      "capacity": "Kapasitas",
+      "remaining": "Sisa",
+      "loading": "Memuat..."
+    }
+  },
+  "layout": {
+    "brand": {
+      "title": "Sistem Resepsi",
+      "subtitle": "Open Campus Fakultas Teknik"
+    },
+    "modeToggle": "Mode",
+    "themeToggleLight": "Tema terang",
+    "themeToggleDark": "Tema gelap",
+    "languageToggle": "Bahasa",
+    "sidebar": {
+      "receptionSection": "Resepsi",
+      "adminSection": "Admin",
+      "items": {
+        "landing": "Beranda resepsi",
+        "attendee": "Data peserta",
+        "programs": "Pilih program",
+        "confirm": "Tinjau & tiket",
+        "dashboard": "Dasbor",
+        "login": "Masuk",
+        "programSettings": "Pengaturan program",
+        "dataExport": "Ekspor data"
+      },
+      "badges": {
+        "live": "LIVE",
+        "comingSoon": "Segera"
+      }
+    },
+    "topStatusBar": {
+      "label": "Operasional resepsi",
+      "badge": "LIVE"
+    }
+  },
+  "header": {
+    "remainingPrograms": "Sisa program {{count}}",
+    "operator": "Petugas: {{name}}",
+    "adminWithName": "Admin: {{name}}",
+    "completed": "Check-in selesai {{count}}",
+    "login": "Masuk admin",
+    "logout": "Keluar",
+    "defaultAdminLabel": "Belum masuk",
+    "defaultOperatorName": "Suzuki"
+  },
+  "modes": {
+    "reserved": "Mode reservasi",
+    "walkIn": "Mode walk-in"
+  },
+  "messages": {
+    "admin": {
+      "demoAuthFailed": "Gagal memverifikasi akun demo",
+      "loginFailed": "Gagal masuk"
+    },
+    "api": {
+      "defaultError": "Gagal memproses permintaan API."
+    },
+    "emptyStates": {
+      "adminLoginRequired": {
+        "title": "Masuk admin diperlukan",
+        "description": "Silakan masuk terlebih dahulu untuk membuka dasbor admin.",
+        "action": "Kembali ke halaman masuk"
+      }
+    }
+  },
+  "landing": {
+    "title": "Resepsi Open Campus Teknik",
+    "description": "Layani pengunjung reservasi dan walk-in dalam tiga langkah dengan pembaruan status real-time.",
+    "staffMode": "Mode staf",
+    "flowTitle": "Alur resepsi",
+    "flowSteps": [
+      "1. Pilih mode (reservasi / walk-in)",
+      "2. Masukkan data dan pilih program",
+      "3. Tinjau status dan tampilkan tiket"
+    ],
+    "currentQueue": "Antrian saat ini",
+    "averageTime": "Waktu rata-rata",
+    "queueCount": "{{count}} orang",
+    "averageDuration": "{{minutes}} menit",
+    "reservedButton": "Reservasi",
+    "walkInButton": "Check-in walk-in",
+    "statusCardTitle": "Status real-time",
+    "statusCardDescription": "Pantau ketersediaan tempat dan panduan pergerakan di lokasi.",
+    "statusItems": {
+      "capstone": {
+        "title": "Mini Capstone",
+        "value": "Sisa 8/32",
+        "status": "Masih banyak"
+      },
+      "briefing": {
+        "title": "Briefing Fakultas Teknik",
+        "value": "Sisa 15/40",
+        "status": "Masih dibuka"
+      },
+      "tour": {
+        "title": "Tur laboratorium kampus",
+        "value": "Sisa 2/20",
+        "status": "Hampir penuh"
+      }
+    }
+  },
+  "programs": {
+    "mock": {
+      "aiLab": {
+        "title": "Sesi pengalaman lab AI",
+        "description": "Jelajahi riset AI terbaru dan kerjakan mini proyek."
+      },
+      "briefing": {
+        "title": "Briefing Fakultas Teknik",
+        "description": "Sesi panduan oleh dosen dan mahasiswa dengan tanya jawab langsung."
+      },
+      "tour": {
+        "title": "Tur lab kampus",
+        "description": "Tur fasilitas riset dan ruang eksperimen."
+      },
+      "defaultDescription": "Program populer yang menggabungkan mini proyek dan tur laboratorium."
+    }
+  },
+  "programSelection": {
+    "title": "Pilih program",
+    "description": "Pilih hingga tiga preferensi. Urutan dapat diubah nanti.",
+    "hint": "Maksimal {{count}} pilihan.",
+    "resultsTitle": "Program terpilih",
+    "resultsDescription": "Daftar pilihan Anda saat ini berdasarkan prioritas.",
+    "emptySelection": "Belum ada program yang dipilih. Silakan pilih sesi yang diinginkan.",
+    "back": "Kembali",
+    "next": "Lanjut"
+  },
+  "confirmation": {
+    "title": "Tinjau detail resepsi",
+    "description": "Pastikan semua informasi sebelum finalisasi distribusi program.",
+    "ticketTitle": "Terbitkan tiket",
+    "ticketDescription": "Tampilkan info antrian dan ekspor PDF bila diperlukan.",
+    "syncNote": "Setelah dikonfirmasi, data otomatis tersinkron ke Firebase sehingga dasbor admin diperbarui secara real-time."
+  },
+  "attendeeForm": {
+    "title": "Data peserta",
+    "description": "Masukkan informasi dasar peserta.",
+    "nameLabel": "Nama lengkap",
+    "namePlaceholder": "contoh: Taro Yamada",
+    "furiganaLabel": "Furigana",
+    "furiganaPlaceholder": "contoh: YAMADA TARO",
+    "schoolLabel": "Asal sekolah",
+    "schoolPlaceholder": "contoh: SMA Contoh",
+    "gradeLabel": "Kelas",
+    "gradeOptions": {
+      "grade1": "Kelas 10",
+      "grade2": "Kelas 11",
+      "grade3": "Kelas 12",
+      "other": "Lainnya"
+    },
+    "companionsLabel": "Jumlah pendamping",
+    "companionsDescription": "Masukkan jumlah orang tua atau teman yang ikut.",
+    "back": "Kembali",
+    "next": "Lanjut"
+  },
+  "admin": {
+    "login": {
+      "title": "Masuk admin",
+      "description": "Hanya staf terautentikasi yang dapat mengakses konsol operasional.",
+      "emailLabel": "Alamat email",
+      "emailDescription": "Gunakan akun Google yang diberikan kepada staf.",
+      "passwordLabel": "Kata sandi",
+      "passwordDescription": "Gunakan kata sandi yang dibagikan admin saat pertama kali masuk.",
+      "demoTitle": "Kredensial demo",
+      "demoDescription": "Gunakan akun ini di lingkungan uji. Produksi memakai Firebase Authentication.",
+      "emailFieldLabel": "Email",
+      "passwordFieldLabel": "Password",
+      "placeholders": {
+        "email": "staff@example.com",
+        "password": "••••••••"
+      }
+    },
+    "dashboard": {
+      "highlightsTitle": "Sorotan operasional",
+      "highlightsDescription": "Pantau metrik acara secara langsung.",
+      "viewDetails": "Lihat detail",
+      "metrics": {
+        "capacity": {
+          "title": "Total kapasitas",
+          "badge": "Capacity",
+          "value": "{{count}} kursi"
+        },
+        "remaining": {
+          "title": "Sisa kursi",
+          "badge": "Remaining",
+          "value": "Sisa {{count}} kursi"
+        },
+        "completed": {
+          "title": "Sudah check-in",
+          "badge": "Completed",
+          "value": "{{count}} peserta"
+        },
+        "waiting": {
+          "title": "Antrian",
+          "badge": "Waiting",
+          "value": "{{count}} peserta"
+        }
+      },
+      "seatsTitle": "Ketersediaan program",
+      "seatsDescription": "Periksa tiap program dan lakukan penyesuaian bila perlu."
+    }
+  },
+  "validation": {
+    "attendee": {
+      "nameRequired": "Silakan masukkan nama.",
+      "furiganaRequired": "Silakan masukkan furigana."
+    },
+    "adminLogin": {
+      "emailRequired": "Silakan masukkan alamat email.",
+      "emailInvalid": "Masukkan format email yang valid.",
+      "passwordMin": "Kata sandi minimal 6 karakter.",
+      "passwordMax": "Kata sandi maksimal 64 karakter."
+    }
+  }
+}

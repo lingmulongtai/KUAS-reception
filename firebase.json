@@ -14,7 +14,7 @@
   ],
   "hosting": [
     {
-      "site": "kuas-reception",
+      "target": "reception-web",
       "public": "apps/reception-web/dist",
       "ignore": [
         "firebase.json",
