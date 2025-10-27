@@ -82,6 +82,61 @@
     "defaultAdminLabel": "Signed out",
     "defaultOperatorName": "Suzuki"
   },
+  "home": {
+    "badge": "On-site reception",
+    "title": "Welcome to KUAS reception",
+    "description": "Choose the flow you need and keep quick links close at hand.",
+    "buttons": {
+      "reserved": "Reserved visitors",
+      "walkIn": "Walk-in check-in"
+    },
+    "secondary": {
+      "programs": "View programs",
+      "capstone": "What is Mini Capstone?"
+    },
+    "selection": {
+      "reserved": "Reserved flow selected",
+      "walkIn": "Walk-in flow selected"
+    },
+    "info": {
+      "programs": {
+        "title": "Program overview",
+        "description": "Share the current program lineup with visitors at the desk.",
+        "points": [
+          "Check remaining capacity before sending attendees.",
+          "Confirm start times and meeting points quickly.",
+          "Flag any sessions that require advance booking."
+        ]
+      },
+      "capstone": {
+        "title": "Mini Capstone experience",
+        "description": "A short hands-on project where visitors try KUAS engineering.",
+        "points": [
+          "Guided by senior students in the innovation lab.",
+          "15-minute build-and-test workshop using campus equipment.",
+          "Great talking point while guests wait in the lobby."
+        ]
+      }
+    },
+    "header": {
+      "logoAlt": "KUAS reception logo",
+      "title": "Engineering Open Campus",
+      "subtitle": "Reception console",
+      "switchToLight": "Switch to light mode",
+      "switchToDark": "Switch to dark mode",
+      "languageToggle": "Toggle language",
+      "devMode": "Dev mode"
+    },
+    "devPanel": {
+      "title": "Developer status",
+      "description": "These details appear only while developer mode is enabled.",
+      "selectedMode": "Selected mode",
+      "activeInfo": "Info panel",
+      "none": "None",
+      "programs": "Program overview",
+      "capstone": "Mini Capstone notes"
+    }
+  },
   "modes": {
     "reserved": "Reserved mode",
     "walkIn": "Walk-in mode"

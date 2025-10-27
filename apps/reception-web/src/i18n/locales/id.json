@@ -82,6 +82,61 @@
     "defaultAdminLabel": "Belum masuk",
     "defaultOperatorName": "Suzuki"
   },
+  "home": {
+    "badge": "Operasional resepsi",
+    "title": "Selamat datang di resepsi KUAS",
+    "description": "Pilih alur yang dibutuhkan dan akses tautan penting dengan cepat.",
+    "buttons": {
+      "reserved": "Pengunjung reservasi",
+      "walkIn": "Check-in walk-in"
+    },
+    "secondary": {
+      "programs": "Lihat program",
+      "capstone": "Apa itu Mini Capstone?"
+    },
+    "selection": {
+      "reserved": "Alur reservasi dipilih",
+      "walkIn": "Alur walk-in dipilih"
+    },
+    "info": {
+      "programs": {
+        "title": "Ringkasan program",
+        "description": "Gunakan ringkasan ini untuk menjelaskan sesi kepada pengunjung.",
+        "points": [
+          "Periksa sisa kursi sebelum mengarahkan peserta.",
+          "Sampaikan waktu mulai dan titik kumpul dengan cepat.",
+          "Beritahu jika ada sesi yang memerlukan pemesanan awal."
+        ]
+      },
+      "capstone": {
+        "title": "Pengalaman Mini Capstone",
+        "description": "Workshop singkat agar tamu merasakan rekayasa KUAS.",
+        "points": [
+          "Didampingi mahasiswa senior di innovation lab.",
+          "Lokakarya 15 menit untuk membuat dan menguji prototipe.",
+          "Pas sebagai bahan obrolan sambil menunggu giliran."
+        ]
+      }
+    },
+    "header": {
+      "logoAlt": "Logo KUAS",
+      "title": "Open Campus Fakultas Teknik",
+      "subtitle": "Konsol resepsi",
+      "switchToLight": "Ubah ke mode terang",
+      "switchToDark": "Ubah ke mode gelap",
+      "languageToggle": "Ganti bahasa",
+      "devMode": "Mode dev"
+    },
+    "devPanel": {
+      "title": "Status developer",
+      "description": "Informasi ini hanya muncul saat mode developer aktif.",
+      "selectedMode": "Alur terpilih",
+      "activeInfo": "Info yang ditampilkan",
+      "none": "Tidak ada",
+      "programs": "Ringkasan program",
+      "capstone": "Catatan Mini Capstone"
+    }
+  },
   "modes": {
     "reserved": "Mode reservasi",
     "walkIn": "Mode walk-in"

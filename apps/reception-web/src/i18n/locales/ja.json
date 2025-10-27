@@ -82,6 +82,61 @@
     "defaultAdminLabel": "未ログイン",
     "defaultOperatorName": "鈴木"
   },
+  "home": {
+    "badge": "受付オペレーション",
+    "title": "KUAS 受付へようこそ",
+    "description": "必要な受付フローと案内リンクをシンプルに選択できます。",
+    "buttons": {
+      "reserved": "予約ありの受付",
+      "walkIn": "予約なしの受付"
+    },
+    "secondary": {
+      "programs": "プログラムを確認",
+      "capstone": "ミニキャップストーン体験とは"
+    },
+    "selection": {
+      "reserved": "予約受付フローを選択中",
+      "walkIn": "当日受付フローを選択中"
+    },
+    "info": {
+      "programs": {
+        "title": "プログラム概要",
+        "description": "来場者にすぐ案内できるよう主なポイントを押さえておきましょう。",
+        "points": [
+          "最新の残席状況を確認してから案内できます。",
+          "開始時刻と集合場所をその場で共有できます。",
+          "事前予約が必要なプログラムはここで注意喚起できます。"
+        ]
+      },
+      "capstone": {
+        "title": "ミニキャップストーン体験",
+        "description": "KUAS のエンジニアリングを体験できる短時間のハンズオンです。",
+        "points": [
+          "イノベーションラボで在学生がマンツーマンでサポート。",
+          "キャンパス設備を使った15分程度の制作・テスト体験。",
+          "待ち時間の会話ネタとしてもお勧めできます。"
+        ]
+      }
+    },
+    "header": {
+      "logoAlt": "KUAS ロゴ",
+      "title": "工学部オープンキャンパス",
+      "subtitle": "受付コンソール",
+      "switchToLight": "ライトモードに切り替え",
+      "switchToDark": "ダークモードに切り替え",
+      "languageToggle": "言語を切り替え",
+      "devMode": "開発モード"
+    },
+    "devPanel": {
+      "title": "開発者向け情報",
+      "description": "開発モードが有効なときだけ表示される診断情報です。",
+      "selectedMode": "選択中のフロー",
+      "activeInfo": "表示中の情報",
+      "none": "なし",
+      "programs": "プログラム概要",
+      "capstone": "ミニキャップストーン概要"
+    }
+  },
   "modes": {
     "reserved": "予約受付モード",
     "walkIn": "当日受付モード"
