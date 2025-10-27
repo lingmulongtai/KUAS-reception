@@ -86,6 +86,45 @@
     "reserved": "Reserved mode",
     "walkIn": "Walk-in mode"
   },
+  "flow": {
+    "title": "Reception hierarchy",
+    "subtitle": "A guided liquid-glass journey",
+    "cta": "Glassify →",
+    "metrics": {
+      "mode": "Mode",
+      "completed": "Completed",
+      "waiting": "Waiting",
+      "adminStatus": "Admin status",
+      "adminOnline": "Signed in",
+      "adminOffline": "Not signed in"
+    },
+    "steps": {
+      "landing": {
+        "title": "Kick off reception",
+        "description": "Choose the check-in mode and brief the visitor."
+      },
+      "attendee": {
+        "title": "Capture attendee",
+        "description": "Collect personal details and companions information."
+      },
+      "programs": {
+        "title": "Prioritise programs",
+        "description": "Select and rank up to three sessions for the visitor."
+      },
+      "confirm": {
+        "title": "Issue confirmation",
+        "description": "Review selections, then generate the ticket and signage."
+      },
+      "adminLogin": {
+        "title": "Admin sign-in",
+        "description": "Authenticate to access live dashboards and controls."
+      },
+      "adminDashboard": {
+        "title": "Operations console",
+        "description": "Monitor live stats, adjust programs, and export data."
+      }
+    }
+  },
   "messages": {
     "admin": {
       "demoAuthFailed": "Demo account authentication failed",

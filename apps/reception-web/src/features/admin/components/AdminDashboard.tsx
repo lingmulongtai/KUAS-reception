@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 export function AdminDashboard() {
   const { data: programs, isLoading } = usePrograms()
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const metrics = useMemo(() => {
     const totalCapacity = programs?.reduce((acc, program) => acc + program.capacity, 0) ?? 0
@@ -34,7 +34,7 @@ export function AdminDashboard() {
         badge: t('admin.dashboard.metrics.waiting.badge'),
       },
     ]
-  }, [i18n.language, programs, t])
+  }, [programs, t])
 
   return (
     <div className="flex flex-col gap-6">

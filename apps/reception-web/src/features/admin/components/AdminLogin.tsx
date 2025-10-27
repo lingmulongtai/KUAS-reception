@@ -19,7 +19,7 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onSubmit, loading, error, allowSelfDemo = true }: AdminLoginProps) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [showDemoInfo, setShowDemoInfo] = useState(false)
 
   const adminLoginSchema = useMemo(
@@ -34,7 +34,7 @@ export function AdminLogin({ onSubmit, loading, error, allowSelfDemo = true }: A
           .min(6, t('validation.adminLogin.passwordMin'))
           .max(64, t('validation.adminLogin.passwordMax')),
       }),
-    [i18n.language, t]
+    [t]
   )
 
   const {

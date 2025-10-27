@@ -86,6 +86,45 @@
     "reserved": "予約受付モード",
     "walkIn": "当日受付モード"
   },
+  "flow": {
+    "title": "受付階層ビュー",
+    "subtitle": "ガラスの質感で流れを確認",
+    "cta": "Glassify →",
+    "metrics": {
+      "mode": "モード",
+      "completed": "完了件数",
+      "waiting": "待機人数",
+      "adminStatus": "管理者ステータス",
+      "adminOnline": "ログイン中",
+      "adminOffline": "未ログイン"
+    },
+    "steps": {
+      "landing": {
+        "title": "受付を開始",
+        "description": "モードを選び、来場者へ案内内容を共有します。"
+      },
+      "attendee": {
+        "title": "参加者情報を入力",
+        "description": "氏名や同伴者などの基本情報を登録します。"
+      },
+      "programs": {
+        "title": "希望プログラムを選択",
+        "description": "最大3つまで希望順にプログラムを決定します。"
+      },
+      "confirm": {
+        "title": "内容を確定",
+        "description": "選択内容を確認し、チケットや案内を発行します。"
+      },
+      "adminLogin": {
+        "title": "管理者ログイン",
+        "description": "運営ダッシュボードに入るために認証します。"
+      },
+      "adminDashboard": {
+        "title": "運営コンソール",
+        "description": "リアルタイムの状況を監視し、設定やデータ出力を行います。"
+      }
+    }
+  },
   "messages": {
     "admin": {
       "demoAuthFailed": "デモ用アカウントの認証に失敗しました",

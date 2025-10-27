@@ -86,6 +86,45 @@
     "reserved": "Mode reservasi",
     "walkIn": "Mode walk-in"
   },
+  "flow": {
+    "title": "Hierarki resepsi",
+    "subtitle": "Ikuti alur liquid-glass",
+    "cta": "Glassify →",
+    "metrics": {
+      "mode": "Mode",
+      "completed": "Selesai",
+      "waiting": "Menunggu",
+      "adminStatus": "Status admin",
+      "adminOnline": "Sedang masuk",
+      "adminOffline": "Belum masuk"
+    },
+    "steps": {
+      "landing": {
+        "title": "Mulai resepsi",
+        "description": "Pilih alur check-in dan beri pengarahan singkat."
+      },
+      "attendee": {
+        "title": "Catat peserta",
+        "description": "Isi data pribadi dan jumlah pendamping."
+      },
+      "programs": {
+        "title": "Tentukan program",
+        "description": "Pilih dan urutkan hingga tiga sesi utama."
+      },
+      "confirm": {
+        "title": "Terapkan konfirmasi",
+        "description": "Tinjau pilihan lalu terbitkan tiket dan panduan."
+      },
+      "adminLogin": {
+        "title": "Masuk admin",
+        "description": "Autentikasi untuk membuka dasbor operasional."
+      },
+      "adminDashboard": {
+        "title": "Konsol operasional",
+        "description": "Pantau status langsung, ubah program, dan ekspor data."
+      }
+    }
+  },
   "messages": {
     "admin": {
       "demoAuthFailed": "Gagal memverifikasi akun demo",
