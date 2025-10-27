@@ -2,54 +2,89 @@
 
 [日本語 README](README.md)
 
-## Overview
-- Modern reception platform for KUAS Faculty of Engineering Open Campus rebuilt with a React + TypeScript SPA under `apps/reception-web/`
-- Offline-first experience for the reception desk, with optional integration to Firebase (Auth / Firestore / Cloud Functions)
-- Includes liquid-glass themed light/dark modes, admin dashboards, and DeepL-powered translations
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Audience & Value Proposition](#audience--value-proposition)
+- [System Architecture](#system-architecture)
+- [Key Features](#key-features)
+- [Technology Stack](#technology-stack)
+- [Setup Guide](#setup-guide)
+- [Development Workflow](#development-workflow)
+- [Quality Checks](#quality-checks)
+- [Translations & Multilingual Support](#translations--multilingual-support)
+- [Directory Guide](#directory-guide)
+- [Release Notes](#release-notes)
+- [License](#license)
 
-## Key Capabilities
-- **Reception flow**: select reserved vs walk-in → attendee details → program preference (1st–3rd) → confirmation ticket
-- **Program management**: real-time remaining capacity, waiting list summary, and admin metrics
-- **Translation gateway**: `/api/translate` backed by DeepL API with rule-based fallback when the key is missing
-- **Theme & language**: persistent light/dark mode, Japanese/English toggle saved per device
+## Project Overview
+- A modern web application that unifies reception operations for KUAS Faculty of Engineering Open Campus across staff, visitors, and administrators.
+- Built as a React 19 + TypeScript + Vite SPA (`apps/reception-web/`) paired with Firebase Functions (Node.js 20) to support both offline-first and cloud-connected modes.
+- Keeps the reception usable during network outages via local storage and cache, then syncs seamlessly with Firestore / Cloud Functions once reconnected.
+- Provides light/dark themes enhanced with liquid glass styling and multilingual UI (Japanese, English, Indonesian, and more).
 
-## Architecture
+## Audience & Value Proposition
+- **Reception Staff**: Rapid attendee check-in, seat management, and program assignment from a single console.
+- **Visitors**: Smooth registration flow for both pre-registered and walk-in guests, including program preference selection.
+- **Administrators**: Real-time dashboards for attendance status, translation management, and content updates.
+
+## System Architecture
 ```
-KUAS Reception app/
+KUAS-reception/
 ├─ apps/
-│  └─ reception-web/        # React + Vite SPA
-│     ├─ public/            # Static assets (logos, background images)
+│  └─ reception-web/        # SPA client (React + Vite)
+│     ├─ public/            # Static assets & manifests
 │     ├─ src/
-│     │  ├─ components/     # Shared layout/UI primitives
-│     │  ├─ features/
-│     │  │  ├─ reception/   # Reception experience screens & logic
-│     │  │  └─ admin/       # Admin dashboard views
-│     │  ├─ services/       # API & Firebase helpers
-│     │  ├─ theme/ styles/  # Tailwind & design tokens
-│     │  └─ hooks/ types/   # Reusable hooks and TS definitions
-│     ├─ package.json       # SPA dependencies
-│     └─ vite.config.ts     # Vite config (alias `@` → `src`)
-├─ functions/               # Firebase Cloud Functions (Node.js)
-│  ├─ index.js              # REST-like API endpoints with CORS
+│     │  ├─ components/     # Layouts and UI patterns
+│     │  ├─ features/       # Modules for reception/admin flows
+│     │  ├─ services/       # API client & Firebase wrappers
+│     │  ├─ hooks/          # Shared custom hooks
+│     │  ├─ i18n/           # i18next config and locale data
+│     │  ├─ theme/          # Light/Dark + Liquid Glass tokens
+│     │  └─ types/          # Shared TypeScript definitions
+│     └─ vite.config.ts     # Vite 7 configuration (alias `@` → `src`)
+├─ functions/               # Firebase Functions (Node.js 20)
+│  ├─ index.js              # Cloud Functions entrypoint
 │  └─ package.json
-└─ legacy/                  # Archived HTML/JS implementation & artifacts
+└─ legacy/                  # Archived HTML/JS implementation & docs
 ```
 
-## Getting Started
-### 1. Clone & install
+## Key Features
+- **Reception Flow**: Choose reservation or walk-in → capture attendee profile → pick 1st–3rd program choices → review and finalize.
+- **Program Management**: Real-time seat availability, waitlist promotion, and allocation visibility powered by Firestore.
+- **Multilingual UI**: Japanese, English, and Indonesian out of the box; additional locales reside in `apps/reception-web/src/i18n/locales/`.
+- **Theme Preferences**: Persisted light/dark/liquid-glass themes per device, with OS-level sync handled by a dedicated hook.
+- **Translation API**: `/translateText` Cloud Function leveraging DeepL; when no API key is configured, a rule-based fallback is used.
+- **Offline Support**: Service Worker and local caching keep the app functional without connectivity and reconcile changes once online.
+
+## Technology Stack
+- **Frontend**: React 19, React Router 6, TanStack Query 5, React Hook Form 7, Zod, Tailwind CSS 3, Lucide Icons.
+- **State & Data**: TanStack Query for fetching/caching, Firestore SDK streams for live updates.
+- **Localization**: i18next, react-i18next, i18next-browser-languagedetector.
+- **Tooling**: Vite 7, TypeScript 5, ESLint 9, PostCSS + Autoprefixer.
+- **Backend**: Firebase Cloud Functions with node-fetch, deepl-node, firebase-admin, langchain, and assorted utilities.
+- **Hosting**: Firebase Hosting + Emulator Suite with automated deployment workflows.
+
+## Setup Guide
+### Prerequisites
+- Node.js 20 and npm 10 recommended.
+- Firebase CLI (`firebase-tools`) installed globally.
+- DeepL API key for production-grade translations.
+
+### 1. Install root workspace dependencies
 ```bash
 npm install
 ```
-- The root `package.json` is preserved under `legacy/`. The modern app lives in `apps/reception-web/`.
+- The root `package.json` manages workspace scripts and emulator tooling.
 
-### 2. Install SPA dependencies
+### 2. Prepare the web client
 ```bash
 cd apps/reception-web
 npm install
 ```
+- Installs Tailwind, TanStack Query, Firebase SDK, and other SPA dependencies.
 
-### 3. Configure environment variables
-Create `apps/reception-web/.env` if you need to override defaults.
+### 3. Configure SPA environment variables
+Create `apps/reception-web/.env` with the following values as needed:
 ```
 VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
 VITE_FIREBASE_API_KEY=
@@ -58,51 +93,81 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_APP_ID=
 VITE_USE_FIREBASE_EMULATOR=true
 ```
-- Set `VITE_API_BASE_URL` to your Functions endpoint (local emulator or production). When running locally, enabling the emulator is recommended.
+- For emulator-only testing, keep `VITE_API_BASE_URL` pointed at the local Functions endpoint above.
 
-### 4. Prepare Firebase Functions
+### 4. Install Firebase Functions dependencies
 ```bash
 cd functions
 npm install
 ```
-- Provide `DEEPL_API_KEY` as a Functions environment variable if you want DeepL translations.
+- Register the DeepL key when needed:
+```bash
+firebase functions:config:set deepl.apikey="YOUR_API_KEY"
+```
+- When running the emulator, replicate the same key inside `.runtimeconfig.json`.
 
-### 5. Run locally
-#### Web client (Vite)
+## Development Workflow
+### Web app (Vite)
 ```bash
 cd apps/reception-web
 npm run dev -- --host
 ```
-- Prefer Vite for development. If you need a simple preview, VS Code’s Live Server can open `apps/reception-web/index.html`.
+- The `--host` flag makes the dev server reachable from other devices on the same LAN.
 
-#### Functions emulator
+### Firebase Emulator Suite
 ```bash
 firebase emulators:start --only functions
 ```
-API endpoints (examples):
-- `GET /getPrograms`
-- `POST /addReceptionRecord`
-- `GET /getReceptionStats`
-- `POST /translateText`
+- Add services as needed, for example `--only functions,firestore,auth`.
+- Key endpoints:
+	- `GET http://localhost:5001/kuas-reception/us-central1/getPrograms`
+	- `POST http://localhost:5001/kuas-reception/us-central1/addReceptionRecord`
+	- `GET http://localhost:5001/kuas-reception/us-central1/getReceptionStats`
+	- `POST http://localhost:5001/kuas-reception/us-central1/translateText`
 
-## Project Highlights
-- `apps/reception-web/src/components`: glass-themed `AppShell`, `Button`, `Badge`, etc.
-- `apps/reception-web/src/features/reception`: Landing → AttendeeForm → ProgramSelection → Confirmation
-- `apps/reception-web/src/features/admin`: Admin dashboard cards and program table
-- `apps/reception-web/src/services/api.ts`: Fetch wrapper pointing to Functions
-- `apps/reception-web/src/services/firebase.ts`: Firestore listeners & writers
-- `functions/index.js`: API implementation (CORS, DeepL fallback, Firestore access)
-- `legacy/`: previous HTML/JS implementation, Firebase hosting configs, Data Connect templates, sample rosters
+### Deploying to Firebase Hosting
+```bash
+npx firebase login
+npm run deploy:reception-web
+```
+- To create a preview channel:
+```bash
+npm run build:reception-web
+npx firebase hosting:channel:deploy preview --only hosting:reception-web
+```
 
-## Translation Workflow
-- `/translateText` uses DeepL when available; otherwise falls back to simple dictionary rules
-- You can expand dictionary terms or add other providers as needed
+## Quality Checks
+- `npm run lint` (inside `apps/reception-web`) runs ESLint for static analysis.
+- `npm run typecheck` validates TypeScript project references.
+- E2E coverage with Cypress is under consideration for core flows (not yet adopted).
+- Pull Requests go through the Firebase deploy validation workflow defined in `.github/workflows/firebase-deploy.yml`.
 
-## Future Enhancements
-- Sync admin UI with Firestore in real time
-- Add admin CRUD for programs and rosters
-- Integrate Firebase Auth for staff permissions and audit trails
+## Translations & Multilingual Support
+- Default locale is `ja`; browser detection switches automatically to `en` or `id`. Locale files live under `apps/reception-web/src/i18n/locales/`.
+- The `/translateText` Function acts as the gateway to DeepL; without an API key it falls back to a lightweight phrase dictionary.
+- Department-specific terms can be curated through a custom glossary to ensure consistent translations.
+
+## Directory Guide
+- `apps/reception-web/src/components/layout`: Shared layouts such as AppShell, Sidebar, and Status Bar.
+- `apps/reception-web/src/components/ui`: UI primitives including Button, Card, and GlassField.
+- `apps/reception-web/src/features/reception`: Reception workflow screens and state management.
+- `apps/reception-web/src/features/admin`: Admin dashboard and analytics views.
+- `apps/reception-web/src/services/api.ts`: Cloud Functions client wrapper.
+- `apps/reception-web/src/services/firebase.ts`: Firestore/Auth utilities.
+- `functions/index.js`: HTTP Cloud Functions entrypoint with CORS and auth headers handled.
+- `legacy/`: Archived HTML/JS app, DataConnect setup, migration documents.
+
+## Release Notes
+| Version | Date | Highlights |
+|---------|------|------------|
+| v0.7.0 | 2025-10-28 | Hardened Firebase deploy workflow, refreshed documentation, configuration cleanup |
+| v0.6.0 | 2025-10-09 | DeepL integration improvements, stabilized deployment pipeline, enhanced language switching |
+| v0.5.0 | 2025-10-02 | Mobile experience updates, iPad bug fixes, Functions adjustments |
+| v0.4.0 | 2025-09-30 | Liquid glass theme refinements, extended multilingual support (Arabic), deployment experiments |
+| v0.3.0 | 2025-09-07 | Smartphone/tablet optimization, Firebase configuration updates, assorted bug fixes |
+| v0.2.0 | 2025-08-23 | Expanded reception flow, added companion tracking and waitlist views, improved success screens |
+| v0.1.0 | 2025-08-16 | Initial SPA release with offline readiness, security hardening, and initial documentation |
 
 ## License
-© KUAS Reception App Team
+© KUAS OC improvement committee
 

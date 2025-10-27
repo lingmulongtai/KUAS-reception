@@ -23,6 +23,7 @@ export function AppShell({ header, sidebar, children }: AppShellProps) {
         backgroundImage: `linear-gradient(var(--app-bg-overlay-start), var(--app-bg-overlay-end)), url('/opencampus-img01.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
       }}
     >
@@ -53,11 +54,14 @@ export function AppShell({ header, sidebar, children }: AppShellProps) {
                   <Menu className="h-5 w-5 text-slate-700 dark:text-slate-200" />
                 </button>
               ) : null}
-              <div className="glass-panel glass-outline hidden items-center gap-3 px-4 py-2 lg:flex">
-                <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400/80 to-sky-400/60 text-white shadow-inner">
-                  KUAS
-                </span>
-                <div>
+              <div className="glass-panel glass-outline flex items-center gap-3 px-4 py-2">
+                <img
+                  src="/kuas_logo_w_trans.png"
+                  alt={t('layout.brand.title')}
+                  className="h-10 w-auto"
+                  draggable={false}
+                />
+                <div className="hidden lg:flex lg:flex-col">
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-700 dark:text-slate-200">
                     {t('layout.brand.title')}
                   </p>
