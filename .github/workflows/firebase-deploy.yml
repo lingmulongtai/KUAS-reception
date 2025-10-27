@@ -26,8 +26,18 @@ jobs:
           cache: 'npm'
 
       # ステップ3: 依存パッケージのインストール
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
+
+      - name: Install functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Install and build reception-web
+        working-directory: apps/reception-web
+        run: |
+          npm ci
+          npm run build
 
       # ステップ4: Firebase Emulatorsを使った自動テストの実行
       - name: Run unit tests with Firebase Emulators
@@ -38,10 +48,6 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
-
-      - name: Install functions dependencies
-        working-directory: functions
-        run: npm ci
 
       # Optional diagnostic: confirm hosting site configuration
       - name: Show hosting sites
