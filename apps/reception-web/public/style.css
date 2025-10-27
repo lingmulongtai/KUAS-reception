@@ -1,4 +1,0 @@
-/* proxy stylesheet that imports root style when served from /public */
-@import url('../style.css');
-
-

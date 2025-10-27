@@ -15,16 +15,31 @@ export function AppShell({ header, sidebar, children }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const { setTheme } = useThemeSync()
   const { t } = useTranslation()
+  const backgroundImageUrl = (() => {
+    const relativePath = 'opencampus-img01.jpg?v=20251028'
+
+    if (typeof window !== 'undefined') {
+      if (window.location.protocol === 'file:') {
+        return new URL(relativePath, window.location.href).href
+      }
+
+      const baseUrl = new URL(import.meta.env.BASE_URL ?? '/', window.location.origin)
+      return new URL(relativePath, baseUrl).href
+    }
+
+    const fallbackBase = import.meta.env.BASE_URL ?? '/'
+    return `${fallbackBase}${relativePath}`
+  })()
 
   return (
     <div
       className="relative min-h-screen w-full overflow-hidden bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100"
       style={{
-        backgroundImage: `linear-gradient(var(--app-bg-overlay-start), var(--app-bg-overlay-end)), url('/opencampus-img01.jpg')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
+        backgroundImage: `linear-gradient(var(--app-bg-overlay-start), var(--app-bg-overlay-end)), url('${backgroundImageUrl}')`,
+        backgroundSize: 'cover, cover',
+        backgroundPosition: 'center, center',
+        backgroundRepeat: 'no-repeat, no-repeat',
+        backgroundAttachment: 'fixed, fixed',
       }}
     >
       <div className="absolute -top-40 -right-32 h-96 w-96 gradient-orb blur-3xl opacity-60 dark:opacity-40 pointer-events-none" />

@@ -8,13 +8,13 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light dark;
-  --app-bg-overlay-start: rgba(255, 255, 255, 0.55);
-  --app-bg-overlay-end: rgba(226, 232, 240, 0.65);
+  --app-bg-overlay-start: rgba(255, 255, 255, 0.35);
+  --app-bg-overlay-end: rgba(226, 232, 240, 0.5);
 }
 
 .dark {
-  --app-bg-overlay-start: rgba(15, 23, 42, 0.82);
-  --app-bg-overlay-end: rgba(15, 23, 42, 0.88);
+  --app-bg-overlay-start: rgba(15, 23, 42, 0.72);
+  --app-bg-overlay-end: rgba(15, 23, 42, 0.78);
 }
 
 * {
