@@ -6,7 +6,14 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface ConfirmationStepProps {
-  attendeeName: string
+  attendee: {
+    name: string
+    furigana: string
+    school?: string
+    grade: string
+    companions: number
+    reserved: boolean
+  }
   selectedPrograms: ProgramChoice[]
   onConfirm: () => void
   onBack: () => void
@@ -15,7 +22,7 @@ interface ConfirmationStepProps {
 }
 
 export function ConfirmationStep({
-  attendeeName,
+  attendee,
   selectedPrograms,
   onConfirm,
   onBack,
@@ -29,7 +36,7 @@ export function ConfirmationStep({
     setIsSubmitting(true)
     try {
       await apiClient.post('/receptions', {
-        attendee: { name: attendeeName },
+        attendee,
         selections: selectedPrograms.map((p) => ({ id: p.id, title: p.title })),
       })
       onConfirm()
@@ -47,7 +54,7 @@ export function ConfirmationStep({
         <div className="glass-panel glass-outline flex flex-col gap-3 rounded-2xl p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('common.labels.participant')}</p>
-            <p className="text-lg font-semibold text-brand-600 dark:text-brand-300">{attendeeName}</p>
+            <p className="text-lg font-semibold text-brand-600 dark:text-brand-300">{attendee.name}</p>
           </div>
           <div className="grid gap-3">
             {selectedPrograms.map((program, index) => (
