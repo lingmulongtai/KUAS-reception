@@ -33,13 +33,27 @@ export function listenPrograms(callback: (programs: unknown[]) => void) {
   })
 }
 
-export async function addReceptionRecord(data: unknown) {
-  const receptionsRef = collection(db, 'receptions')
-  const docRef = await addDoc(receptionsRef, data as Record<string, unknown>)
-  return docRef.id
-}
+// Backend handles writes now, so we remove addReceptionRecord and updateProgramCapacity
+// to prevent accidental usage.
 
-export async function updateProgramCapacity(programId: string, remaining: number) {
-  const programDoc = doc(db, 'programs', programId)
-  await updateDoc(programDoc, { remaining })
+export function listenStats(callback: (stats: any) => void) {
+  const receptionsRef = collection(db, 'receptions')
+  // Listen to all changes to calculate stats client-side (or server side triggers could maintain a stats doc)
+  // For now, client-side aggregation from snapshot is fine for small scale
+  return onSnapshot(receptionsRef, (snapshot) => {
+    let completed = 0
+    let waiting = 0
+    let reserved = 0
+    let walkIn = 0
+
+    snapshot.forEach((doc) => {
+      const data = doc.data()
+      if (data.status === 'completed') completed++
+      if (data.status === 'waiting') waiting++
+      if (data.attendee?.reserved) reserved++
+      else walkIn++
+    })
+
+    callback({ completed, waiting, reserved, walkIn })
+  })
 }
