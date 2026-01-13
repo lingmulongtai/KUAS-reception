@@ -73,7 +73,11 @@ function ReceptionApp() {
         <header className="flex flex-wrap items-center justify-between gap-4 px-6 py-6">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/70 shadow-inner backdrop-blur dark:bg-slate-900/60">
-              <img src="/kuas_logo_w_trans.png" alt={t('home.header.logoAlt')} className="h-9 w-9 object-contain" />
+              <img 
+                src={isDark ? '/kuas_logo_w_trans.png' : '/kuas_logo.jpg'} 
+                alt={t('home.header.logoAlt')} 
+                className="h-9 w-9 object-contain rounded-lg" 
+              />
             </div>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
@@ -134,6 +138,53 @@ function ReceptionApp() {
             )}
           </div>
         </main>
+
+        {/* 開発者モードパネル */}
+        {isDevMode && (
+          <div className="fixed bottom-4 right-4 z-50 w-80 rounded-2xl border border-brand-200 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-brand-800 dark:bg-slate-900/95">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-brand-700 dark:text-brand-300">
+                {t('home.devPanel.title')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsDevMode(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              {t('home.devPanel.description')}
+            </p>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">{t('home.devPanel.selectedMode')}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {selectedMode ? t(`modes.${selectedMode}`) : t('home.devPanel.none')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Theme</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {isDark ? 'Dark' : 'Light'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Language</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {currentLocale.code.toUpperCase()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Environment</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  {import.meta.env.DEV ? 'Development' : 'Production'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

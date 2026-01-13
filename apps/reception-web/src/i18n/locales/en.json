@@ -197,6 +197,15 @@
     }
   },
   "landing": {
+    "welcome": "Welcome!",
+    "welcomeDescription": "Thank you for joining the Engineering Faculty Open Campus",
+    "reservedTitle": "Pre-registered visitors",
+    "reservedSubtitle": "If you have a reservation number",
+    "walkInTitle": "Walk-in visitors",
+    "walkInSubtitle": "No reservation needed",
+    "step1": "Enter info",
+    "step2": "Select programs",
+    "step3": "Complete",
     "title": "Engineering Open Campus Reception",
     "description": "Check in reserved and walk-in visitors in three guided steps with real-time status updates.",
     "staffMode": "Staff mode",
@@ -257,14 +266,44 @@
     "resultsDescription": "Your current selections in order of preference.",
     "emptySelection": "You haven't selected any programs yet. Choose your preferred sessions.",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "tapToSelect": "Tap to select",
+    "maxHint": "You can select up to {{count}} programs. Selection order indicates priority.",
+    "selectedCount": "Selected programs ({{current}}/{{max}})",
+    "proceed": "Proceed to confirmation",
+    "selectProgram": "Select a program"
   },
   "confirmation": {
     "title": "Review check-in details",
     "description": "Confirm everything before finalizing the program allocation.",
     "ticketTitle": "Issue ticket",
     "ticketDescription": "Show wait info on the shared display and export a PDF if needed.",
-    "syncNote": "Once confirmed, data syncs to Firebase so the admin panel updates in real time."
+    "syncNote": "Once confirmed, data syncs to Firebase so the admin panel updates in real time.",
+    "reviewTitle": "Review your information",
+    "reviewDescription": "Please verify the following details before completing check-in.",
+    "attendeeInfo": "Attendee information",
+    "selectedPrograms": "Selected programs",
+    "seatsRemaining": "{{remaining}}/{{capacity}} seats remaining",
+    "submitting": "Submitting...",
+    "complete": "Complete check-in"
+  },
+  "receptionFlow": {
+    "restart": "Start over",
+    "attendee": {
+      "title": "Enter your information",
+      "description": "Please provide your basic information. This will only be used for check-in purposes."
+    },
+    "program": {
+      "title": "Select programs to attend",
+      "description": "Tap on programs you're interested in. You can select up to 3 in order of preference."
+    },
+    "completed": {
+      "title": "Check-in complete!",
+      "thankYou": "Thank you for registering, {{name}}!",
+      "nextStep": "Staff will guide you to your selected programs",
+      "selectedPrograms": "Selected programs",
+      "returnHome": "Return to home"
+    }
   },
   "attendeeForm": {
     "title": "Attendee details",
@@ -275,6 +314,7 @@
     "furiganaPlaceholder": "e.g. YAMADA TARO",
     "schoolLabel": "School",
     "schoolPlaceholder": "e.g. Example High School",
+    "optional": "(optional)",
     "gradeLabel": "Grade",
     "gradeOptions": {
       "grade1": "1st year (HS)",
@@ -282,8 +322,11 @@
       "grade3": "3rd year (HS)",
       "other": "Other"
     },
-    "companionsLabel": "Number of companions",
+    "companionsLabel": "Companions",
+    "companionsHint": "(guardians, friends, etc.)",
+    "companionsUnit": "people",
     "companionsDescription": "Enter guardians or friends joining the visit.",
+    "nextButton": "Select programs",
     "back": "Back",
     "next": "Continue"
   },

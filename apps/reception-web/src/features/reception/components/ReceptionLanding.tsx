@@ -1,5 +1,4 @@
-import { ArrowRight, CalendarCheck2, Footprints, UserPlus2 } from 'lucide-react'
-import { Button, Card } from '@/components/ui'
+import { ArrowRight, CalendarCheck2, UserPlus2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface ReceptionLandingProps {
@@ -9,107 +8,84 @@ interface ReceptionLandingProps {
 
 export function ReceptionLanding({ onStartReserved, onStartWalkIn }: ReceptionLandingProps) {
   const { t } = useTranslation()
-  const flowSteps = t('landing.flowSteps', { returnObjects: true }) as string[]
-  const statusItems = Object.values(
-    t('landing.statusItems', { returnObjects: true }) as Record<string, { title: string; value: string; status: string }>
-  )
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-      <Card
-        title={t('landing.title')}
-        description={t('landing.description')}
-        className="relative overflow-hidden"
-        headerSlot={
-          <Button variant="secondary" size="sm" icon={<Footprints className="h-4 w-4" />}>
-            {t('landing.staffMode')}
-          </Button>
-        }
-      >
-        <div className="relative grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                {t('landing.flowTitle')}
-              </p>
-              <ul className="mt-3 space-y-2 text-sm font-medium text-slate-900 dark:text-slate-200">
-                {flowSteps.map((step, i) => (
-                  <li key={step} className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-100 text-xs text-brand-700 dark:bg-brand-900 dark:text-brand-300">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <div className="flex flex-col items-center justify-center gap-8 py-8">
+      {/* ウェルカムメッセージ */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">
+          {t('landing.welcome', 'ようこそ！')}
+        </h1>
+        <p className="mt-2 text-lg text-slate-600 dark:text-slate-300">
+          {t('landing.welcomeDescription', '工学部オープンキャンパスへのご参加ありがとうございます')}
+        </p>
+      </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {t('landing.currentQueue')}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
-                  {t('landing.queueCount', { count: 12 })}
-                </p>
+      {/* メイン選択ボタン */}
+      <div className="grid w-full max-w-xl gap-4">
+        <button
+          type="button"
+          onClick={onStartReserved}
+          className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 to-brand-600 p-6 text-left text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <CalendarCheck2 className="h-7 w-7" />
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {t('landing.averageTime')}
-                </p>
-                <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
-                  {t('landing.averageDuration', { minutes: 2 })}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 justify-center">
-            <Button
-              size="lg"
-              className="h-20 w-full justify-between px-6 text-lg"
-              icon={<CalendarCheck2 className="h-6 w-6" />}
-              onClick={onStartReserved}
-            >
-              <div className="text-left">
-                <div className="font-bold">{t('landing.reservedButton')}</div>
-                <div className="text-xs opacity-80 font-normal">Pre-booked attendees</div>
-              </div>
-              <ArrowRight className="h-6 w-6" />
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="h-20 w-full justify-between px-6 text-lg"
-              icon={<UserPlus2 className="h-6 w-6" />}
-              onClick={onStartWalkIn}
-            >
-              <div className="text-left">
-                <div className="font-bold">{t('landing.walkInButton')}</div>
-                <div className="text-xs opacity-80 font-normal">New registration</div>
-              </div>
-              <ArrowRight className="h-6 w-6" />
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      <Card title={t('landing.statusCardTitle')} description={t('landing.statusCardDescription')}>
-        <div className="grid gap-3">
-          {statusItems.map((item) => (
-            <div
-              key={item.title}
-              className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-900"
-            >
               <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.title}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{item.status}</p>
+                <h2 className="text-xl font-bold">{t('landing.reservedTitle', '事前予約済みの方')}</h2>
+                <p className="mt-0.5 text-sm text-white/80">
+                  {t('landing.reservedSubtitle', '予約番号をお持ちの方はこちら')}
+                </p>
               </div>
-              <p className="text-xl font-bold text-brand-600 dark:text-brand-400">{item.value}</p>
             </div>
-          ))}
-        </div>
-      </Card>
+            <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={onStartWalkIn}
+          className="group relative overflow-hidden rounded-3xl border-2 border-slate-200 bg-white/80 p-6 text-left shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-brand-300 hover:shadow-xl active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900/80 dark:hover:border-brand-500"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
+                <UserPlus2 className="h-7 w-7 text-slate-600 dark:text-slate-300" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  {t('landing.walkInTitle', '当日参加の方')}
+                </h2>
+                <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                  {t('landing.walkInSubtitle', '予約なしでも参加できます')}
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-6 w-6 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-brand-500" />
+          </div>
+        </button>
+      </div>
+
+      {/* 簡易フロー説明 */}
+      <div className="mt-4 flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900 dark:text-brand-300">
+          1
+        </span>
+        <span>{t('landing.step1', '情報入力')}</span>
+        <span className="text-slate-300 dark:text-slate-600">→</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900 dark:text-brand-300">
+          2
+        </span>
+        <span>{t('landing.step2', 'プログラム選択')}</span>
+        <span className="text-slate-300 dark:text-slate-600">→</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600 dark:bg-brand-900 dark:text-brand-300">
+          3
+        </span>
+        <span>{t('landing.step3', '完了')}</span>
+      </div>
     </div>
   )
 }

@@ -4,14 +4,12 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 
 import ja from './locales/ja.json'
 import en from './locales/en.json'
-import id from './locales/id.json'
 
-type LocaleKey = 'ja' | 'en' | 'id'
+type LocaleKey = 'ja' | 'en'
 
 export const supportedLocales: Array<{ code: LocaleKey; labelKey: string }> = [
   { code: 'ja', labelKey: 'languages.ja' },
   { code: 'en', labelKey: 'languages.en' },
-  { code: 'id', labelKey: 'languages.id' },
 ]
 
 i18n
@@ -21,7 +19,6 @@ i18n
     resources: {
       ja: { translation: ja },
       en: { translation: en },
-      id: { translation: id },
     },
     fallbackLng: 'ja',
     supportedLngs: supportedLocales.map((locale) => locale.code),

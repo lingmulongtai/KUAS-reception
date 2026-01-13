@@ -197,6 +197,15 @@
     }
   },
   "landing": {
+    "welcome": "ようこそ！",
+    "welcomeDescription": "工学部オープンキャンパスへのご参加ありがとうございます",
+    "reservedTitle": "事前予約済みの方",
+    "reservedSubtitle": "予約番号をお持ちの方はこちら",
+    "walkInTitle": "当日参加の方",
+    "walkInSubtitle": "予約なしでも参加できます",
+    "step1": "情報入力",
+    "step2": "プログラム選択",
+    "step3": "完了",
     "title": "工学部オープンキャンパス 受付",
     "description": "予約者・当日参加の受付をタッチで進められます。手順は3ステップ、リアルタイムに状況が更新されます。",
     "staffMode": "スタッフモード",
@@ -257,24 +266,55 @@
     "resultsDescription": "現在選択されているプログラムです。順番が希望順位になります。",
     "emptySelection": "まだプログラムが選択されていません。希望のプログラムを選択してください。",
     "back": "もどる",
-    "next": "次へ進む"
+    "next": "次へ進む",
+    "tapToSelect": "タップして選択してください",
+    "maxHint": "最大{{count}}つまで選べます。選んだ順番が希望順位になります。",
+    "selectedCount": "選択中のプログラム（{{current}}/{{max}}）",
+    "proceed": "確認へ進む",
+    "selectProgram": "プログラムを選択"
   },
   "confirmation": {
     "title": "受付内容の確認",
     "description": "プログラムの割り当てを確定する前に内容を確認してください。",
     "ticketTitle": "チケット発行",
     "ticketDescription": "完了後、連携ディスプレイに待機情報が表示されます。必要に応じてPDFも出力できます。",
-    "syncNote": "確定すると、自動的にFirebaseに同期され、管理パネルからリアルタイムで状況確認が可能です。"
+    "syncNote": "確定すると、自動的にFirebaseに同期され、管理パネルからリアルタイムで状況確認が可能です。",
+    "reviewTitle": "入力内容の確認",
+    "reviewDescription": "以下の内容で受付を完了します。内容をご確認ください。",
+    "attendeeInfo": "参加者情報",
+    "selectedPrograms": "選択されたプログラム",
+    "seatsRemaining": "残り {{remaining}}/{{capacity}} 席",
+    "submitting": "送信中...",
+    "complete": "受付を完了する"
+  },
+  "receptionFlow": {
+    "restart": "最初からやり直す",
+    "attendee": {
+      "title": "参加者情報を入力してください",
+      "description": "基本情報をご入力ください。入力いただいた情報は受付処理にのみ使用します。"
+    },
+    "program": {
+      "title": "参加したいプログラムを選択",
+      "description": "興味のあるプログラムをタップしてください。最大3つまで、希望順に選択できます。"
+    },
+    "completed": {
+      "title": "受付完了！",
+      "thankYou": "{{name}} 様、ご登録ありがとうございます",
+      "nextStep": "選択されたプログラムの案内は、スタッフがご説明します",
+      "selectedPrograms": "選択されたプログラム",
+      "returnHome": "ホームに戻る"
+    }
   },
   "attendeeForm": {
     "title": "参加者情報",
     "description": "基本情報を入力してください",
-    "nameLabel": "氏名",
+    "nameLabel": "お名前",
     "namePlaceholder": "山田 太郎",
     "furiganaLabel": "フリガナ",
-    "furiganaPlaceholder": "ヤマダ タロウ",
+    "furiganaPlaceholder": "ヤマダ タロウ（フリガナ）",
     "schoolLabel": "学校名",
-    "schoolPlaceholder": "〇〇高校",
+    "schoolPlaceholder": "〇〇高等学校",
+    "optional": "（任意）",
     "gradeLabel": "学年",
     "gradeOptions": {
       "grade1": "高校1年生",
@@ -282,8 +322,11 @@
       "grade3": "高校3年生",
       "other": "その他"
     },
-    "companionsLabel": "同伴者人数",
+    "companionsLabel": "同伴者",
+    "companionsHint": "（保護者・ご友人など）",
+    "companionsUnit": "名",
     "companionsDescription": "保護者・ご友人の人数を入力してください",
+    "nextButton": "プログラム選択へ",
     "back": "もどる",
     "next": "次へ進む"
   },
