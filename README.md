@@ -20,7 +20,7 @@
 - 京都先端科学大学 工学部オープンキャンパスにおける来場受付を、スタッフ・来場者・管理者が共通 UI で扱えるよう再構築したモダン Web アプリです。
 - React 19 + TypeScript + Vite による SPA（`apps/reception-web/`）と Firebase Functions（Node.js 20）で構成し、オンライン/オフライン両対応のハイブリッド運用を実現します。
 - オフライン時はローカルストレージとキャッシュを利用し、オンライン復帰時に Firestore / Cloud Functions とシームレスに同期します。
-- UI テーマはライト・ダークに加え、リキッドグラス表現と多言語 UI（日/英/インドネシア語ほか）を提供します。
+- UI テーマはライト・ダークに加え、リキッドグラス表現と多言語 UI（日/英）を提供します。
 
 ## ターゲットと提供価値
 - **受付スタッフ**: 来場者のチェックイン、残席管理、プログラム割当を素早く実施。
@@ -51,7 +51,7 @@ KUAS-reception/
 ## 主要機能
 - **受付フロー**: 予約/当日選択 → 参加情報入力 → プログラム第1〜3希望選択 → 内容確認と確定処理。
 - **プログラム管理**: Firestore 連携による残席表示、待機者の繰り上げ、割当状況の可視化。
-- **多言語 UI**: i18next による日・英・インドネシア語を標準サポート、追加言語データは `apps/reception-web/src/i18n/locales/` に配置。
+- **多言語 UI**: i18next による日・英を標準サポート、追加言語データは `apps/reception-web/src/i18n/locales/` に配置。
 - **テーマ設定**: ライト/ダーク/リキッドグラスを個人単位で保存。Theme Sync Hook により OS 設定にも追従。
 - **翻訳 API**: DeepL API を利用する `/translateText` Functions。キー未設定時はルールベースによるフォールバック翻訳を提供。
 - **オフライン対応**: Service Worker とローカルキャッシュで接続断でも使用継続可能。復帰後は差分同期。
@@ -107,7 +107,42 @@ firebase functions:config:set deepl.apikey="YOUR_API_KEY"
 - エミュレータ利用時は `.runtimeconfig.json` に同様のキーを記述できます。
 
 ## 開発フロー
-### Web アプリ (Vite)
+### クイックスタート（推奨）
+プロジェクトルートから以下のコマンドで開発サーバーを起動できます：
+```bash
+npm run dev
+```
+- ルートから実行すると自動的に `apps/reception-web` の Vite 開発サーバーが起動します。
+- デフォルトで `http://localhost:5173` でアクセス可能です。
+
+### その他の便利なコマンド
+```bash
+# ビルド
+npm run build
+
+# プレビュー（ビルド後の確認）
+npm run preview
+
+# Lint チェック
+npm run lint
+
+# 型チェック
+npm run typecheck
+
+# Firebase へデプロイ
+npm run deploy
+
+# Firebase Functions のみデプロイ
+npm run deploy:functions
+
+# すべてをデプロイ（Hosting + Functions）
+npm run deploy:all
+
+# Firebase エミュレータ起動
+npm run emulators
+```
+
+### Web アプリ (Vite) - 直接起動
 ```bash
 cd apps/reception-web
 npm run dev -- --host
@@ -143,7 +178,7 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 - Pull Request 時は GitHub Actions によるデプロイ検証（`.github/workflows/firebase-deploy.yml`）を通過する構成です。
 
 ## 翻訳と多言語対応
-- 既定言語は `ja`、ブラウザ検出により `en` / `id` へ自動切替。辞書は `apps/reception-web/src/i18n/locales/` 配下に JSON として配置します。
+- 既定言語は `ja`、ブラウザ検出により `en` へ自動切替。辞書は `apps/reception-web/src/i18n/locales/` 配下に JSON として配置します。
 - DeepL API を利用する自動翻訳は `/translateText` Functions を経由。API キーが無い場合はシンプルなフレーズ辞書でフォールバックします。
 - 固有名詞や学部固有ワードは `customGlossary` を活用し、必要に応じて辞書を追加してください。
 

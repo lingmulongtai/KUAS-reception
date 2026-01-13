@@ -125,7 +125,7 @@
       "switchToLight": "Switch to light mode",
       "switchToDark": "Switch to dark mode",
       "languageToggle": "Toggle language",
-      "devMode": "Dev mode"
+      "adminMode": "Admin"
     },
     "devPanel": {
       "title": "Developer status",
@@ -135,6 +135,120 @@
       "none": "None",
       "programs": "Program overview",
       "capstone": "Mini Capstone notes"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "Admin Login",
+      "email": "Email",
+      "emailPlaceholder": "admin@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter password",
+      "submit": "Login",
+      "loggingIn": "Logging in...",
+      "demoCredentials": "Demo Credentials",
+      "demoEmail": "Email: admin@kuas.ac.jp",
+      "demoPassword": "Password: admin123"
+    },
+    "panel": {
+      "title": "Admin Panel",
+      "logout": "Logout"
+    },
+    "tabs": {
+      "reservations": "Reservations",
+      "programs": "Programs",
+      "settings": "Settings"
+    },
+    "stats": {
+      "total": "Total Receptions",
+      "waiting": "Waiting",
+      "completed": "Completed",
+      "reserved": "Reserved"
+    },
+    "reservations": {
+      "title": "Reservations",
+      "search": "Search by name or school...",
+      "filter": {
+        "all": "All",
+        "waiting": "Waiting",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "empty": "No reservations",
+      "emptyFiltered": "No reservations match the filter",
+      "columns": {
+        "name": "Name",
+        "school": "School",
+        "programs": "Programs",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "waiting": "Waiting",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "actions": {
+        "complete": "Mark Complete",
+        "cancel": "Cancel",
+        "restore": "Restore",
+        "delete": "Delete"
+      }
+    },
+    "programs": {
+      "title": "Programs",
+      "add": "Add Program",
+      "empty": "No programs",
+      "form": {
+        "title": "Title",
+        "titlePlaceholder": "Enter program name",
+        "description": "Description",
+        "descriptionPlaceholder": "Enter program description",
+        "capacity": "Capacity",
+        "times": "Session Times",
+        "timesPlaceholder": "10:00, 11:00, 14:00",
+        "location": "Location",
+        "locationPlaceholder": "Enter location",
+        "isPublic": "Public",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      }
+    },
+    "settings": {
+      "title": "Reception Settings",
+      "reception": {
+        "title": "Reception Status",
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "event": {
+        "title": "Event Information",
+        "name": "Event Name",
+        "namePlaceholder": "Open Campus 2025",
+        "date": "Date",
+        "datePlaceholder": "June 15, 2025"
+      },
+      "hours": {
+        "title": "Reception Hours",
+        "start": "Start Time",
+        "end": "End Time"
+      },
+      "limits": {
+        "title": "Limits",
+        "maxPrograms": "Max Program Selections",
+        "maxProgramsValue": "Up to {{count}}"
+      },
+      "message": {
+        "title": "Welcome Message",
+        "placeholder": "Enter welcome message for visitors..."
+      },
+      "save": "Save Settings",
+      "saving": "Saving...",
+      "saved": "Saved"
     }
   },
   "modes": {
@@ -329,53 +443,6 @@
     "nextButton": "Select programs",
     "back": "Back",
     "next": "Continue"
-  },
-  "admin": {
-    "login": {
-      "title": "Admin sign-in",
-      "description": "Only authenticated staff can access the operations console.",
-      "emailLabel": "Email address",
-      "emailDescription": "Use the Google account assigned to staff.",
-      "passwordLabel": "Password",
-      "passwordDescription": "Use the password shared by the administrator for first sign-in.",
-      "demoTitle": "Demo credentials",
-      "demoDescription": "Use this account in test environments. Production relies on Firebase Authentication.",
-      "emailFieldLabel": "Email",
-      "passwordFieldLabel": "Password",
-      "placeholders": {
-        "email": "staff@example.com",
-        "password": "••••••••"
-      }
-    },
-    "dashboard": {
-      "highlightsTitle": "Operations highlights",
-      "highlightsDescription": "Monitor live event metrics at a glance.",
-      "viewDetails": "View details",
-      "metrics": {
-        "capacity": {
-          "title": "Total capacity",
-          "badge": "Capacity",
-          "value": "{{count}} seats"
-        },
-        "remaining": {
-          "title": "Seats remaining",
-          "badge": "Remaining",
-          "value": "{{count}} seats left"
-        },
-        "completed": {
-          "title": "Checked in",
-          "badge": "Completed",
-          "value": "{{count}} attendees"
-        },
-        "waiting": {
-          "title": "Waiting list",
-          "badge": "Waiting",
-          "value": "{{count}} attendees"
-        }
-      },
-      "seatsTitle": "Program availability",
-      "seatsDescription": "Review each program and make adjustments as needed."
-    }
   },
   "validation": {
     "attendee": {

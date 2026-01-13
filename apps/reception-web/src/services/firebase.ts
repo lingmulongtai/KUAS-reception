@@ -8,7 +8,21 @@ import {
   query,
   updateDoc,
   addDoc,
+  deleteDoc,
+  setDoc,
+  getDoc,
+  orderBy,
+  Timestamp,
 } from 'firebase/firestore'
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  connectAuthEmulator,
+  type User,
+} from 'firebase/auth'
+import type { Program, Reservation, ReceptionSettings } from '@/features/admin/types'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,19 +33,121 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
+const auth = getAuth(app)
 
 if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR) {
   connectFirestoreEmulator(db, 'localhost', 8080)
+  connectAuthEmulator(auth, 'http://localhost:9099')
 }
 
-export function listenPrograms(callback: (programs: unknown[]) => void) {
+// ===== 認証関連 =====
+export function subscribeToAuth(callback: (user: User | null) => void) {
+  return onAuthStateChanged(auth, callback)
+}
+
+export async function loginAdmin(email: string, password: string) {
+  return signInWithEmailAndPassword(auth, email, password)
+}
+
+export async function logoutAdmin() {
+  return signOut(auth)
+}
+
+export function getCurrentUser() {
+  return auth.currentUser
+}
+
+// ===== プログラム関連 =====
+export function listenPrograms(callback: (programs: Program[]) => void) {
   const programsRef = collection(db, 'programs')
-  const programsQuery = query(programsRef)
+  const programsQuery = query(programsRef, orderBy('order', 'asc'))
   return onSnapshot(programsQuery, (snapshot) => {
-    const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+    const items = snapshot.docs.map((doc) => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as Program[]
     callback(items)
   })
 }
+
+export async function addProgram(program: Omit<Program, 'id'>) {
+  const programsRef = collection(db, 'programs')
+  const docRef = await addDoc(programsRef, {
+    ...program,
+    createdAt: Timestamp.now(),
+  })
+  return docRef.id
+}
+
+export async function updateProgram(id: string, data: Partial<Program>) {
+  const programRef = doc(db, 'programs', id)
+  await updateDoc(programRef, {
+    ...data,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+export async function deleteProgram(id: string) {
+  const programRef = doc(db, 'programs', id)
+  await deleteDoc(programRef)
+}
+
+// ===== 予約関連 =====
+export function listenReservations(callback: (reservations: Reservation[]) => void) {
+  const reservationsRef = collection(db, 'receptions')
+  const reservationsQuery = query(reservationsRef, orderBy('createdAt', 'desc'))
+  return onSnapshot(reservationsQuery, (snapshot) => {
+    const items = snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString(),
+      }
+    }) as Reservation[]
+    callback(items)
+  })
+}
+
+export async function updateReservation(id: string, data: Partial<Reservation>) {
+  const reservationRef = doc(db, 'receptions', id)
+  await updateDoc(reservationRef, {
+    ...data,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+export async function deleteReservation(id: string) {
+  const reservationRef = doc(db, 'receptions', id)
+  await deleteDoc(reservationRef)
+}
+
+// ===== 設定関連 =====
+const SETTINGS_DOC_ID = 'reception-settings'
+
+export function listenSettings(callback: (settings: ReceptionSettings | null) => void) {
+  const settingsRef = doc(db, 'settings', SETTINGS_DOC_ID)
+  return onSnapshot(settingsRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.data() as ReceptionSettings)
+    } else {
+      callback(null)
+    }
+  })
+}
+
+export async function updateSettings(settings: Partial<ReceptionSettings>) {
+  const settingsRef = doc(db, 'settings', SETTINGS_DOC_ID)
+  const snapshot = await getDoc(settingsRef)
+  if (snapshot.exists()) {
+    await updateDoc(settingsRef, settings)
+  } else {
+    await setDoc(settingsRef, settings)
+  }
+}
+
+// ===== 統計関連 =====
 
 // Backend handles writes now, so we remove addReceptionRecord and updateProgramCapacity
 // to prevent accidental usage.

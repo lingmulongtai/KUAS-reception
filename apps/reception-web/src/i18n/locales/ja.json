@@ -125,7 +125,7 @@
       "switchToLight": "ライトモードに切り替え",
       "switchToDark": "ダークモードに切り替え",
       "languageToggle": "言語を切り替え",
-      "devMode": "開発モード"
+      "adminMode": "管理"
     },
     "devPanel": {
       "title": "開発者向け情報",
@@ -135,6 +135,120 @@
       "none": "なし",
       "programs": "プログラム概要",
       "capstone": "ミニキャップストーン概要"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "管理者ログイン",
+      "email": "メールアドレス",
+      "emailPlaceholder": "admin@example.com",
+      "password": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "submit": "ログイン",
+      "loggingIn": "ログイン中...",
+      "demoCredentials": "デモ用アカウント",
+      "demoEmail": "メール: admin@kuas.ac.jp",
+      "demoPassword": "パスワード: admin123"
+    },
+    "panel": {
+      "title": "管理パネル",
+      "logout": "ログアウト"
+    },
+    "tabs": {
+      "reservations": "予約管理",
+      "programs": "プログラム管理",
+      "settings": "設定"
+    },
+    "stats": {
+      "total": "総受付数",
+      "waiting": "待機中",
+      "completed": "完了",
+      "reserved": "予約あり"
+    },
+    "reservations": {
+      "title": "予約一覧",
+      "search": "名前・学校で検索...",
+      "filter": {
+        "all": "すべて",
+        "waiting": "待機中",
+        "completed": "完了",
+        "cancelled": "キャンセル"
+      },
+      "empty": "予約はありません",
+      "emptyFiltered": "条件に一致する予約はありません",
+      "columns": {
+        "name": "名前",
+        "school": "学校",
+        "programs": "プログラム",
+        "status": "ステータス",
+        "actions": "操作"
+      },
+      "status": {
+        "waiting": "待機中",
+        "completed": "完了",
+        "cancelled": "キャンセル"
+      },
+      "actions": {
+        "complete": "完了にする",
+        "cancel": "キャンセル",
+        "restore": "待機に戻す",
+        "delete": "削除"
+      }
+    },
+    "programs": {
+      "title": "プログラム一覧",
+      "add": "プログラムを追加",
+      "empty": "プログラムはありません",
+      "form": {
+        "title": "タイトル",
+        "titlePlaceholder": "プログラム名を入力",
+        "description": "説明",
+        "descriptionPlaceholder": "プログラムの説明を入力",
+        "capacity": "定員",
+        "times": "開催時間",
+        "timesPlaceholder": "10:00, 11:00, 14:00",
+        "location": "場所",
+        "locationPlaceholder": "開催場所を入力",
+        "isPublic": "公開する",
+        "save": "保存",
+        "cancel": "キャンセル"
+      },
+      "actions": {
+        "edit": "編集",
+        "delete": "削除"
+      }
+    },
+    "settings": {
+      "title": "受付設定",
+      "reception": {
+        "title": "受付状態",
+        "open": "受付中",
+        "closed": "受付停止"
+      },
+      "event": {
+        "title": "イベント情報",
+        "name": "イベント名",
+        "namePlaceholder": "オープンキャンパス 2025",
+        "date": "開催日",
+        "datePlaceholder": "2025年6月15日"
+      },
+      "hours": {
+        "title": "受付時間",
+        "start": "開始時刻",
+        "end": "終了時刻"
+      },
+      "limits": {
+        "title": "制限設定",
+        "maxPrograms": "最大プログラム選択数",
+        "maxProgramsValue": "{{count}}個まで"
+      },
+      "message": {
+        "title": "ウェルカムメッセージ",
+        "placeholder": "来場者へのメッセージを入力..."
+      },
+      "save": "設定を保存",
+      "saving": "保存中...",
+      "saved": "保存しました"
     }
   },
   "modes": {
@@ -329,53 +443,6 @@
     "nextButton": "プログラム選択へ",
     "back": "もどる",
     "next": "次へ進む"
-  },
-  "admin": {
-    "login": {
-      "title": "管理者ログイン",
-      "description": "イベント運営管理ツールへのアクセスには認証が必要です。スタッフ用のアカウントでログインしてください。",
-      "emailLabel": "メールアドレス",
-      "emailDescription": "運営スタッフのGoogleアカウントを入力してください",
-      "passwordLabel": "パスワード",
-      "passwordDescription": "初回ログイン時は管理者から共有されたパスワードを使用してください",
-      "demoTitle": "デモ用ログイン情報",
-      "demoDescription": "テスト環境では以下のアカウントを使用できます。実際の運用ではFirebase Authenticationで管理します。",
-      "emailFieldLabel": "Email",
-      "passwordFieldLabel": "Password",
-      "placeholders": {
-        "email": "staff@example.com",
-        "password": "••••••••"
-      }
-    },
-    "dashboard": {
-      "highlightsTitle": "運営ハイライト",
-      "highlightsDescription": "リアルタイムでイベント状況を確認できます。",
-      "viewDetails": "詳細を見る",
-      "metrics": {
-        "capacity": {
-          "title": "総定員",
-          "badge": "Capacity",
-          "value": "{{count}} 名"
-        },
-        "remaining": {
-          "title": "残り枠",
-          "badge": "Remaining",
-          "value": "残り {{count}} 名"
-        },
-        "completed": {
-          "title": "受付完了",
-          "badge": "Completed",
-          "value": "{{count}} 名"
-        },
-        "waiting": {
-          "title": "待機者",
-          "badge": "Waiting",
-          "value": "{{count}} 名"
-        }
-      },
-      "seatsTitle": "プログラム残席",
-      "seatsDescription": "各プログラムの最新状況を確認し、必要に応じて調整できます。"
-    }
   },
   "validation": {
     "attendee": {

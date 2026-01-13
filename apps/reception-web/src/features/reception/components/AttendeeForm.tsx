@@ -63,6 +63,15 @@ export function AttendeeForm({ defaultValues, onSubmit, onBack }: AttendeeFormPr
 
   return (
     <form onSubmit={handleSubmit(submitHandler)} className="flex flex-col gap-6">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+        >
+          ← {t('receptionFlow.restart', '最初からやり直す')}
+        </button>
+      )}
       {/* 名前セクション */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">

@@ -8,43 +8,59 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light dark;
+  --app-body-background-image: none;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  /* Use the specific image requested by user */
-  background-image: url('/opencampus-img01.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  position: relative;
   color: #0f172a; /* Slate 900 default */
 }
 
-.dark body {
-    color: #f1f5f9; /* Slate 100 */
+html.dark body {
+  color: #f1f5f9; /* Slate 100 */
 }
 
-/* Add a global overlay to ensure text readability on top of image */
+/* Background image container */
 body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.85); /* Light mode heavy overlay */
-    z-index: -1;
-    backdrop-filter: blur(2px);
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--app-body-background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -2;
 }
 
-.dark body::before {
-    background-color: rgba(15, 23, 42, 0.85); /* Dark mode heavy overlay */
+/* Overlay for light mode - semi-transparent white */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: -1;
+}
+
+/* Overlay for dark mode - semi-transparent dark */
+html.dark body::after {
+  background-color: rgba(15, 23, 42, 0.75);
 }
 
 body,
@@ -61,4 +77,150 @@ html,
 
 button {
   font-family: inherit;
+}
+
+/* ===== Theme Transition Animation ===== */
+@keyframes theme-reveal {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes theme-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
+}
+
+.theme-transition-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 150vmax;
+  height: 150vmax;
+  border-radius: 50%;
+  z-index: 9999;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: theme-reveal 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.theme-transition-overlay::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: theme-ripple 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.theme-transition-overlay.to-dark {
+  background: radial-gradient(circle, #1e293b 0%, #0f172a 50%, transparent 70%);
+}
+
+.theme-transition-overlay.to-dark::before {
+  background: radial-gradient(circle, rgba(30, 41, 59, 0.5) 0%, transparent 60%);
+}
+
+.theme-transition-overlay.to-light {
+  background: radial-gradient(circle, #f8fafc 0%, #e2e8f0 50%, transparent 70%);
+}
+
+.theme-transition-overlay.to-light::before {
+  background: radial-gradient(circle, rgba(248, 250, 252, 0.5) 0%, transparent 60%);
+}
+
+/* ===== Language Change Animation ===== */
+@keyframes text-morph-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+    filter: blur(4px);
+  }
+}
+
+@keyframes text-morph-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.lang-transition-out {
+  animation: text-morph-out 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.lang-transition-in {
+  animation: text-morph-in 0.35s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+/* Shimmer effect on text during language change */
+.lang-shimmer {
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    rgba(34, 197, 94, 0.8) 25%,
+    currentColor 50%,
+    rgba(34, 197, 94, 0.8) 75%,
+    currentColor 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 0.8s ease-in-out;
+}
+
+/* Smooth page content transition */
+.content-fade-in {
+  animation: content-appear 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+@keyframes content-appear {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
