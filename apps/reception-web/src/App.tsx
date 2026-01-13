@@ -106,7 +106,7 @@ function ReceptionApp() {
 
   return (
     <div className={clsx(
-      "relative min-h-screen overflow-hidden bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100",
+      "relative min-h-screen overflow-hidden text-slate-900 transition-colors dark:text-slate-100",
       langPhase === 'out' && "lang-transition-out",
       langPhase === 'in' && "lang-transition-in"
     )}>

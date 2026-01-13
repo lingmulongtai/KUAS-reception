@@ -45,14 +45,8 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      {/* バックドロップ */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* パネル */}
-      <div className="relative ml-auto flex h-full w-full max-w-4xl flex-col bg-white/98 shadow-2xl backdrop-blur dark:bg-slate-900/98">
+      {/* パネル - 画面全体を覆う */}
+      <div className="flex h-full w-full flex-col bg-white dark:bg-slate-900">
         {/* ヘッダー */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-700">
           <div>
