@@ -6,29 +6,14 @@ import {
 } from '@/services/firebase'
 import type { AdminUser } from '../types'
 
-// デモ用のアカウント情報
+// デモ用のアカウント情報（開発環境のみ）
 const DEMO_ACCOUNTS = [
   { email: 'admin@kuas.ac.jp', password: 'admin123' },
   { email: 'demo@example.com', password: 'demo123' },
 ]
 
-const STORAGE_KEY = 'kuasAdminUser'
-
 export function useAdmin() {
-  const [user, setUser] = useState<AdminUser | null>(() => {
-    // ローカルストレージからユーザーを復元（ログアウトするまで維持）
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem(STORAGE_KEY)
-      if (savedUser) {
-        try {
-          return JSON.parse(savedUser)
-        } catch {
-          return null
-        }
-      }
-    }
-    return null
-  })
+  const [user, setUser] = useState<AdminUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,13 +26,8 @@ export function useAdmin() {
           displayName: firebaseUser.displayName,
         }
         setUser(adminUser)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(adminUser))
       } else {
-        // ローカルストレージにユーザーがあればそれを維持
-        const savedUser = localStorage.getItem(STORAGE_KEY)
-        if (!savedUser) {
-          setUser(null)
-        }
+        setUser(null)
       }
       setLoading(false)
     })
@@ -60,25 +40,34 @@ export function useAdmin() {
     setLoading(true)
     
     // デモアカウントのチェック（開発環境のみ）
+    // Note: Emulator が接続されている場合、Firebase Auth 側で処理される
     if (import.meta.env.DEV) {
       const demoAccount = DEMO_ACCOUNTS.find(
         (acc) => acc.email === email && acc.password === password
       )
       if (demoAccount) {
-        const demoUser: AdminUser = {
-          uid: 'demo-user-' + Date.now(),
-          email: demoAccount.email,
-          displayName: 'デモ管理者',
+        // Emulator Auth が使えない場合のフォールバック
+        try {
+          await loginAdmin(email, password)
+          // Firebase Auth が成功すれば onAuthStateChanged で処理される
+          return
+        } catch {
+          // Firebase Auth が使えない場合、デモユーザーを設定
+          const demoUser: AdminUser = {
+            uid: 'demo-user-' + Date.now(),
+            email: demoAccount.email,
+            displayName: 'デモ管理者',
+          }
+          setUser(demoUser)
+          setLoading(false)
+          return
         }
-        setUser(demoUser)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(demoUser))
-        setLoading(false)
-        return
       }
     }
     
     try {
       await loginAdmin(email, password)
+      // onAuthStateChanged callback will handle setting user
     } catch (err: unknown) {
       const firebaseError = err as { code?: string; message?: string }
       let errorMessage: string
@@ -103,8 +92,6 @@ export function useAdmin() {
   const logout = async () => {
     setLoading(true)
     try {
-      // ローカルストレージからユーザーを削除
-      localStorage.removeItem(STORAGE_KEY)
       setUser(null)
       await logoutAdmin()
     } finally {

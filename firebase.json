@@ -1,4 +1,8 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
   "functions": [
     {
       "source": "functions",
@@ -35,6 +39,9 @@
     },
     "firestore": {
       "port": 8080
+    },
+    "auth": {
+      "port": 9099
     },
     "ui": {
       "enabled": true

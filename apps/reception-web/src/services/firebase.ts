@@ -24,7 +24,7 @@ import {
   type User,
   type Auth,
 } from 'firebase/auth'
-import type { Program, Reservation, ReceptionSettings } from '@/features/admin/types'
+import type { Program, Reservation, ReceptionSettings, Assignment } from '@/features/admin/types'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -142,8 +142,8 @@ export function listenReservations(callback: (reservations: Reservation[]) => vo
       return {
         id: doc.id,
         ...data,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString(),
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
       }
     }) as Reservation[]
     callback(items)
@@ -166,6 +166,26 @@ export async function deleteReservation(id: string) {
   if (!db) throw new Error('Firebase is not configured')
   const reservationRef = doc(db, 'receptions', id)
   await deleteDoc(reservationRef)
+}
+
+// ===== 割当関連 =====
+export function listenAssignments(callback: (assignments: Assignment[]) => void) {
+  if (!db) {
+    callback([])
+    return () => {}
+  }
+  const assignmentsRef = collection(db, 'assignments')
+  const assignmentsQuery = query(assignmentsRef, orderBy('assignedAt', 'desc'))
+  return onSnapshot(assignmentsQuery, (snapshot) => {
+    const items = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    })) as Assignment[]
+    callback(items)
+  }, (error) => {
+    console.warn('Error listening to assignments:', error)
+    callback([])
+  })
 }
 
 // ===== 設定関連 =====
@@ -201,21 +221,24 @@ export async function updateSettings(settings: Partial<ReceptionSettings>) {
 }
 
 // ===== 統計関連 =====
-
-// Backend handles writes now, so we remove addReceptionRecord and updateProgramCapacity
-// to prevent accidental usage.
-
-export function listenStats(callback: (stats: any) => void) {
+export function listenStats(callback: (stats: {
+  completed: number
+  waiting: number
+  assigned: number
+  cancelled: number
+  reserved: number
+  walkIn: number
+}) => void) {
   if (!db) {
-    callback({ completed: 0, waiting: 0, reserved: 0, walkIn: 0 })
+    callback({ completed: 0, waiting: 0, assigned: 0, cancelled: 0, reserved: 0, walkIn: 0 })
     return () => {}
   }
   const receptionsRef = collection(db, 'receptions')
-  // Listen to all changes to calculate stats client-side (or server side triggers could maintain a stats doc)
-  // For now, client-side aggregation from snapshot is fine for small scale
   return onSnapshot(receptionsRef, (snapshot) => {
     let completed = 0
     let waiting = 0
+    let assigned = 0
+    let cancelled = 0
     let reserved = 0
     let walkIn = 0
 
@@ -223,13 +246,15 @@ export function listenStats(callback: (stats: any) => void) {
       const data = doc.data()
       if (data.status === 'completed') completed++
       if (data.status === 'waiting') waiting++
+      if (data.status === 'assigned') assigned++
+      if (data.status === 'cancelled') cancelled++
       if (data.attendee?.reserved) reserved++
       else walkIn++
     })
 
-    callback({ completed, waiting, reserved, walkIn })
+    callback({ completed, waiting, assigned, cancelled, reserved, walkIn })
   }, (error) => {
     console.warn('Error listening to stats:', error)
-    callback({ completed: 0, waiting: 0, reserved: 0, walkIn: 0 })
+    callback({ completed: 0, waiting: 0, assigned: 0, cancelled: 0, reserved: 0, walkIn: 0 })
   })
 }

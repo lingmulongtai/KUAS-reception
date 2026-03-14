@@ -31,6 +31,7 @@ export function useReservations() {
   const stats = {
     total: reservations.length,
     waiting: reservations.filter((r) => r.status === 'waiting').length,
+    assigned: reservations.filter((r) => r.status === 'assigned').length,
     completed: reservations.filter((r) => r.status === 'completed').length,
     cancelled: reservations.filter((r) => r.status === 'cancelled').length,
     reserved: reservations.filter((r) => r.attendee.reserved).length,

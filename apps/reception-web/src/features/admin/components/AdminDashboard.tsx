@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { Card, Button, Badge } from '@/components/ui'
 import { usePrograms } from '@/features/reception/hooks/usePrograms'
+import { useReservations } from '../hooks/useReservations'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export function AdminDashboard() {
   const { data: programs, isLoading } = usePrograms()
+  const { stats } = useReservations()
   const { t } = useTranslation()
 
   const metrics = useMemo(() => {
@@ -25,16 +27,16 @@ export function AdminDashboard() {
       },
       {
         title: t('admin.dashboard.metrics.completed.title'),
-        value: t('admin.dashboard.metrics.completed.value', { count: 128 }),
+        value: t('admin.dashboard.metrics.completed.value', { count: stats.completed }),
         badge: t('admin.dashboard.metrics.completed.badge'),
       },
       {
         title: t('admin.dashboard.metrics.waiting.title'),
-        value: t('admin.dashboard.metrics.waiting.value', { count: 12 }),
+        value: t('admin.dashboard.metrics.waiting.value', { count: stats.waiting }),
         badge: t('admin.dashboard.metrics.waiting.badge'),
       },
     ]
-  }, [programs, t])
+  }, [programs, stats, t])
 
   return (
     <div className="flex flex-col gap-6">

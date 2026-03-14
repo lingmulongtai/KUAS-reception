@@ -15,7 +15,7 @@ const receptionSchema = z.object({
         title: z.string().optional(),
     })).max(3),
     notes: z.string().optional(),
-    status: z.enum(["waiting", "completed", "canceled"]).default("waiting"),
+    status: z.enum(["waiting", "assigned", "completed", "cancelled"]).default("waiting"),
 });
 
 const translateSchema = z.object({
@@ -23,7 +23,14 @@ const translateSchema = z.object({
     targetLang: z.string().min(2),
 });
 
+// Manual assignment request schema
+const manualAssignmentSchema = z.object({
+    receptionId: z.string().min(1, "receptionId is required"),
+    programId: z.string().min(1, "programId is required"),
+});
+
 module.exports = {
     receptionSchema,
     translateSchema,
+    manualAssignmentSchema,
 };

@@ -9,7 +9,8 @@ import {
   BarChart3,
   Clock,
   CheckCircle2,
-  UserCheck
+  UserCheck,
+  Target
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { useAdmin } from '../hooks/useAdmin'
@@ -17,6 +18,7 @@ import { useReservations } from '../hooks/useReservations'
 import { ReservationManager } from './ReservationManager'
 import { ProgramEditor } from './ProgramEditor'
 import { SettingsPanel } from './SettingsPanel'
+import { AssignmentBoard } from './AssignmentBoard'
 import type { AdminTab } from '../types'
 
 interface AdminPanelProps {
@@ -39,6 +41,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   const tabs = [
     { id: 'reservations' as AdminTab, label: t('admin.tabs.reservations', '予約管理'), icon: Users },
+    { id: 'assignments' as AdminTab, label: t('admin.tabs.assignments', '割当管理'), icon: Target },
     { id: 'programs' as AdminTab, label: t('admin.tabs.programs', 'プログラム'), icon: Calendar },
     { id: 'settings' as AdminTab, label: t('admin.tabs.settings', '設定'), icon: Settings },
   ]
@@ -78,7 +81,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
         </div>
 
         {/* 統計カード */}
-        <div className="grid grid-cols-2 gap-4 border-b border-slate-200 p-4 sm:grid-cols-4 dark:border-slate-700">
+        <div className="grid grid-cols-2 gap-4 border-b border-slate-200 p-4 sm:grid-cols-5 dark:border-slate-700">
           <StatCard 
             icon={BarChart3} 
             label={t('admin.stats.total', '総予約数')} 
@@ -90,6 +93,12 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             label={t('admin.stats.waiting', '待機中')} 
             value={stats.waiting}
             color="amber"
+          />
+          <StatCard 
+            icon={Target} 
+            label={t('admin.stats.assigned', '割当済')} 
+            value={stats.assigned ?? 0}
+            color="blue"
           />
           <StatCard 
             icon={CheckCircle2} 
@@ -127,6 +136,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
         {/* コンテンツ */}
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'reservations' && <ReservationManager />}
+          {activeTab === 'assignments' && <AssignmentBoard />}
           {activeTab === 'programs' && <ProgramEditor />}
           {activeTab === 'settings' && <SettingsPanel />}
         </div>

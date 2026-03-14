@@ -12,14 +12,17 @@ import {
   User,
   Loader2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  UserCheck,
+  Target
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { useReservations } from '../hooks/useReservations'
 import { usePrograms } from '../hooks/useAdminPrograms'
 import type { Reservation } from '../types'
+import { apiClient } from '@/services/api'
 
-type StatusFilter = 'all' | 'waiting' | 'completed' | 'cancelled'
+type StatusFilter = 'all' | 'waiting' | 'assigned' | 'completed' | 'cancelled'
 
 export function ReservationManager() {
   const { t } = useTranslation()
@@ -30,6 +33,7 @@ export function ReservationManager() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editSelections, setEditSelections] = useState<Array<{ id: string; title: string }>>([])
+  const [assigningId, setAssigningId] = useState<string | null>(null)
 
   const filteredReservations = reservations.filter((r) => {
     const matchesSearch = 
@@ -79,9 +83,22 @@ export function ReservationManager() {
     }
   }
 
+  const handleManualAssign = async (receptionId: string, programId: string) => {
+    setAssigningId(receptionId)
+    try {
+      await apiClient.post('/assignments/manual', { receptionId, programId })
+    } catch (error) {
+      console.error('Manual assignment failed:', error)
+      alert(error instanceof Error ? error.message : t('admin.reservations.assignError', '割当に失敗しました'))
+    } finally {
+      setAssigningId(null)
+    }
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'waiting': return <Clock className="h-4 w-4 text-amber-500" />
+      case 'assigned': return <UserCheck className="h-4 w-4 text-blue-500" />
       case 'completed': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />
       case 'cancelled': return <XCircle className="h-4 w-4 text-slate-400" />
       default: return null
@@ -91,6 +108,7 @@ export function ReservationManager() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'waiting': return t('admin.reservations.status.waiting', '待機中')
+      case 'assigned': return t('admin.reservations.status.assigned', '割当済')
       case 'completed': return t('admin.reservations.status.completed', '完了')
       case 'cancelled': return t('admin.reservations.status.cancelled', 'キャンセル')
       default: return status
@@ -129,8 +147,8 @@ export function ReservationManager() {
             placeholder={t('admin.reservations.searchPlaceholder', '名前、フリガナ、学校名で検索...')}
           />
         </div>
-        <div className="flex gap-2">
-          {(['all', 'waiting', 'completed', 'cancelled'] as StatusFilter[]).map((status) => (
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'waiting', 'assigned', 'completed', 'cancelled'] as StatusFilter[]).map((status) => (
             <button
               key={status}
               type="button"
@@ -175,6 +193,11 @@ export function ReservationManager() {
                       {t('admin.reservations.reserved', '事前予約')}
                     </span>
                   )}
+                  {reservation.assignedProgram && (
+                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                      {t('admin.reservations.assignedTo', '{{program}}に割当', { program: reservation.assignedProgram.title })}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                   {reservation.attendee.school && (
@@ -205,6 +228,29 @@ export function ReservationManager() {
             {/* 展開された詳細 */}
             {expandedId === reservation.id && (
               <div className="border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+                {/* 割当情報 */}
+                {reservation.assignedProgram && (
+                  <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                        {t('admin.reservations.assignedProgram', '割当済みプログラム')}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">
+                      {reservation.assignedProgram.title}
+                      <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
+                        ({t('admin.reservations.priority', '第{{n}}希望', { n: reservation.assignedProgram.priority })})
+                        {' · '}
+                        {reservation.assignedProgram.assignedBy === 'auto'
+                          ? t('admin.reservations.autoAssigned', '自動割当')
+                          : t('admin.reservations.manualAssigned', '手動割当')
+                        }
+                      </span>
+                    </p>
+                  </div>
+                )}
+
                 {/* 選択されたプログラム */}
                 <div className="mb-4">
                   <div className="mb-2 flex items-center justify-between">
@@ -282,6 +328,35 @@ export function ReservationManager() {
                     </div>
                   )}
                 </div>
+
+                {/* 手動割当（待機中の場合のみ） */}
+                {reservation.status === 'waiting' && (
+                  <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                    <p className="mb-2 text-sm font-medium text-amber-700 dark:text-amber-300">
+                      {t('admin.reservations.manualAssignTitle', '手動割当')}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {programs.filter(p => p.isActive && p.remaining > 0).map((program) => (
+                        <Button
+                          key={program.id}
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleManualAssign(reservation.id, program.id)}
+                          loading={assigningId === reservation.id}
+                          className="gap-1 text-xs"
+                        >
+                          <UserCheck className="h-3 w-3" />
+                          <span>{program.title} ({program.remaining})</span>
+                        </Button>
+                      ))}
+                      {programs.filter(p => p.isActive && p.remaining > 0).length === 0 && (
+                        <span className="text-sm text-amber-600 dark:text-amber-400">
+                          {t('admin.reservations.noAvailablePrograms', '空きのあるプログラムがありません')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* アクションボタン */}
                 <div className="flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">

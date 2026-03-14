@@ -4,6 +4,7 @@ import { type ProgramChoice } from '../types'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
+import type { ReceptionResult } from '@/features/admin/types'
 
 interface ConfirmationStepProps {
   attendee: {
@@ -15,7 +16,7 @@ interface ConfirmationStepProps {
     reserved: boolean
   }
   selectedPrograms: ProgramChoice[]
-  onConfirm: () => void
+  onConfirm: (result: ReceptionResult | null) => void
   onBack: () => void
   onShareTicket?: () => void
   onPrintTicket?: () => void
@@ -29,6 +30,7 @@ export function ConfirmationStep({
 }: ConfirmationStepProps) {
   const { t } = useTranslation()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const gradeLabels: Record<string, string> = {
     grade1: t('attendeeForm.gradeOptions.grade1', '高校1年生'),
@@ -39,22 +41,22 @@ export function ConfirmationStep({
 
   const handleConfirm = async () => {
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
-      // 開発環境ではAPIコールをスキップ
-      if (import.meta.env.DEV || !import.meta.env.VITE_API_BASE_URL) {
-        await new Promise((resolve) => setTimeout(resolve, 800))
-      } else {
-        const { apiClient } = await import('@/services')
-        await apiClient.post('/receptions', {
-          attendee,
-          selections: selectedPrograms.map((p) => ({ id: p.id, title: p.title })),
-        })
-      }
-      onConfirm()
+      const { apiClient } = await import('@/services')
+      const result = await apiClient.post<ReceptionResult>('/receptions', {
+        attendee,
+        selections: selectedPrograms.map((p) => ({ id: p.id, title: p.title })),
+      })
+      onConfirm(result)
     } catch (error) {
       console.error('Reception submission failed:', error)
-      // エラーでも完了画面に進む（オフライン対応のため）
-      onConfirm()
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : t('confirmation.submitError', '送信に失敗しました。もう一度お試しください。')
+      )
+      // Don't auto-advance on error — let user retry
     } finally {
       setIsSubmitting(false)
     }
@@ -135,6 +137,13 @@ export function ConfirmationStep({
           </div>
         </div>
       </Card>
+
+      {/* エラーメッセージ */}
+      {submitError && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300">
+          {submitError}
+        </div>
+      )}
 
       {/* 確定ボタン */}
       <div className="flex items-center justify-between gap-4">

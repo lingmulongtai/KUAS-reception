@@ -5,8 +5,9 @@ import { ConfirmationStep } from './ConfirmationStep'
 import { usePrograms } from '../hooks/usePrograms'
 import { type ReceptionForm } from '../types'
 import { Button, Card, StepIndicator } from '@/components/ui'
-import { CheckCircle2, Home, Sparkles, ArrowLeft } from 'lucide-react'
+import { CheckCircle2, Home, Sparkles, ArrowLeft, Clock, AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import type { ReceptionResult } from '@/features/admin/types'
 
 type Step = 'attendee' | 'program' | 'confirm' | 'completed'
 
@@ -20,6 +21,7 @@ export function ReceptionFlow({ mode, onCancel, onComplete }: ReceptionFlowProps
     const { t } = useTranslation()
     const { data: programs = [], isLoading } = usePrograms()
     const [step, setStep] = useState<Step>('attendee')
+    const [receptionResult, setReceptionResult] = useState<ReceptionResult | null>(null)
 
     const STEPS = [
       { id: 'attendee', label: t('flow.steps.attendee.title', '情報入力') },
@@ -61,31 +63,73 @@ export function ReceptionFlow({ mode, onCancel, onComplete }: ReceptionFlowProps
         setStep('confirm')
     }
 
-    const handleConfirm = () => {
+    const handleConfirm = (result: ReceptionResult | null) => {
+        setReceptionResult(result)
         setCompletedSteps(prev => [...prev, 'confirm'])
         setStep('completed')
     }
 
     if (step === 'completed') {
+        const isAssigned = receptionResult?.assignedProgram != null
+        const isWaitlisted = receptionResult?.waitlisted === true
+        const assignedProgram = receptionResult?.assignedProgram
+
         return (
             <div className="flex flex-col items-center justify-center gap-8 py-16">
                 {/* 成功アニメーション */}
                 <div className="relative">
-                    <div className="absolute inset-0 animate-ping rounded-full bg-emerald-400/30" />
-                    <div className="relative rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 p-6 shadow-xl shadow-emerald-500/30">
-                        <CheckCircle2 className="h-16 w-16 text-white" />
+                    <div className={`absolute inset-0 animate-ping rounded-full ${isAssigned ? 'bg-emerald-400/30' : 'bg-amber-400/30'}`} />
+                    <div className={`relative rounded-full p-6 shadow-xl ${
+                        isAssigned
+                            ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30'
+                            : 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/30'
+                    }`}>
+                        {isAssigned ? (
+                            <CheckCircle2 className="h-16 w-16 text-white" />
+                        ) : (
+                            <Clock className="h-16 w-16 text-white" />
+                        )}
                     </div>
                     <Sparkles className="absolute -right-2 -top-2 h-8 w-8 text-amber-400 animate-pulse" />
                 </div>
                 
                 <div className="text-center">
                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {t('receptionFlow.completed.title', '受付完了！')}
+                        {isAssigned
+                            ? t('receptionFlow.completed.title', '受付完了！')
+                            : t('receptionFlow.completed.waitlistTitle', '受付完了（待機中）')
+                        }
                     </h2>
                     <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
                         {t('receptionFlow.completed.thankYou', '{{name}} 様、ご登録ありがとうございます', { name: formData.attendee?.name })}
                     </p>
-                    <p className="mt-1 text-slate-500 dark:text-slate-400">
+
+                    {isAssigned && assignedProgram && (
+                        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+                            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                                {assignedProgram.priority === 1
+                                    ? t('receptionFlow.completed.assignedFirst', '第1希望のプログラムに割り当てられました！')
+                                    : t('receptionFlow.completed.assignedNth', '第{{n}}希望のプログラムに割り当てられました', { n: assignedProgram.priority })
+                                }
+                            </p>
+                            <p className="mt-1 text-lg font-bold text-emerald-800 dark:text-emerald-200">
+                                {assignedProgram.title}
+                            </p>
+                        </div>
+                    )}
+
+                    {isWaitlisted && (
+                        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                            <div className="flex items-center justify-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                                    {t('receptionFlow.completed.waitlistMessage', '選択されたプログラムは現在満席です。空きが出次第ご案内いたします。')}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <p className="mt-3 text-slate-500 dark:text-slate-400">
                         {t('receptionFlow.completed.nextStep', '選択されたプログラムの案内は、スタッフがご説明します')}
                     </p>
                 </div>
@@ -99,19 +143,37 @@ export function ReceptionFlow({ mode, onCancel, onComplete }: ReceptionFlowProps
                         <div className="space-y-2">
                             {programs
                                 .filter(p => selectedProgramIds.includes(p.id))
-                                .map((program, index) => (
-                                    <div
-                                        key={program.id}
-                                        className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-2 dark:bg-slate-800"
-                                    >
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-white">
-                                            {index + 1}
-                                        </span>
-                                        <span className="font-medium text-slate-700 dark:text-slate-200">
-                                            {program.title}
-                                        </span>
-                                    </div>
-                                ))}
+                                .map((program, index) => {
+                                    const isThisAssigned = assignedProgram?.id === program.id
+                                    return (
+                                        <div
+                                            key={program.id}
+                                            className={`flex items-center gap-3 rounded-xl px-4 py-2 ${
+                                                isThisAssigned
+                                                    ? 'bg-emerald-50 ring-2 ring-emerald-500 dark:bg-emerald-900/30'
+                                                    : 'bg-slate-50 dark:bg-slate-800'
+                                            }`}
+                                        >
+                                            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white ${
+                                                isThisAssigned ? 'bg-emerald-500' : 'bg-brand-500'
+                                            }`}>
+                                                {index + 1}
+                                            </span>
+                                            <span className={`font-medium ${
+                                                isThisAssigned
+                                                    ? 'text-emerald-700 dark:text-emerald-200'
+                                                    : 'text-slate-700 dark:text-slate-200'
+                                            }`}>
+                                                {program.title}
+                                            </span>
+                                            {isThisAssigned && (
+                                                <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                                    {t('receptionFlow.completed.assigned', '割当済')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )
+                                })}
                         </div>
                     </div>
                 )}

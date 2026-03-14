@@ -14,6 +14,15 @@ export const programSchema = z.object({
   order: z.number().int().default(0),
 })
 
+// 割当プログラムスキーマ
+export const assignedProgramSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  priority: z.number(),
+  assignedAt: z.string(),
+  assignedBy: z.enum(["auto", "manual"]),
+})
+
 // 予約レコードスキーマ
 export const reservationSchema = z.object({
   id: z.string(),
@@ -29,10 +38,23 @@ export const reservationSchema = z.object({
     id: z.string(),
     title: z.string(),
   })),
-  status: z.enum(['waiting', 'completed', 'cancelled']),
+  assignedProgram: assignedProgramSchema.nullable().optional(),
+  status: z.enum(['waiting', 'assigned', 'completed', 'cancelled']),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
   notes: z.string().optional(),
+})
+
+// 割当レコードスキーマ
+export const assignmentSchema = z.object({
+  id: z.string(),
+  receptionId: z.string(),
+  programId: z.string(),
+  attendeeName: z.string(),
+  priority: z.number(),
+  status: z.enum(['confirmed', 'cancelled']),
+  assignedAt: z.string(),
+  cancelledAt: z.string().optional(),
 })
 
 // 受付設定スキーマ
@@ -47,7 +69,9 @@ export const receptionSettingsSchema = z.object({
 })
 
 export type Program = z.infer<typeof programSchema>
+export type AssignedProgram = z.infer<typeof assignedProgramSchema>
 export type Reservation = z.infer<typeof reservationSchema>
+export type Assignment = z.infer<typeof assignmentSchema>
 export type ReceptionSettings = z.infer<typeof receptionSettingsSchema>
 
 // 管理者ユーザー
@@ -58,4 +82,11 @@ export interface AdminUser {
 }
 
 // 管理パネルのタブ
-export type AdminTab = 'reservations' | 'programs' | 'settings'
+export type AdminTab = 'reservations' | 'programs' | 'assignments' | 'settings'
+
+// 受付結果 (API レスポンス)
+export interface ReceptionResult {
+  id: string
+  assignedProgram: AssignedProgram | null
+  waitlisted: boolean
+}
