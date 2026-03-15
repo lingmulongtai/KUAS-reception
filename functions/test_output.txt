@@ -1,0 +1,46 @@
+FAIL __tests__/assignment.test.js
+  addReceptionWithAssignment
+    笳・skipped 1. assigns to first-priority program when seats available
+    笳・skipped 2. falls back to second-priority when first is full
+    笳・skipped 3. waitlists when all programs are full
+    笳・skipped 5. companions require multiple seats
+    笳・skipped handles non-existent program gracefully
+    笳・skipped handles empty selections
+  manualAssignment
+    笳・skipped assigns a waiting reception to a program
+    笳・skipped rejects assignment for non-waiting reception
+    笳・skipped rejects when not enough seats
+  cancelAssignmentAndPromote
+    ﾃ・6. cancels assignment and promotes waiting attendee (5 ms)
+    笳・skipped cancels without promotion when no waiting attendees
+    笳・skipped rejects cancellation of already cancelled assignment
+    笳・skipped rejects cancellation of non-existent assignment
+  Validation
+    笳・skipped 7. rejects invalid attendee data
+    笳・skipped validates correct reception data
+    笳・skipped rejects more than 3 selections
+    笳・skipped accepts status values including 'assigned'
+
+  笳・cancelAssignmentAndPromote 窶ｺ 6. cancels assignment and promotes waiting attendee
+
+    expect(received).toMatchObject(expected)
+
+    Matcher error: received value must be a non-null object
+
+    Received has value: null
+
+      409 |     });
+      410 |
+    > 411 |     expect(result.promoted).toMatchObject({
+          |                             ^
+      412 |       receptionId: "waiting-rec-1",
+      413 |       attendeeName: "蠕・ｩ溷､ｪ驛・,
+      414 |     });
+
+      at Object.toMatchObject (__tests__/assignment.test.js:411:29)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 16 skipped, 17 total
+Snapshots:   0 total
+Time:        0.526 s, estimated 1 s
+Ran all test suites with tests matching "cancels assignment and promotes waiting attendee".

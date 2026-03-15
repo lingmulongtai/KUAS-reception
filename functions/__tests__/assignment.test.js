@@ -395,6 +395,16 @@ describe("cancelAssignmentAndPromote", () => {
             data: () => ({ attendee: { companions: 0 } }),
           };
         }
+        if (ref.id === "waiting-rec-1") {
+          return {
+            exists: true,
+            data: () => ({
+              status: "waiting",
+              attendee: { name: "待機太郎", companions: 0 },
+              selections: [{ id: "prog-1", title: "AI Lab" }],
+            }),
+          };
+        }
         return { exists: false };
       });
 

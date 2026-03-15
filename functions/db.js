@@ -219,10 +219,9 @@ const cancelAssignmentAndPromote = async (assignmentId) => {
             status: "cancelled",
         });
 
-        // 6. Check for waitlisted attendees who want this program
-        // Note: We need to query outside the transaction since Firestore
-        // transactions only support get/set/update/delete, not queries directly.
-        // We'll query first, then do reads inside the transaction.
+        // Check for waitlisted attendees who want this program
+        // Note: We query outside the transaction to get a list of POTENTIAL waiters,
+        // then do gets/updates inside the transaction to safely lock them.
         const waitingSnapshot = await db
             .collection("receptions")
             .where("status", "==", "waiting")
@@ -232,11 +231,11 @@ const cancelAssignmentAndPromote = async (assignmentId) => {
         let newRemainingSeats = programData.remaining + seatsToRestore;
 
         // Sort by createdAt (oldest first for fairness)
-        const waitingReceptions = waitingSnapshot.docs
+        const potentialWaitingReceptions = waitingSnapshot.docs
             .map((doc) => ({ id: doc.id, ...doc.data() }))
             .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-        for (const waiting of waitingReceptions) {
+        for (const waiting of potentialWaitingReceptions) {
             const selectionIndex = (waiting.selections || []).findIndex(
                 (s) => s.id === assignment.programId
             );
@@ -247,6 +246,15 @@ const cancelAssignmentAndPromote = async (assignmentId) => {
 
             if (newRemainingSeats < requiredSeats) continue;
 
+            // Fetch the current document inside the transaction to lock it
+            const waitingRef = db.collection("receptions").doc(waiting.id);
+            const waitingDoc = await transaction.get(waitingRef);
+
+            // Skip if it no longer exists, or status changed from "waiting" since the outer query
+            if (!waitingDoc.exists) continue;
+            const currentWaitingData = waitingDoc.data();
+            if (currentWaitingData.status !== "waiting") continue;
+
             // Promote this attendee
             const newAssignedProgram = {
                 id: assignment.programId,
@@ -256,7 +264,6 @@ const cancelAssignmentAndPromote = async (assignmentId) => {
                 assignedBy: "auto",
             };
 
-            const waitingRef = db.collection("receptions").doc(waiting.id);
             transaction.update(waitingRef, {
                 assignedProgram: newAssignedProgram,
                 status: "assigned",
@@ -268,7 +275,7 @@ const cancelAssignmentAndPromote = async (assignmentId) => {
             transaction.set(newAssignmentRef, {
                 receptionId: waiting.id,
                 programId: assignment.programId,
-                attendeeName: waiting.attendee?.name || "",
+                attendeeName: currentWaitingData.attendee?.name || "",
                 priority: selectionIndex + 1,
                 status: "confirmed",
                 assignedAt: new Date().toISOString(),
@@ -276,9 +283,9 @@ const cancelAssignmentAndPromote = async (assignmentId) => {
 
             promoted = {
                 receptionId: waiting.id,
-                attendeeName: waiting.attendee?.name || "",
+                attendeeName: currentWaitingData.attendee?.name || "",
             };
-            break; // Only promote one attendee per cancellation
+            break; // Only promote one attendee per cancellation (can adjust if multiple fits)
         }
 
         // Update program remaining seats
