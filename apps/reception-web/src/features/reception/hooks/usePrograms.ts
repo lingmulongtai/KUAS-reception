@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { type ProgramChoice } from '../types'
 
-// モックデータ - 開発・デモ用
+// モックデータ - APIが利用できない場合のフォールバック用
 const MOCK_PROGRAMS: ProgramChoice[] = [
   {
     id: 'ai-lab',
@@ -48,20 +48,14 @@ const MOCK_PROGRAMS: ProgramChoice[] = [
 ]
 
 async function fetchPrograms(): Promise<ProgramChoice[]> {
-  // 開発環境ではモックデータを返す
-  // 本番環境ではAPIから取得
-  if (import.meta.env.DEV || !import.meta.env.VITE_API_BASE_URL) {
-    // 少し遅延を入れてローディング状態をシミュレート
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    return MOCK_PROGRAMS
-  }
-  
+  // Always try the API first, fall back to mock data only on error
   try {
     const { apiClient } = await import('@/services')
     const data = await apiClient.get<{ programs: ProgramChoice[] }>('/programs')
     return data.programs
   } catch {
-    // APIエラー時はモックデータにフォールバック
+    // API unavailable (no backend running) — use mock data as fallback
+    console.warn('Programs API unavailable, using mock data')
     return MOCK_PROGRAMS
   }
 }
