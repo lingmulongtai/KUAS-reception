@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
 
-export function DNALoader() {
+interface DNALoaderProps {
+  lang?: 'ja' | 'en';
+}
+
+export function DNALoader({ lang = 'ja' }: DNALoaderProps) {
   const strands = Array.from({ length: 10 }, (_, i) => i);
+  const loadingText = lang === 'ja' ? 'DNA を解析中...' : 'Analyzing DNA...';
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -54,7 +59,7 @@ export function DNALoader() {
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        DNA を解析中...
+        {loadingText}
       </motion.p>
     </div>
   );

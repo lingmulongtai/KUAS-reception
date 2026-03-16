@@ -74,9 +74,9 @@ export function LanguageDNA({ languageStats, lang }: LanguageDNAProps) {
         </div>
 
         <div className="flex-1 space-y-3">
-          {top5.map((lang_item, i) => (
+          {top5.map((langItem, i) => (
             <motion.div
-              key={lang_item.name}
+              key={langItem.name}
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -86,21 +86,21 @@ export function LanguageDNA({ languageStats, lang }: LanguageDNAProps) {
               <span className="text-gh-muted font-mono text-sm w-4">{i + 1}</span>
               <div
                 className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ background: lang_item.color }}
+                style={{ background: langItem.color }}
               />
-              <span className="text-gh-text text-sm flex-1">{lang_item.name}</span>
+              <span className="text-gh-text text-sm flex-1">{langItem.name}</span>
               <div className="flex-1 bg-gh-bg rounded-full h-2 max-w-32">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: lang_item.color }}
+                  style={{ background: langItem.color }}
                   initial={{ width: 0 }}
-                  whileInView={{ width: `${lang_item.percentage}%` }}
+                  whileInView={{ width: `${langItem.percentage}%` }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.8, delay: i * 0.1 }}
                 />
               </div>
               <span className="text-gh-muted font-mono text-xs w-10 text-right">
-                {lang_item.percentage}%
+                {langItem.percentage}%
               </span>
             </motion.div>
           ))}

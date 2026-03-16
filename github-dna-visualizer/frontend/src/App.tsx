@@ -43,6 +43,7 @@ function VisualizerPage() {
       setUsername(urlUser);
       fetchData(urlUser);
     }
+  // Only run on mount to initialize from URL params — intentionally omit deps to avoid re-fetch on navigation
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -137,7 +138,7 @@ function VisualizerPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <DNALoader />
+              <DNALoader lang={lang} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -238,6 +239,7 @@ function ComparePage() {
       dataA.fetchData(a);
       dataB.fetchData(b);
     }
+  // Only run on mount to initialize from URL params — intentionally omit deps to avoid re-fetch on navigation
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -298,7 +300,7 @@ function ComparePage() {
         </div>
 
         {(dataA.loading || dataB.loading) && (
-          <div className="flex justify-center py-12"><DNALoader /></div>
+          <div className="flex justify-center py-12"><DNALoader lang={lang} /></div>
         )}
 
         {dataA.data && dataB.data && scoresA && scoresB && !dataA.loading && !dataB.loading && (

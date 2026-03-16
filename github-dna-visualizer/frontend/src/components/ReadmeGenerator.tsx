@@ -10,6 +10,7 @@ interface ReadmeGeneratorProps {
 
 export function ReadmeGenerator({ data, scores, lang }: ReadmeGeneratorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { user } = data;
   const topLangs = Object.entries(data.languageStats)
@@ -68,11 +69,16 @@ ${topLangs.map(l => `- ${l}`).join('\n')}
                 <span className="text-gh-muted text-sm font-mono">README.md</span>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(readme).catch(() => {});
+                    navigator.clipboard.writeText(readme)
+                      .then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      })
+                      .catch(() => {});
                   }}
                   className="text-xs text-gh-blue hover:underline"
                 >
-                  {lang === 'ja' ? 'コピー' : 'Copy'}
+                  {copied ? (lang === 'ja' ? 'コピー済み！' : 'Copied!') : (lang === 'ja' ? 'コピー' : 'Copy')}
                 </button>
               </div>
               <pre className="text-gh-text text-xs overflow-auto max-h-64 font-mono whitespace-pre-wrap">
