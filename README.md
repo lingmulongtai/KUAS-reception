@@ -216,6 +216,7 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 - `npm run typecheck` で TypeScript プロジェクト参照による型検証を実行。
 - UI レグレッションを抑えるため、主要フローは Cypress/E2E 導入を検討中です（未導入）。
 - Pull Request 時は GitHub Actions によるデプロイ検証（`.github/workflows/firebase-deploy.yml`）を通過する構成です。
+- 現状把握と次アクション整理を AI に依頼する場合は `docs/ai-investigation-prompt.md` を利用してください。
 
 ## 翻訳と多言語対応
 - 既定言語は `ja`、ブラウザ検出により `en` へ自動切替。辞書は `apps/reception-web/src/i18n/locales/` 配下に JSON として配置します。
@@ -245,4 +246,3 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 
 ## ライセンス
 © KUAS OC improvement committee
-
