@@ -12,6 +12,7 @@
 - [開発フロー](#開発フロー)
 - [品質チェック](#品質チェック)
 - [翻訳と多言語対応](#翻訳と多言語対応)
+- [AI 調査・評価プロンプト](#ai-調査評価プロンプト)
 - [ディレクトリガイド](#ディレクトリガイド)
 - [更新履歴](#更新履歴)
 - [ライセンス](#ライセンス)
@@ -222,6 +223,9 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 - DeepL API を利用する自動翻訳は `/translateText` Functions を経由。API キーが無い場合はシンプルなフレーズ辞書でフォールバックします。
 - 固有名詞や学部固有ワードは `customGlossary` を活用し、必要に応じて辞書を追加してください。
 
+## AI 調査・評価プロンプト
+- 現状把握と次アクション整理を AI に依頼する場合は `docs/ai-investigation-prompt.md` を利用してください。
+
 ## ディレクトリガイド
 - `apps/reception-web/src/components/layout`: AppShell / Sidebar / Status Bar などの共通レイアウト。
 - `apps/reception-web/src/components/ui`: Button / Card / GlassField などの UI Primitive。
@@ -245,4 +249,3 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 
 ## ライセンス
 © KUAS OC improvement committee
-
