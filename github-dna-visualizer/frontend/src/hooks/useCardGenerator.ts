@@ -1,0 +1,113 @@
+import { useCallback } from 'react';
+import { GitHubData, PersonalityScores } from '../types';
+import { getLanguageColor } from '../utils/githubColors';
+
+interface UseCardGeneratorReturn {
+  generateCard: (data: GitHubData, scores: PersonalityScores) => void;
+}
+
+export function useCardGenerator(): UseCardGeneratorReturn {
+  const generateCard = useCallback((data: GitHubData, scores: PersonalityScores) => {
+    const { user, languageStats } = data;
+
+    // Calculate top languages
+    const totalBytes = Object.values(languageStats).reduce((a, b) => a + b, 0);
+    const topLanguages = Object.entries(languageStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([name, bytes]) => ({
+        name,
+        percentage: Math.round((bytes / Math.max(totalBytes, 1)) * 100),
+        color: getLanguageColor(name),
+      }));
+
+    // Create SVG card (1200x630)
+    const svgContent = createSVGCard(user.name ?? user.login, user.login, user.avatar_url, topLanguages, scores);
+
+    // Download as SVG (PNG would require canvas/puppeteer)
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `github-dna-${user.login}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  return { generateCard };
+}
+
+function createSVGCard(
+  name: string,
+  login: string,
+  _avatarUrl: string,
+  topLanguages: Array<{ name: string; percentage: number; color: string }>,
+  scores: PersonalityScores,
+): string {
+  const scoreEntries = [
+    { label: 'Creator', value: scores.creator },
+    { label: 'Collaborator', value: scores.collaborator },
+    { label: 'Communicator', value: scores.communicator },
+    { label: 'Maintainer', value: scores.maintainer },
+    { label: 'Explorer', value: scores.explorer },
+  ];
+
+  const langBars = topLanguages.map((lang, i) => `
+    <rect x="80" y="${350 + i * 35}" width="${lang.percentage * 5}" height="20" fill="${lang.color}" rx="4"/>
+    <text x="70" y="${365 + i * 35}" fill="#c9d1d9" font-size="13" text-anchor="end" font-family="monospace">${lang.name}</text>
+    <text x="${80 + lang.percentage * 5 + 8}" y="${365 + i * 35}" fill="#8b949e" font-size="12" font-family="monospace">${lang.percentage}%</text>
+  `).join('');
+
+  const radarLines = scoreEntries.map((s, i) => {
+    const angle = (i / scoreEntries.length) * Math.PI * 2 - Math.PI / 2;
+    const r = (s.value / 100) * 80;
+    const x = 900 + Math.cos(angle) * r;
+    const y = 420 + Math.sin(angle) * r;
+    const lx = 900 + Math.cos(angle) * 95;
+    const ly = 420 + Math.sin(angle) * 95;
+    return `<circle cx="${x}" cy="${y}" r="4" fill="#58a6ff"/><text x="${lx}" y="${ly + 5}" fill="#8b949e" font-size="11" text-anchor="middle" font-family="sans-serif">${s.label}</text>`;
+  }).join('');
+
+  const polygonPoints = scoreEntries.map((s, i) => {
+    const angle = (i / scoreEntries.length) * Math.PI * 2 - Math.PI / 2;
+    const r = (s.value / 100) * 80;
+    return `${900 + Math.cos(angle) * r},${420 + Math.sin(angle) * r}`;
+  }).join(' ');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#58a6ff"/>
+      <stop offset="100%" style="stop-color:#bc8cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0d1117"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#grad)"/>
+
+  <!-- Header -->
+  <text x="60" y="70" fill="url(#grad)" font-size="28" font-weight="bold" font-family="sans-serif">GitHub DNA Visualizer</text>
+  <text x="60" y="110" fill="#c9d1d9" font-size="22" font-weight="bold" font-family="sans-serif">${name}</text>
+  <text x="60" y="140" fill="#8b949e" font-size="16" font-family="monospace">@${login}</text>
+
+  <!-- Language DNA section -->
+  <text x="60" y="210" fill="#58a6ff" font-size="16" font-weight="bold" font-family="sans-serif">Language DNA</text>
+  ${langBars}
+
+  <!-- Personality Radar section -->
+  <text x="750" y="210" fill="#58a6ff" font-size="16" font-weight="bold" font-family="sans-serif">Personality</text>
+  <!-- Radar background circles -->
+  <circle cx="900" cy="420" r="80" fill="none" stroke="#30363d" stroke-width="1"/>
+  <circle cx="900" cy="420" r="60" fill="none" stroke="#30363d" stroke-width="1"/>
+  <circle cx="900" cy="420" r="40" fill="none" stroke="#30363d" stroke-width="1"/>
+  <circle cx="900" cy="420" r="20" fill="none" stroke="#30363d" stroke-width="1"/>
+  <!-- Radar polygon -->
+  <polygon points="${polygonPoints}" fill="rgba(88,166,255,0.2)" stroke="#58a6ff" stroke-width="2"/>
+  ${radarLines}
+
+  <!-- Footer -->
+  <text x="600" y="610" fill="#8b949e" font-size="14" text-anchor="middle" font-family="sans-serif">Generated by GitHub DNA Visualizer</text>
+</svg>`;
+}
