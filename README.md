@@ -12,6 +12,7 @@
 - [開発フロー](#開発フロー)
 - [品質チェック](#品質チェック)
 - [翻訳と多言語対応](#翻訳と多言語対応)
+- [AI 調査・評価プロンプト](#ai-調査評価プロンプト)
 - [ディレクトリガイド](#ディレクトリガイド)
 - [更新履歴](#更新履歴)
 - [ライセンス](#ライセンス)
@@ -216,12 +217,14 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 - `npm run typecheck` で TypeScript プロジェクト参照による型検証を実行。
 - UI レグレッションを抑えるため、主要フローは Cypress/E2E 導入を検討中です（未導入）。
 - Pull Request 時は GitHub Actions によるデプロイ検証（`.github/workflows/firebase-deploy.yml`）を通過する構成です。
-- 現状把握と次アクション整理を AI に依頼する場合は `docs/ai-investigation-prompt.md` を利用してください。
 
 ## 翻訳と多言語対応
 - 既定言語は `ja`、ブラウザ検出により `en` へ自動切替。辞書は `apps/reception-web/src/i18n/locales/` 配下に JSON として配置します。
 - DeepL API を利用する自動翻訳は `/translateText` Functions を経由。API キーが無い場合はシンプルなフレーズ辞書でフォールバックします。
 - 固有名詞や学部固有ワードは `customGlossary` を活用し、必要に応じて辞書を追加してください。
+
+## AI 調査・評価プロンプト
+- 現状把握と次アクション整理を AI に依頼する場合は `docs/ai-investigation-prompt.md` を利用してください。
 
 ## ディレクトリガイド
 - `apps/reception-web/src/components/layout`: AppShell / Sidebar / Status Bar などの共通レイアウト。
