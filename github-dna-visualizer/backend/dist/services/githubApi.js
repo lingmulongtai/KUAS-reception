@@ -8,6 +8,7 @@ const node_fetch_1 = __importDefault(require("node-fetch"));
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_API = 'https://api.github.com';
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql';
+const MAX_REPOS_FOR_LANGUAGE_STATS = 30;
 const cache = new Map();
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 function getFromCache(key) {
@@ -133,7 +134,6 @@ async function getAggregatedData(username) {
         fetchEvents(username),
     ]);
     // Fetch language stats for non-fork repos (limit to avoid rate limits)
-    const MAX_REPOS_FOR_LANGUAGE_STATS = 30;
     const nonForkRepos = repos.filter(r => !r.fork).slice(0, MAX_REPOS_FOR_LANGUAGE_STATS);
     const languageResults = await Promise.all(nonForkRepos.map(r => fetchLanguages(username, r.name)));
     const languageStats = {};

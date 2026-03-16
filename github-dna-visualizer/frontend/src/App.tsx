@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProfileHeader } from './components/ProfileHeader';
@@ -27,6 +27,7 @@ function VisualizerPage() {
   const [lang, setLang] = useState<Language>('ja');
   const { data, loading, error, fetchData } = useGithubData();
   const { generateCard } = useCardGenerator();
+  const hasInitialized = useRef(false);
 
   const handleSearch = useCallback((name: string) => {
     const trimmed = name.trim();
@@ -36,16 +37,17 @@ function VisualizerPage() {
     fetchData(trimmed);
   }, [fetchData, setSearchParams]);
 
+  // Initialize from URL params on first mount only
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
     const urlUser = searchParams.get('user');
     if (urlUser && urlUser !== username) {
       setInputValue(urlUser);
       setUsername(urlUser);
       fetchData(urlUser);
     }
-  // Only run on mount to initialize from URL params — intentionally omit deps to avoid re-fetch on navigation
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchData, searchParams, username]);
 
   const scores = data ? calculatePersonalityScores(data) : null;
 
@@ -219,6 +221,7 @@ function ComparePage() {
   const [inputB, setInputB] = useState(searchParams.get('b') ?? '');
   const dataA = useGithubData();
   const dataB = useGithubData();
+  const hasInitialized = useRef(false);
 
   const handleCompare = useCallback(() => {
     const trimA = inputA.trim();
@@ -230,7 +233,10 @@ function ComparePage() {
     dataB.fetchData(trimB);
   }, [inputA, inputB, dataA, dataB]);
 
+  // Initialize from URL params on first mount only
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
     const a = searchParams.get('a');
     const b = searchParams.get('b');
     if (a && b) {
@@ -239,9 +245,7 @@ function ComparePage() {
       dataA.fetchData(a);
       dataB.fetchData(b);
     }
-  // Only run on mount to initialize from URL params — intentionally omit deps to avoid re-fetch on navigation
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dataA, dataB, searchParams]);
 
   const scoresA = dataA.data ? calculatePersonalityScores(dataA.data) : null;
   const scoresB = dataB.data ? calculatePersonalityScores(dataB.data) : null;
