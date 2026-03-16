@@ -139,7 +139,8 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 ## Quality Checks
 - `npm run lint` (inside `apps/reception-web`) runs ESLint for static analysis.
 - `npm run typecheck` validates TypeScript project references.
-- E2E coverage with Cypress is under consideration for core flows (not yet adopted).
+- Playwright E2E tests are available under `apps/reception-web/e2e/` for core flow regression coverage.
+- Run `cd apps/reception-web && npm run test:e2e` to execute the E2E suite.
 - Pull Requests go through the Firebase deploy validation workflow defined in `.github/workflows/firebase-deploy.yml`.
 
 ## Translations & Multilingual Support
@@ -170,4 +171,3 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 
 ## License
 © KUAS OC improvement committee
-
