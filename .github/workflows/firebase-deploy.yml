@@ -39,11 +39,12 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install Playwright browser
+      - name: Install Playwright browsers (chromium)
         working-directory: apps/reception-web
         run: npx playwright install --with-deps chromium
 
       - name: Run reception-web E2E tests
+        continue-on-error: false
         working-directory: apps/reception-web
         run: npm run test:e2e
 
