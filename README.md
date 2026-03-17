@@ -215,7 +215,8 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 ## 品質チェック
 - `npm run lint`（`apps/reception-web` 内）で ESLint による静的解析を実行。
 - `npm run typecheck` で TypeScript プロジェクト参照による型検証を実行。
-- UI レグレッションを抑えるため、主要フローは Cypress/E2E 導入を検討中です（未導入）。
+- UI レグレッションを抑えるため、Playwright による E2E テスト（`apps/reception-web/e2e/`）を導入しています。
+- `cd apps/reception-web && npm run test:e2e` で主要フローの E2E テストを実行できます。
 - Pull Request 時は GitHub Actions によるデプロイ検証（`.github/workflows/firebase-deploy.yml`）を通過する構成です。
 
 ## 翻訳と多言語対応
