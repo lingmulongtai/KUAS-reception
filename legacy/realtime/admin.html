@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0F8C52">
+  <title>KUAS 受付 – 管理画面</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- ネットワーク状態バナー -->
+  <div id="network-banner" class="network-banner" role="status" aria-live="polite"></div>
+  <!-- トースト通知 -->
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <!-- 確認ダイアログ -->
+  <div id="confirm-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="dialog">
+      <h2 id="confirm-title">確認</h2>
+      <p  id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="secondary-button" id="confirm-cancel">キャンセル</button>
+        <button class="danger-button"    id="confirm-ok">実行する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-root">
+    <!-- ヘッダー -->
+    <header class="admin-header">
+      <h1 class="admin-header-title">
+        <i class="ph-fill ph-buildings"></i>
+        KUAS 受付管理
+      </h1>
+      <div class="admin-header-actions">
+        <button class="header-btn header-btn-outline" id="btn-backup">
+          <i class="ph ph-download-simple"></i>
+          <span>JSONバックアップ</span>
+        </button>
+        <button class="header-btn header-btn-outline" id="btn-sync">
+          <i class="ph ph-arrows-clockwise"></i>
+          <span>手動同期</span>
+        </button>
+        <button class="header-btn header-btn-danger" id="btn-reset">
+          <i class="ph ph-trash"></i>
+          <span>データリセット</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- タブ -->
+    <nav class="admin-tabs" role="tablist">
+      <button class="admin-tab active" role="tab" data-tab="overview">
+        <i class="ph ph-chart-bar"></i> 概要
+      </button>
+      <button class="admin-tab" role="tab" data-tab="programs">
+        <i class="ph ph-stack"></i> プログラム管理
+      </button>
+      <button class="admin-tab" role="tab" data-tab="waiting">
+        <i class="ph ph-hourglass"></i> 待機リスト
+        <span class="tab-badge" id="badge-waiting">0</span>
+      </button>
+      <button class="admin-tab" role="tab" data-tab="confirmed">
+        <i class="ph ph-check-circle"></i> 確定者一覧
+        <span class="tab-badge" id="badge-confirmed">0</span>
+      </button>
+      <button class="admin-tab" role="tab" data-tab="settings">
+        <i class="ph ph-gear"></i> 設定
+      </button>
+    </nav>
+
+    <!-- コンテンツ -->
+    <main class="admin-content">
+
+      <!-- ─── 概要タブ ─── -->
+      <section id="tab-overview" class="tab-panel active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">待機者数</div>
+            <div class="stat-value" id="stat-waiting">–</div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-label">確定者数</div>
+            <div class="stat-value" id="stat-confirmed">–</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-label">説明会のみ</div>
+            <div class="stat-value" id="stat-briefing">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">プログラム数</div>
+            <div class="stat-value" id="stat-programs">–</div>
+          </div>
+        </div>
+
+        <!-- プログラム別集計 -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 class="table-card-title"><i class="ph ph-stack"></i> プログラム別状況</h2>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>プログラム名</th>
+                  <th>定員</th>
+                  <th>確定</th>
+                  <th>残席</th>
+                  <th>待機中</th>
+                </tr>
+              </thead>
+              <tbody id="overview-programs-body">
+                <tr><td colspan="5" class="empty-state" style="text-align:center;padding:24px">読み込み中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── プログラム管理タブ ─── -->
+      <section id="tab-programs" class="tab-panel">
+        <!-- 新規追加フォーム -->
+        <div class="table-card" style="margin-bottom:20px">
+          <div class="table-card-header">
+            <h2 class="table-card-title"><i class="ph ph-plus-circle"></i> プログラムを追加</h2>
+          </div>
+          <div style="padding:16px 20px">
+            <form id="add-program-form">
+              <div class="program-form-grid">
+                <div class="field-group">
+                  <label class="field-label">プログラム名 <span class="required-mark">必須</span></label>
+                  <input class="input-sm" name="title" placeholder="例：AIロボットプログラミング" required>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">説明</label>
+                  <input class="input-sm" name="description" placeholder="概要を入力">
+                </div>
+                <div class="field-group">
+                  <label class="field-label">定員 <span class="required-mark">必須</span></label>
+                  <input class="input-sm" name="capacity" type="number" min="1" max="999" value="20" required>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">表示順</label>
+                  <input class="input-sm" name="order" type="number" min="1" value="1">
+                </div>
+              </div>
+              <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end">
+                <button type="button" class="secondary-button" id="btn-init-programs" style="padding:9px 16px;font-size:0.88rem">
+                  <i class="ph ph-magic-wand"></i> デフォルトを初期化
+                </button>
+                <button type="submit" class="primary-button" style="padding:9px 20px;font-size:0.88rem">
+                  <i class="ph ph-plus"></i> 追加
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- プログラム一覧 -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 class="table-card-title"><i class="ph ph-list"></i> 登録済みプログラム</h2>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>順</th>
+                  <th>プログラム名</th>
+                  <th>説明</th>
+                  <th>定員</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="programs-table-body">
+                <tr><td colspan="5" style="text-align:center;padding:24px;color:#888">読み込み中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── 待機リストタブ ─── -->
+      <section id="tab-waiting" class="tab-panel">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 class="table-card-title">
+              <i class="ph ph-hourglass"></i> 待機リスト
+              <span class="tab-badge" id="waiting-count-badge">0</span>
+            </h2>
+            <button class="primary-button" id="btn-bulk-assign" style="padding:10px 18px;font-size:0.9rem">
+              <i class="ph ph-arrows-merge"></i> 待機者を一括割り当て
+            </button>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>お名前</th>
+                  <th>フリガナ</th>
+                  <th>学年</th>
+                  <th>同伴者</th>
+                  <th>種別</th>
+                  <th>希望プログラム</th>
+                  <th>受付時刻</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="waiting-table-body">
+                <tr><td colspan="9" style="text-align:center;padding:40px;color:#888">
+                  <div class="empty-state"><i class="ph ph-hourglass"></i><p>待機者はいません</p></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── 確定者一覧タブ ─── -->
+      <section id="tab-confirmed" class="tab-panel">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 class="table-card-title">
+              <i class="ph ph-check-circle"></i> 確定者一覧
+              <span class="tab-badge" id="confirmed-count-badge">0</span>
+            </h2>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>お名前</th>
+                  <th>フリガナ</th>
+                  <th>学年</th>
+                  <th>同伴者</th>
+                  <th>種別</th>
+                  <th>確定プログラム</th>
+                  <th>確定時刻</th>
+                </tr>
+              </thead>
+              <tbody id="confirmed-table-body">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:#888">
+                  <div class="empty-state"><i class="ph ph-check-circle"></i><p>確定者はいません</p></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── 設定タブ ─── -->
+      <section id="tab-settings" class="tab-panel">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 class="table-card-title"><i class="ph ph-gear"></i> 割り当て設定</h2>
+          </div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:18px">
+            <div class="field-group">
+              <label style="display:flex;align-items:center;gap:12px;cursor:pointer">
+                <input type="checkbox" id="setting-prioritize-reservations" style="width:18px;height:18px;accent-color:var(--color-primary)">
+                <span>
+                  <strong>予約者を優先して割り当てる</strong><br>
+                  <span style="font-size:0.83rem;color:#888">有効にすると、「予約あり」の待機者が先に割り当てられます。</span>
+                </span>
+              </label>
+            </div>
+            <button class="primary-button" id="btn-save-settings" style="align-self:flex-start;padding:10px 20px;font-size:0.9rem">
+              <i class="ph ph-floppy-disk"></i> 設定を保存
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Firebase SDK (Realtime Database) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+  <!-- Firebase 設定・共通モジュール -->
+  <script src="./firebase-config.js"></script>
+  <script src="./app.js"></script>
+
+  <!-- 管理画面ロジック -->
+  <script>
+  (() => {
+    // ─── 状態 ──────────────────────────────────────────────
+    let programs          = {};
+    let waitingList       = {};
+    let confirmedAttendees = {};
+    let settings          = {};
+
+    // ─── ユーティリティ ────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const escHtml = (str) => KuasApp.escHtml(str);
+
+    const formatTime = (ts) => {
+      if (!ts) return '–';
+      try {
+        return new Date(ts).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch { return '–'; }
+    };
+
+    const getProgramTitle = (pid) => programs[pid]?.title ? escHtml(programs[pid].title) : `(${escHtml(pid)})`;
+
+    // ─── タブ切り替え ──────────────────────────────────────
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = $('tab-' + btn.dataset.tab);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    // ─── 確認ダイアログ ────────────────────────────────────
+    const confirmAction = (title, message, onOk) => {
+      $('confirm-title').textContent   = title;
+      $('confirm-message').textContent = message;
+      $('confirm-overlay').classList.remove('hidden');
+      const ok     = $('confirm-ok');
+      const cancel = $('confirm-cancel');
+      const close  = () => { $('confirm-overlay').classList.add('hidden'); };
+      const cleanup = () => { ok.removeEventListener('click', handleOk); cancel.removeEventListener('click', close); };
+      const handleOk = () => { cleanup(); close(); onOk(); };
+      ok.addEventListener('click', handleOk);
+      cancel.addEventListener('click', close);
+    };
+
+    // ─── 概要タブ レンダリング ─────────────────────────────
+    const renderOverview = () => {
+      const waitingArr    = Object.values(waitingList    || {}).filter(Boolean);
+      const confirmedArr  = Object.values(confirmedAttendees || {}).filter(Boolean);
+      const programsArr   = Object.entries(programs || {});
+      const briefingCount = confirmedArr.filter(u => u.type === 'briefing_only').length;
+
+      $('stat-waiting')   && ($('stat-waiting').textContent   = waitingArr.length);
+      $('stat-confirmed') && ($('stat-confirmed').textContent = confirmedArr.length);
+      $('stat-briefing')  && ($('stat-briefing').textContent  = briefingCount);
+      $('stat-programs')  && ($('stat-programs').textContent  = programsArr.length);
+
+      // プログラム別確定数
+      const confirmedByProg = {};
+      const waitingByProg   = {};
+      for (const a of confirmedArr) {
+        if (a.assignedProgram) {
+          confirmedByProg[a.assignedProgram] = (confirmedByProg[a.assignedProgram] || 0) + 1;
+        }
+      }
+      for (const u of waitingArr) {
+        const choices = Array.isArray(u.choices) ? u.choices : [];
+        for (const pid of choices) {
+          waitingByProg[pid] = (waitingByProg[pid] || 0) + 1;
+          break; // 第1希望のみカウント
+        }
+      }
+
+      const tbody = $('overview-programs-body');
+      if (!tbody) return;
+      if (programsArr.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#888">プログラムが未登録です</td></tr>';
+        return;
+      }
+      const sorted = programsArr.sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
+      tbody.innerHTML = sorted.map(([pid, prog]) => {
+        const cap       = Number(prog.capacity) || 0;
+        const confirmed = confirmedByProg[pid]  || 0;
+        const remaining = Math.max(cap - confirmed, 0);
+        const waiting   = waitingByProg[pid]    || 0;
+        const pct       = cap > 0 ? Math.round((confirmed / cap) * 100) : 0;
+        return `<tr>
+          <td><strong>${escHtml(prog.title || pid)}</strong></td>
+          <td>${cap}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span>${confirmed}</span>
+              <div style="flex:1;max-width:80px;height:6px;background:#e8ede9;border-radius:99px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:var(--color-primary);border-radius:99px"></div>
+              </div>
+            </div>
+          </td>
+          <td style="color:${remaining === 0 ? 'var(--color-error)' : 'var(--color-primary)'};font-weight:700">${remaining}</td>
+          <td>${waiting}</td>
+        </tr>`;
+      }).join('');
+    };
+
+    // ─── プログラム管理タブ レンダリング ──────────────────
+    const renderPrograms = () => {
+      const tbody = $('programs-table-body');
+      if (!tbody) return;
+      const sorted = Object.entries(programs || {})
+        .filter(([, p]) => p != null)
+        .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#888">プログラムが未登録です</td></tr>';
+        return;
+      }
+      tbody.innerHTML = sorted.map(([pid, prog]) => /* html */`
+        <tr data-prog-id="${escHtml(pid)}">
+          <td>
+            <input class="input-sm prog-field" data-field="order" style="width:60px"
+              type="number" min="1" value="${Number(prog.order) || 1}">
+          </td>
+          <td>
+            <input class="input-sm prog-field" data-field="title" style="min-width:180px"
+              value="${escHtml(prog.title || '')}">
+          </td>
+          <td>
+            <input class="input-sm prog-field" data-field="description" style="min-width:200px"
+              value="${escHtml(prog.description || '')}">
+          </td>
+          <td>
+            <input class="input-sm prog-field" data-field="capacity" style="width:70px"
+              type="number" min="1" value="${Number(prog.capacity) || 0}">
+          </td>
+          <td style="white-space:nowrap;display:flex;gap:6px;padding:10px 14px">
+            <button class="secondary-button btn-save-prog" style="padding:7px 12px;font-size:0.82rem"
+              data-prog-id="${escHtml(pid)}">
+              <i class="ph ph-floppy-disk"></i> 保存
+            </button>
+            <button class="danger-button btn-delete-prog" style="padding:7px 12px;font-size:0.82rem"
+              data-prog-id="${escHtml(pid)}">
+              <i class="ph ph-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      // 保存ボタン
+      tbody.querySelectorAll('.btn-save-prog').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const pid = btn.dataset.progId;
+          const row = tbody.querySelector(`tr[data-prog-id="${pid}"]`);
+          if (!row) return;
+          const fields = {};
+          row.querySelectorAll('.prog-field').forEach(inp => {
+            const field = inp.dataset.field;
+            fields[field] = inp.type === 'number' ? Number(inp.value) : inp.value.trim();
+          });
+          if (!fields.title) { KuasApp.showToast('プログラム名を入力してください'); return; }
+          try {
+            await KuasApp.updateNode(`${KuasApp.DB_PATHS.programs}/${pid}`, fields);
+            KuasApp.showToast('プログラムを更新しました');
+          } catch (err) {
+            KuasApp.showToast('更新に失敗しました: ' + err.message);
+          }
+        });
+      });
+
+      // 削除ボタン
+      tbody.querySelectorAll('.btn-delete-prog').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pid = btn.dataset.progId;
+          const prog = programs[pid];
+          confirmAction(
+            'プログラムを削除',
+            `「${prog?.title || pid}」を削除しますか？この操作は元に戻せません。`,
+            async () => {
+              try {
+                await KuasApp.removeNode(`${KuasApp.DB_PATHS.programs}/${pid}`);
+                KuasApp.showToast('プログラムを削除しました');
+              } catch (err) {
+                KuasApp.showToast('削除に失敗しました: ' + err.message);
+              }
+            }
+          );
+        });
+      });
+    };
+
+    // ─── 待機リスト レンダリング ───────────────────────────
+    const renderWaiting = () => {
+      const tbody  = $('waiting-table-body');
+      const badge  = $('waiting-count-badge');
+      const badge2 = $('badge-waiting');
+      if (!tbody) return;
+
+      const entries = Object.entries(waitingList || {})
+        .filter(([, u]) => u != null)
+        .sort(([, a], [, b]) => (a.createdAt || 0) - (b.createdAt || 0));
+
+      const count = entries.length;
+      if (badge)  badge.textContent  = count;
+      if (badge2) badge2.textContent = count;
+
+      if (count === 0) {
+        tbody.innerHTML = `<tr><td colspan="9">
+          <div class="empty-state"><i class="ph ph-hourglass"></i><p>待機者はいません</p></div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = entries.map(([uid, user], idx) => {
+        const choices = Array.isArray(user.choices) ? user.choices : [];
+        const choiceLabels = ['第1','第2','第3'];
+        const choiceText = choices.map((pid, i) =>
+          `<span style="font-size:0.78rem">${choiceLabels[i]}:${getProgramTitle(pid)}</span>`
+        ).join('<br>');
+        const typeLabel = user.type === 'reserved' ? '予約' : user.type === 'briefing_only' ? '説明会' : '当日';
+        return `<tr>
+          <td>${idx + 1}</td>
+          <td><strong>${escHtml(user.name || '–')}</strong></td>
+          <td>${escHtml(user.furigana || '–')}</td>
+          <td>${escHtml(user.grade || '–')}</td>
+          <td>${Number(user.companions) || 0}名</td>
+          <td><span class="status-badge waiting">${escHtml(typeLabel)}</span></td>
+          <td>${choiceText || '<span style="color:#aaa">なし</span>'}</td>
+          <td style="white-space:nowrap">${formatTime(user.createdAt)}</td>
+          <td>
+            <button class="danger-button btn-remove-waiting" style="padding:5px 10px;font-size:0.78rem"
+              data-uid="${escHtml(uid)}">
+              <i class="ph ph-x"></i>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll('.btn-remove-waiting').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid  = btn.dataset.uid;
+          const user = waitingList[uid];
+          confirmAction(
+            '待機者を削除',
+            `「${user?.name || uid}」を待機リストから削除しますか？`,
+            async () => {
+              try {
+                await KuasApp.removeNode(`${KuasApp.DB_PATHS.waitingList}/${uid}`);
+                KuasApp.showToast('待機者を削除しました');
+              } catch (err) {
+                KuasApp.showToast('削除に失敗しました: ' + err.message);
+              }
+            }
+          );
+        });
+      });
+    };
+
+    // ─── 確定者一覧 レンダリング ───────────────────────────
+    const renderConfirmed = () => {
+      const tbody  = $('confirmed-table-body');
+      const badge  = $('confirmed-count-badge');
+      const badge2 = $('badge-confirmed');
+      if (!tbody) return;
+
+      const entries = Object.entries(confirmedAttendees || {})
+        .filter(([, u]) => u != null)
+        .sort(([, a], [, b]) => (a.confirmedAt || 0) - (b.confirmedAt || 0));
+
+      const count = entries.length;
+      if (badge)  badge.textContent  = count;
+      if (badge2) badge2.textContent = count;
+
+      if (count === 0) {
+        tbody.innerHTML = `<tr><td colspan="8">
+          <div class="empty-state"><i class="ph ph-check-circle"></i><p>確定者はいません</p></div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = entries.map(([, user], idx) => {
+        const isBriefing = user.type === 'briefing_only';
+        const typeLabel  = user.type === 'reserved' ? '予約' : isBriefing ? '説明会' : '当日';
+        const progText   = isBriefing
+          ? '<span style="color:#888">–</span>'
+          : user.assignedProgram ? getProgramTitle(user.assignedProgram) : '<span style="color:#888">未割当</span>';
+        return `<tr>
+          <td>${idx + 1}</td>
+          <td><strong>${escHtml(user.name || '–')}</strong></td>
+          <td>${escHtml(user.furigana || '–')}</td>
+          <td>${escHtml(user.grade || '–')}</td>
+          <td>${Number(user.companions) || 0}名</td>
+          <td><span class="status-badge ${isBriefing ? 'briefing' : 'confirmed'}">${escHtml(typeLabel)}</span></td>
+          <td>${progText}</td>
+          <td style="white-space:nowrap">${formatTime(user.confirmedAt)}</td>
+        </tr>`;
+      }).join('');
+    };
+
+    // ─── 設定タブ ─────────────────────────────────────────
+    const renderSettings = () => {
+      const cb = $('setting-prioritize-reservations');
+      if (cb) cb.checked = settings?.prioritizeReservations === true;
+    };
+
+    // ─── 全タブ更新 ───────────────────────────────────────
+    const renderAll = () => {
+      renderOverview();
+      renderPrograms();
+      renderWaiting();
+      renderConfirmed();
+      renderSettings();
+    };
+
+    // ─── 一括割り当て ─────────────────────────────────────
+    $('btn-bulk-assign')?.addEventListener('click', () => {
+      const waitingArr = Object.values(waitingList || {}).filter(Boolean);
+      if (waitingArr.length === 0) {
+        KuasApp.showToast('待機者がいません');
+        return;
+      }
+      confirmAction(
+        '待機者を一括割り当て',
+        `待機中の ${waitingArr.length} 名をプログラムへ割り当てます。割り当てできない場合は待機リストに残ります。実行しますか？`,
+        async () => {
+          const btn = $('btn-bulk-assign');
+          if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 処理中…'; }
+          try {
+            const { updates, assignedCount, skippedCount } =
+              KuasApp.buildBulkAssignUpdates(programs, waitingList, confirmedAttendees, settings);
+            if (Object.keys(updates).length === 0) {
+              KuasApp.showToast('割り当て可能な空席がありません');
+              return;
+            }
+            await KuasApp.multiPathUpdate(updates);
+            KuasApp.showToast(`${assignedCount}名を割り当て完了。${skippedCount}名は空席不足で待機中。`);
+          } catch (err) {
+            console.error('[KUAS] 一括割り当て失敗:', err);
+            KuasApp.showToast('割り当てに失敗しました: ' + err.message);
+          } finally {
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="ph ph-arrows-merge"></i> 待機者を一括割り当て';
+            }
+          }
+        }
+      );
+    });
+
+    // ─── プログラム追加フォーム ────────────────────────────
+    $('add-program-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = {
+        title:       (fd.get('title')       || '').trim(),
+        description: (fd.get('description') || '').trim(),
+        capacity:    Number(fd.get('capacity') || 20),
+        order:       Number(fd.get('order')    || 1)
+      };
+      if (!payload.title) { KuasApp.showToast('プログラム名を入力してください'); return; }
+      try {
+        await KuasApp.pushToNode(KuasApp.DB_PATHS.programs, payload);
+        e.target.reset();
+        KuasApp.showToast('プログラムを追加しました');
+      } catch (err) {
+        KuasApp.showToast('追加に失敗しました: ' + err.message);
+      }
+    });
+
+    // ─── デフォルトプログラム初期化 ───────────────────────
+    $('btn-init-programs')?.addEventListener('click', () => {
+      confirmAction(
+        'デフォルトプログラムを追加',
+        'サンプルプログラム5件を追加します。既存のプログラムは削除されません。',
+        async () => {
+          try {
+            const ref = KuasApp.getRef(KuasApp.DB_PATHS.programs);
+            for (const prog of KuasApp.DEFAULT_PROGRAMS) {
+              await ref.push({ ...prog, createdAt: firebase.database.ServerValue.TIMESTAMP });
+            }
+            KuasApp.showToast('デフォルトプログラムを追加しました');
+          } catch (err) {
+            KuasApp.showToast('初期化に失敗しました: ' + err.message);
+          }
+        }
+      );
+    });
+
+    // ─── 設定保存 ──────────────────────────────────────────
+    $('btn-save-settings')?.addEventListener('click', async () => {
+      const prioritize = $('setting-prioritize-reservations')?.checked === true;
+      try {
+        await KuasApp.updateNode(KuasApp.DB_PATHS.settings, { prioritizeReservations: prioritize });
+        settings.prioritizeReservations = prioritize;
+        KuasApp.showToast('設定を保存しました');
+      } catch (err) {
+        KuasApp.showToast('設定の保存に失敗しました: ' + err.message);
+      }
+    });
+
+    // ─── ヘッダーボタン ────────────────────────────────────
+    $('btn-backup')?.addEventListener('click', () => KuasApp.downloadJsonBackup());
+
+    $('btn-sync')?.addEventListener('click', () => {
+      KuasApp.showToast('Firebase からデータを再取得しています…');
+      // リスナーが自動で最新データを反映するため、表示を更新するだけ
+      renderAll();
+    });
+
+    $('btn-reset')?.addEventListener('click', () => {
+      confirmAction(
+        'すべてのデータをリセット',
+        '待機リスト・確定者一覧・プログラムをすべて削除し、初期プログラムを再登録します。この操作は元に戻せません。',
+        () => KuasApp.resetAllData()
+      );
+    });
+
+    // ─── Firebase リアルタイムリスナー ────────────────────
+    KuasApp.listenToNode(KuasApp.DB_PATHS.programs, (val) => {
+      programs = val || {};
+      renderOverview();
+      renderPrograms();
+    });
+
+    KuasApp.listenToNode(KuasApp.DB_PATHS.waitingList, (val) => {
+      waitingList = val || {};
+      renderOverview();
+      renderWaiting();
+    });
+
+    KuasApp.listenToNode(KuasApp.DB_PATHS.confirmedAttendees, (val) => {
+      confirmedAttendees = val || {};
+      renderOverview();
+      renderConfirmed();
+    });
+
+    KuasApp.listenToNode(KuasApp.DB_PATHS.settings, (val) => {
+      settings = val || {};
+      renderSettings();
+    });
+
+    // ─── 初期化 ───────────────────────────────────────────
+    const init = () => {
+      if (!KuasApp.initFirebase()) {
+        KuasApp.showToast('Firebase の設定が完了していません。firebase-config.js を確認してください。', 8000);
+      }
+      KuasApp.initNetworkStatus();
+      KuasApp.preventReload();
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+  </script>
+</body>
+</html>
