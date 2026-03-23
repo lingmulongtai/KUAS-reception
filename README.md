@@ -133,6 +133,10 @@ VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_APP_ID=
 VITE_USE_FIREBASE_EMULATOR=true
+# Realtime Database を米国外（シンガポール等）に作成した場合は databaseURL を設定してください。
+# 例: VITE_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.asia-southeast1.firebasedatabase.app
+# 正確な URL は Firebase コンソール → Realtime Database → データ タブで確認できます。
+# VITE_FIREBASE_DATABASE_URL=
 ```
 - Firebase プロジェクト未接続で検証する場合は、上記の Functions Emulator URL を利用します。
 
