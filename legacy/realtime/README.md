@@ -25,7 +25,8 @@
 window.firebaseConfig = {
   apiKey:            "AIzaSy...",
   authDomain:        "your-project.firebaseapp.com",
-  databaseURL:       "https://your-project-default-rtdb.firebaseio.com",
+  // ロケーションに合わせた databaseURL を設定してください（下記「重要」参照）
+  databaseURL:       "https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId:         "your-project",
   storageBucket:     "your-project.appspot.com",
   messagingSenderId: "1234567890",
@@ -33,11 +34,26 @@ window.firebaseConfig = {
 };
 ```
 
+> **【重要】databaseURL のリージョンについて**
+>
+> Firebase Realtime Database を**米国以外のリージョン**（シンガポール `asia-southeast1` など）に作成した場合、
+> `databaseURL` の形式が通常と異なります。
+>
+> | ロケーション | databaseURL の形式 |
+> |---|---|
+> | アメリカ（デフォルト） | `https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com` |
+> | シンガポール（asia-southeast1） | `https://YOUR_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app` |
+> | その他のリージョン | `https://YOUR_PROJECT_ID-default-rtdb.REGION.firebasedatabase.app` |
+>
+> 正確な URL は **Firebase コンソール → Realtime Database → データ** タブの上部に表示されています。
+> その値をそのままコピーして `databaseURL` に設定してください。
+
 ### 2. Realtime Database の有効化
 
 1. Firebase コンソール → **Realtime Database** → 「データベースを作成」
 2. ロケーション: `asia-southeast1`（シンガポール）を推奨
 3. 初期セキュリティルールは「ロックモード（拒否）」を選択
+4. 作成後、「データ」タブ上部に表示される URL を `firebase-config.js` の `databaseURL` にコピーする
 
 ### 3. セキュリティルールの設定
 
@@ -191,3 +207,4 @@ Firebase コンソール → Realtime Database → **ルール** タブを開き
 | プログラムが表示されない | 管理画面の「デフォルトを初期化」ボタン、またはプログラム追加フォームからプログラムを登録してください |
 | 待機者が割り当てられない | 全プログラムが満員の可能性があります。プログラム管理タブで定員を確認してください |
 | データが表示されない | Firebase コンソールでセキュリティルールを確認してください |
+| データベースへの接続に失敗する / データが同期されない | `databaseURL` の形式が正しいか確認してください（シンガポールなど米国外のリージョンに作成した場合は上記「重要」セクションを参照） |
