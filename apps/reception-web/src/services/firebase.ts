@@ -31,6 +31,11 @@ const firebaseConfig = {
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  // Realtime Database を米国外（シンガポール等）に作成した場合はリージョンを含む URL を設定してください。
+  // 例: "https://YOUR_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app"
+  ...(import.meta.env.VITE_FIREBASE_DATABASE_URL
+    ? { databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL }
+    : {}),
 }
 
 // Firebase が有効かどうかをチェック
