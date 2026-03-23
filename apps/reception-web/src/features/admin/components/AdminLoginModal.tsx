@@ -127,19 +127,6 @@ export function AdminLoginModal({ isOpen, onClose, onLoginSuccess }: AdminLoginM
             )}
           </Button>
         </form>
-
-        {/* デモアカウント情報（開発環境のみ） */}
-        {import.meta.env.DEV && (
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-            <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-              {t('admin.login.demoInfo', '開発用アカウント')}
-            </p>
-            <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-              <p>Email: <code className="rounded bg-slate-200 px-1 dark:bg-slate-700">admin@kuas.ac.jp</code></p>
-              <p>Pass: <code className="rounded bg-slate-200 px-1 dark:bg-slate-700">admin123</code></p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
