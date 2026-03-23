@@ -41,6 +41,19 @@ const firebaseConfig = {
 // Firebase が有効かどうかをチェック
 const isFirebaseConfigured = !!(firebaseConfig.apiKey && firebaseConfig.projectId)
 
+if (!isFirebaseConfigured) {
+  console.error(
+    '[Firebase] 必要な環境変数が設定されていません。\n' +
+    'apps/reception-web/.env ファイルに以下の変数を設定してください:\n' +
+    '  VITE_FIREBASE_API_KEY=<your-api-key>\n' +
+    '  VITE_FIREBASE_AUTH_DOMAIN=<your-project>.firebaseapp.com\n' +
+    '  VITE_FIREBASE_PROJECT_ID=<your-project-id>\n' +
+    '  VITE_FIREBASE_APP_ID=<your-app-id>\n' +
+    'Firebase コンソール（https://console.firebase.google.com/）の\n' +
+    'プロジェクト設定 → 全般 → マイアプリ からコピーできます。'
+  )
+}
+
 let app: FirebaseApp | null = null
 let db: Firestore | null = null
 let auth: Auth | null = null
@@ -51,12 +64,12 @@ if (isFirebaseConfigured) {
     db = getFirestore(app)
     auth = getAuth(app)
 
-    if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR) {
+    if (import.meta.env.VITE_USE_FIREBASE_EMULATOR) {
       connectFirestoreEmulator(db, 'localhost', 8080)
       connectAuthEmulator(auth, 'http://localhost:9099')
     }
   } catch (e) {
-    console.warn('Firebase initialization failed:', e)
+    console.error('[Firebase] 初期化に失敗しました:', e)
   }
 }
 
