@@ -86,7 +86,6 @@ KUAS-reception/
 ├─ functions/               # Firebase Functions (Node.js 20)
 │  ├─ index.js              # Cloud Functions エントリ
 │  └─ package.json
-└─ legacy/                  # 旧来の HTML/JS 実装・資料アーカイブ
 ```
 
 ## 主要機能
@@ -125,22 +124,39 @@ npm install
 - Tailwind、TanStack Query、Firebase SDK など SPA 用依存関係をインストールします。
 
 ### 3. SPA 用環境変数
-`apps/reception-web/.env` を作成し、必要な値を設定します。
+`apps/reception-web/.env.example` をコピーして `apps/reception-web/.env` を作成し、必要な値を設定します。
+```bash
+cp apps/reception-web/.env.example apps/reception-web/.env
 ```
-VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_APP_ID=
-VITE_USE_FIREBASE_EMULATOR=true
-# Realtime Database を米国外（シンガポール等）に作成した場合は databaseURL を設定してください。
-# 例: VITE_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.asia-southeast1.firebasedatabase.app
-# 正確な URL は Firebase コンソール → Realtime Database → データ タブで確認できます。
-# VITE_FIREBASE_DATABASE_URL=
-```
-- Firebase プロジェクト未接続で検証する場合は、上記の Functions Emulator URL を利用します。
 
-### 4. Firebase Functions のセットアップ
+**必須項目**（Firebase コンソール → プロジェクト設定 → 全般 → マイアプリ からコピー）:
+```
+VITE_FIREBASE_API_KEY=<your-api-key>
+VITE_FIREBASE_AUTH_DOMAIN=<your-project>.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=<your-project-id>
+VITE_FIREBASE_APP_ID=<your-app-id>
+```
+
+> **注意**: 上記の `VITE_FIREBASE_*` が未設定の場合、アプリ起動時にブラウザのコンソールにエラーが出力され、管理画面ログインができません。
+
+**任意項目**:
+```
+# Cloud Functions の URL（本番環境では適宜変更）
+VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
+
+# Firebase Emulator を使用する場合のみ true に設定
+# VITE_USE_FIREBASE_EMULATOR=true
+
+# Realtime Database を米国外（シンガポール等）に作成した場合は設定
+# VITE_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.asia-southeast1.firebasedatabase.app
+```
+
+### 4. 管理者アカウントの設定
+Firebase コンソール → Authentication → Sign-in method で **Email/Password** を有効化し、
+**Users** タブ → **Add user** で管理者のメールアドレスとパスワードを登録してください。
+登録したメールアドレス/パスワードで管理画面からログインできます。
+
+### 5. Firebase Functions のセットアップ
 ```bash
 cd functions
 npm install
@@ -238,7 +254,6 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 - `apps/reception-web/src/services/api.ts`: Cloud Functions 呼び出し用クライアント。
 - `apps/reception-web/src/services/firebase.ts`: Firestore / Auth ユーティリティ。
 - `functions/index.js`: HTTP Cloud Functions のエントリ。CORS/認証ヘッダー処理を実装済み。
-- `legacy/`: 旧版 HTML/JS、DataConnect 設定、移行用資料のアーカイブ。
 
 ## 更新履歴
 | バージョン | 日付 | 主な変更点 |
