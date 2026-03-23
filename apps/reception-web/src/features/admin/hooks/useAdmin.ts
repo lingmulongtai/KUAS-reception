@@ -6,12 +6,6 @@ import {
 } from '@/services/firebase'
 import type { AdminUser } from '../types'
 
-// デモ用のアカウント情報（開発環境のみ）
-const DEMO_ACCOUNTS = [
-  { email: 'admin@kuas.ac.jp', password: 'admin123' },
-  { email: 'demo@example.com', password: 'demo123' },
-]
-
 export function useAdmin() {
   const [user, setUser] = useState<AdminUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,32 +33,6 @@ export function useAdmin() {
     setError(null)
     setLoading(true)
     
-    // デモアカウントのチェック（開発環境のみ）
-    // Note: Emulator が接続されている場合、Firebase Auth 側で処理される
-    if (import.meta.env.DEV) {
-      const demoAccount = DEMO_ACCOUNTS.find(
-        (acc) => acc.email === email && acc.password === password
-      )
-      if (demoAccount) {
-        // Emulator Auth が使えない場合のフォールバック
-        try {
-          await loginAdmin(email, password)
-          // Firebase Auth が成功すれば onAuthStateChanged で処理される
-          return
-        } catch {
-          // Firebase Auth が使えない場合、デモユーザーを設定
-          const demoUser: AdminUser = {
-            uid: 'demo-user-' + Date.now(),
-            email: demoAccount.email,
-            displayName: 'デモ管理者',
-          }
-          setUser(demoUser)
-          setLoading(false)
-          return
-        }
-      }
-    }
-    
     try {
       await loginAdmin(email, password)
       // onAuthStateChanged callback will handle setting user
@@ -73,7 +41,7 @@ export function useAdmin() {
       let errorMessage: string
       
       if (firebaseError.message === 'Firebase is not configured') {
-        errorMessage = 'Firebase が設定されていません。開発用アカウントをお試しください。'
+        errorMessage = 'Firebase 環境変数が設定されていません。.env ファイルの VITE_FIREBASE_* を確認してください。'
       } else if (firebaseError.code === 'auth/invalid-credential') {
         errorMessage = 'メールアドレスまたはパスワードが正しくありません'
       } else if (firebaseError.code === 'auth/too-many-requests') {

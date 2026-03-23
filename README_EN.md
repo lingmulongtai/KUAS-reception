@@ -45,7 +45,6 @@ KUAS-reception/
 ├─ functions/               # Firebase Functions (Node.js 20)
 │  ├─ index.js              # Cloud Functions entrypoint
 │  └─ package.json
-└─ legacy/                  # Archived HTML/JS implementation & docs
 ```
 
 ## Key Features
@@ -84,18 +83,39 @@ npm install
 - Installs Tailwind, TanStack Query, Firebase SDK, and other SPA dependencies.
 
 ### 3. Configure SPA environment variables
-Create `apps/reception-web/.env` with the following values as needed:
+Copy the example file and fill in your values:
+```bash
+cp apps/reception-web/.env.example apps/reception-web/.env
 ```
-VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_APP_ID=
-VITE_USE_FIREBASE_EMULATOR=true
-```
-- For emulator-only testing, keep `VITE_API_BASE_URL` pointed at the local Functions endpoint above.
 
-### 4. Install Firebase Functions dependencies
+**Required** (copy from Firebase Console → Project Settings → General → Your apps):
+```
+VITE_FIREBASE_API_KEY=<your-api-key>
+VITE_FIREBASE_AUTH_DOMAIN=<your-project>.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=<your-project-id>
+VITE_FIREBASE_APP_ID=<your-app-id>
+```
+
+> **Note**: If any `VITE_FIREBASE_*` variable is missing, a clear error will appear in the browser console at startup and admin login will be unavailable.
+
+**Optional**:
+```
+# Cloud Functions URL (update for production)
+VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
+
+# Set to true only when using the Firebase Emulator
+# VITE_USE_FIREBASE_EMULATOR=true
+
+# Only needed if Realtime Database is in a non-US region
+# VITE_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.asia-southeast1.firebasedatabase.app
+```
+
+### 4. Create an admin user
+In Firebase Console → Authentication → Sign-in method, enable **Email/Password**.
+Then go to the **Users** tab → **Add user** and create an admin account.
+Use these credentials to log in from the admin panel.
+
+### 5. Install Firebase Functions dependencies
 ```bash
 cd functions
 npm install
@@ -155,7 +175,6 @@ npx firebase hosting:channel:deploy preview --only hosting:reception-web
 - `apps/reception-web/src/services/api.ts`: Cloud Functions client wrapper.
 - `apps/reception-web/src/services/firebase.ts`: Firestore/Auth utilities.
 - `functions/index.js`: HTTP Cloud Functions entrypoint with CORS and auth headers handled.
-- `legacy/`: Archived HTML/JS app, DataConnect setup, migration documents.
 
 ## Release Notes
 | Version | Date | Highlights |
