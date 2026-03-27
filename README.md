@@ -1,270 +1,424 @@
-# KUAS Reception アプリ
+<div align="center">
 
-[English README](README_EN.md)
+# KUAS Reception
 
-## 目次
-- [プロジェクト概要](#プロジェクト概要)
-- [ターゲットと提供価値](#ターゲットと提供価値)
-- [システムアーキテクチャ](#システムアーキテクチャ)
-- [主要機能](#主要機能)
-- [技術スタック](#技術スタック)
-- [セットアップ手順](#セットアップ手順)
-- [開発フロー](#開発フロー)
-- [品質チェック](#品質チェック)
-- [翻訳と多言語対応](#翻訳と多言語対応)
-- [AI 調査・評価プロンプト](#ai-調査評価プロンプト)
-- [ディレクトリガイド](#ディレクトリガイド)
-- [更新履歴](#更新履歴)
-- [ライセンス](#ライセンス)
+**京都先端科学大学 工学部オープンキャンパス 受付管理システム**
+
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Firebase](https://img.shields.io/badge/Firebase-Functions%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![License](https://img.shields.io/badge/License-KUAS_OC_Committee-green)](#ライセンス)
+
+[🇺🇸 English README](README_EN.md) | [📋 プロジェクト概要](#プロジェクト概要) | [🚀 セットアップ](#セットアップ) | [📖 ドキュメント](#ディレクトリガイド)
+
+</div>
+
+---
 
 ## プロジェクト概要
-- 京都先端科学大学 工学部オープンキャンパスにおける来場受付を、スタッフ・来場者・管理者が共通 UI で扱えるよう再構築したモダン Web アプリです。
-- React 19 + TypeScript + Vite による SPA（`apps/reception-web/`）と Firebase Functions（Node.js 20）で構成し、オンライン/オフライン両対応のハイブリッド運用を実現します。
-- オフライン時はローカルストレージとキャッシュを利用し、オンライン復帰時に Firestore## 🚀 開発ステータス (2026/03 最新アップデート)
 
-本プロジェクトは現在、アーキテクチャの大幅な刷新とバックエンドエンジンの強化（Phase 1 & 2）が完了しています。
+来場者・受付スタッフ・管理者が **一つの UI** でオープンキャンパスの受付をスムーズに運営するための Web アプリです。
 
-**最近の実装完了機能:**
-- **Firestore Transactions**: スレッドセーフなプログラム自動割当エンジン、手動割当、およびキャンセル時のウェイティングリスト（待機者）自動繰り上げ機能の実装。
-- **Firebase Authentication**: Express製APIにFirebase Authベースの検証ミドルウェア（Bearer token）を導入し、エンドポイントの保護を実現。
-- **Firestore Security Rules**: コレクション単位での包括的なRead/Write制御を実装。
-- **管理者ダッシュボード**: 割当ボード（Assignment Board）を新設し、プログラムごとの空き状況や待機者の状態を視覚的に管理可能に。
-- **単体テスト**: Jestによる堅牢なバックエンド割当ロジックのテストと、Vitestによるフロントエンド型のスキーマ検証を実装。
+- **来場者**はタブレット/スマートフォンから情報入力とプログラム選択を完結できます
+- **受付スタッフ**はリアルタイムで座席割当・待機者管理を行えます
+- **管理者**はダッシュボードで統計確認・プログラム設定・受付の開閉を制御できます
+
+React 19 + TypeScript SPA と Firebase Cloud Functions（Node.js 20）で構成し、Firestore トランザクションによる **スレッドセーフな席割当** を実現しています。
 
 ---
 
-## 🌟 主な機能
+## 対象ユーザーと価値
 
-### 参加者（ゲスト）向け機能
-- **事前予約・当日受付両対応**: 状況に応じたスムーズなエントリー。
-- **直感的なプログラム選択**: 第1希望から第3希望まで、混雑状況（残り席数）を見ながら選択可能。定員オーバーの場合は自動的に待機者（Waiting）として登録されます。
-- **リアルタイム確定通知**: トランザクション処理により、瞬時に座席を確保し結果をフィードバック。
-- **多言語対応 (i18n)**: 英語と日本語によるUIの切り替え。
-
-### 管理者スタッフ向け機能
-- **リアルタイムダッシュボード**: 来場者数や割当状況のKPI、プログラム毎の定員と残席数を一覧化。
-- **予約・割当管理 (Assignment Board)**:
-  - 待機中ユーザーのリストアップと「手動割当」による強制アサイン。
-  - 欠席等によるキャンセルの実行と、次点待機者の「自動繰り上げ処理」。
-- **プログラム管理**: プログラム名、説明、定員数の即時設定。
-- **受付設定制御**: 受付の全体的な開始・停止、選択可能なプログラム最大数の設定。
+| ユーザー | 提供価値 |
+|----------|----------|
+| **来場者** | 予約・当日受付を問わず、第1〜3希望でプログラムを選択し即座に割当結果を確認 |
+| **受付スタッフ** | 待機者リストと手動割当・キャンセル繰り上げを1画面で管理 |
+| **管理者** | KPI ダッシュボード・プログラム編集・受付の開閉を認証付きパネルで操作 |
 
 ---
-
-## 📚 データ構造 (Firestore)
-
-主要なコレクションとそのスキーマ（Zodによる厳密な型定義あり）:
-
-- `programs`: セッションごとの定員(`capacity`)と現在の空き(`remaining`)を管理。
-- `receptions`: 当日の受付（参加者情報、同伴者数、希望プログラムの配列）。`status` (`waiting`, `assigned`, `completed`, `cancelled`) を保持。
-- `assignments`: 実際に座席が確保された確約データ。
-- `settings`: 受付の稼働状況などのグローバルステータス。
-- `users`: Firebase Authentication と連携し、管理者やスタッフの権限を管理。
-
----
-
-## ターゲットと提供価値
-- **受付スタッフ**: 来場者のチェックイン、残席管理、プログラム割当を素早く実施。
-- **来場者**: 予約/当日受付を問わず、スムーズに情報入力・プログラム選択が可能。
-- **管理者**: ダッシュボードで参加者状況のリアルタイム把握、翻訳やコンテンツ更新をコントロール。
-
-## システムアーキテクチャ
-```
-KUAS-reception/
-├─ apps/
-│  └─ reception-web/        # SPA クライアント (React + Vite)
-│     ├─ public/            # 静的アセット・マニフェスト類
-│     ├─ src/
-│     │  ├─ components/     # レイアウト / UI パターン
-│     │  ├─ features/       # reception・admin 各機能モジュール
-│     │  ├─ services/       # API クライアント / Firebase ラッパー
-│     │  ├─ hooks/          # 共通カスタムフック
-│     │  ├─ i18n/           # i18next 設定と辞書
-│     │  ├─ theme/          # Light/Dark + Liquid Glass テーマトークン
-│     │  └─ types/          # 共通型定義
-│     └─ vite.config.ts     # Vite 7 設定（`@` エイリアスなど）
-├─ functions/               # Firebase Functions (Node.js 20)
-│  ├─ index.js              # Cloud Functions エントリ
-│  └─ package.json
-```
 
 ## 主要機能
-- **受付フロー**: 予約/当日選択 → 参加情報入力 → プログラム第1〜3希望選択 → 内容確認と確定処理。
-- **プログラム管理**: Firestore 連携による残席表示、待機者の繰り上げ、割当状況の可視化。
-- **多言語 UI**: i18next による日・英を標準サポート、追加言語データは `apps/reception-web/src/i18n/locales/` に配置。
-- **テーマ設定**: ライト/ダーク/リキッドグラスを個人単位で保存。Theme Sync Hook により OS 設定にも追従。
-- **翻訳 API**: DeepL API を利用する `/translateText` Functions。キー未設定時はルールベースによるフォールバック翻訳を提供。
-- **オフライン対応**: Service Worker とローカルキャッシュで接続断でも使用継続可能。復帰後は差分同期。
+
+### 来場者向け受付フロー
+
+```
+[受付開始] → [予約 or 当日] → [参加者情報入力] → [プログラム選択（最大3つ）] → [確認・送信] → [割当結果表示]
+```
+
+- 第1〜3希望を順番に指定し、空席があれば最高優先度のプログラムに自動割当
+- 全希望が満席の場合はウェイティングリストに自動登録
+- 同伴者数を考慮した席数計算（最大10名）
+- 日本語 / 英語 UI 対応
+
+### 管理者ダッシュボード
+
+| 機能 | 説明 |
+|------|------|
+| **KPI ウィジェット** | 総来場者数・割当済・待機中・完了・キャンセル数をリアルタイム表示 |
+| **割当ボード** | 待機者を手動で特定プログラムに割当、キャンセル時は次点を自動繰り上げ |
+| **プログラム管理** | プログラムの作成・編集・削除、定員設定 |
+| **受付設定** | 受付の開閉、最大選択数、イベント名・日時・ウェルカムメッセージ |
+| **予約管理** | 全受付レコードをステータスでフィルタリング・閲覧 |
+
+### バックエンド機能
+
+- **Firestore トランザクション**による原子的な席割当（オーバーブッキング防止）
+- **Firebase Authentication** + Bearer Token による管理者エンドポイント保護
+- **DeepL API** による翻訳（未設定時はルールベースでフォールバック）
+- **Firestore Security Rules** によるコレクション単位のアクセス制御
+
+---
+
+## システムアーキテクチャ
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Firebase Hosting                       │
+│              React 19 SPA (Vite 7 + TypeScript)          │
+│  ┌─────────────────┐    ┌──────────────────────────────┐ │
+│  │  受付フロー      │    │  管理者ダッシュボード         │ │
+│  │  - 参加者情報入力│    │  - KPI / 統計               │ │
+│  │  - プログラム選択│    │  - 割当ボード                │ │
+│  │  - 確認・完了   │    │  - プログラム管理             │ │
+│  └────────┬────────┘    └──────────┬───────────────────┘ │
+└───────────┼──────────────────────┼───────────────────────┘
+            │ HTTP (Bearer Token)  │ Firestore onSnapshot
+            ▼                      ▼
+┌───────────────────────────────────────────────────────────┐
+│              Firebase Cloud Functions (Node.js 20)         │
+│  ┌──────────────┐  ┌───────────────┐  ┌────────────────┐  │
+│  │  /programs   │  │  /receptions  │  │  /assignments  │  │
+│  │  GET (公開)  │  │  POST (公開)  │  │  POST (管理者) │  │
+│  └──────────────┘  └───────────────┘  └────────────────┘  │
+│              ┌──────────────────────┐                      │
+│              │  Firestore Transaction                       │
+│              │  (スレッドセーフ割当) │                      │
+│              └──────────────────────┘                      │
+└───────────────────────────┬───────────────────────────────┘
+                            │
+                            ▼
+            ┌───────────────────────────┐
+            │     Cloud Firestore        │
+            │  programs / receptions     │
+            │  assignments / settings    │
+            └───────────────────────────┘
+```
+
+### ディレクトリ構成
+
+```
+KUAS-reception/
+├── apps/
+│   └── reception-web/              # React SPA
+│       ├── public/                 # 静的アセット・ロゴ
+│       └── src/
+│           ├── components/
+│           │   ├── layout/         # AppShell・Sidebar・TopStatusBar
+│           │   └── ui/             # Button・Card・Badge・GlassField
+│           ├── features/
+│           │   ├── reception/      # 受付フロー全体
+│           │   │   ├── components/ # 各ステップのコンポーネント
+│           │   │   ├── hooks/      # usePrograms など
+│           │   │   └── types.ts    # Zod スキーマ定義
+│           │   └── admin/          # 管理者ダッシュボード
+│           │       ├── components/ # 各パネルコンポーネント
+│           │       └── hooks/      # useAdmin・useReservations など
+│           ├── services/
+│           │   ├── api.ts          # HTTP クライアント（Bearer Token付き）
+│           │   └── firebase.ts     # Firestore / Auth ラッパー
+│           └── i18n/
+│               └── locales/        # ja.json / en.json / id.json
+├── functions/                      # Cloud Functions
+│   ├── app.js                      # Express ルーティング
+│   ├── db.js                       # Firestore トランザクションロジック
+│   ├── schemas.js                  # Zod バリデーションスキーマ
+│   └── middleware/auth.js          # Firebase Token 検証
+├── firestore.rules                 # Firestore セキュリティルール
+├── firestore.indexes.json          # 複合インデックス定義
+└── firebase.json                   # Firebase 設定
+```
+
+---
+
+## データ構造 (Firestore)
+
+```
+programs/{id}
+  ├── title: string
+  ├── description: string
+  ├── capacity: number        # 総定員数
+  ├── remaining: number       # 残席数（トランザクションで更新）
+  ├── startTime / endTime: string
+  ├── location: string
+  ├── isActive: boolean
+  └── order: number           # 表示順
+
+receptions/{id}
+  ├── attendee
+  │   ├── name / furigana / school / grade
+  │   ├── companions: number  # 同伴者数
+  │   └── reserved: boolean   # 事前予約フラグ
+  ├── selections: [{id, title}]  # 第1〜3希望
+  ├── assignedProgram: {id, title, priority, assignedBy}
+  ├── status: "waiting" | "assigned" | "completed" | "cancelled"
+  └── createdAt: string
+
+assignments/{id}
+  ├── receptionId / programId
+  ├── attendeeName / priority
+  ├── status: "confirmed" | "cancelled"
+  └── assignedAt / cancelledAt: string
+
+settings/reception-settings
+  ├── isOpen: boolean
+  ├── maxSelections: number
+  ├── eventName / eventDate / welcomeMessage: string
+  └── openTime / closeTime: string
+```
+
+---
 
 ## 技術スタック
-- **フロントエンド**: React 19 / React Router 6 / TanStack Query 5 / React Hook Form 7 / Zod / Tailwind CSS 3 / Lucide Icons。
-- **状態・データ**: TanStack Query によるフェッチ & キャッシュ、Firestore SDK とのストリーム連携。
-- **多言語**: i18next / react-i18next / i18next-browser-languagedetector。
-- **ビルド・開発**: Vite 7, TypeScript 5, ESLint 9, PostCSS + Autoprefixer。
-- **バックエンド**: Firebase Cloud Functions (node-fetch, deepl-node, firebase-admin, langchain ほかユーティリティ)。
-- **ホスティング**: Firebase Hosting + Emulator Suite、デプロイ自動化ワークフローを整備。
 
-## セットアップ手順
+### フロントエンド
+
+| カテゴリ | ライブラリ |
+|----------|-----------|
+| UI フレームワーク | React 19, React Router 6 |
+| データフェッチ | TanStack Query 5 |
+| フォーム管理 | React Hook Form 7 + Zod |
+| スタイリング | Tailwind CSS 3, Lucide Icons |
+| 多言語 | i18next 24, react-i18next 15 |
+| Firebase | Firebase SDK 12 (Firestore + Auth) |
+| ビルド | Vite 7, TypeScript 5 |
+
+### バックエンド
+
+| カテゴリ | ライブラリ |
+|----------|-----------|
+| HTTP サーバー | Express 5 |
+| Firebase | firebase-admin 12, firebase-functions 6 |
+| バリデーション | Zod 3 |
+| 翻訳 | deepl-node 1 |
+
+### インフラ
+
+| サービス | 用途 |
+|----------|------|
+| Firebase Hosting | SPA 静的ホスティング |
+| Cloud Functions | API サーバー (asia-northeast1) |
+| Cloud Firestore | リアルタイムデータベース |
+| Firebase Authentication | 管理者認証 |
+| GitHub Actions | CI/CD（main ブランチ自動デプロイ） |
+
+---
+
+## API エンドポイント
+
+### パブリック（認証不要）
+
+| メソッド | パス | 説明 |
+|---------|------|------|
+| `GET` | `/programs` | プログラム一覧取得 |
+| `POST` | `/receptions` | 受付登録・自動割当 |
+| `GET` | `/receptions/stats` | 統計情報取得 |
+| `GET` | `/system/settings` | 受付設定取得 |
+| `POST` | `/translate` | テキスト翻訳 |
+
+### 管理者専用（Firebase ID Token 必須）
+
+| メソッド | パス | 説明 |
+|---------|------|------|
+| `PATCH` | `/programs/:id` | プログラム更新 |
+| `POST` | `/assignments/manual` | 手動割当 |
+| `POST` | `/assignments/:id/cancel` | キャンセル＆繰り上げ |
+
+---
+
+## セットアップ
+
 ### 前提条件
-- Node.js 20 系、npm 10 系を推奨。
-- Firebase CLI (`firebase-tools`) をグローバルインストール済みであること。
-- DeepL API キー（翻訳を本番運用する場合）。
 
-### 1. ルート依存関係の取得
+- **Node.js** 20 LTS 以上、**npm** 10 以上
+- **Firebase CLI**: `npm install -g firebase-tools`
+- Firebase プロジェクト（Firestore・Authentication・Hosting 有効化済み）
+- DeepL API キー（翻訳機能を使う場合）
+
+### 1. リポジトリのクローンと依存関係インストール
+
 ```bash
+git clone <repository-url>
+cd KUAS-reception
 npm install
+cd apps/reception-web && npm install
+cd ../../functions && npm install
 ```
-- ルート `package.json` はワークスペース管理とエミュレータ用スクリプトを提供します。
 
-### 2. Web クライアントのセットアップ
-```bash
-cd apps/reception-web
-npm install
-```
-- Tailwind、TanStack Query、Firebase SDK など SPA 用依存関係をインストールします。
+### 2. 環境変数の設定
 
-### 3. SPA 用環境変数
-`apps/reception-web/.env.example` をコピーして `apps/reception-web/.env` を作成し、必要な値を設定します。
+`apps/reception-web/` に `.env` ファイルを作成してください。
+
 ```bash
 cp apps/reception-web/.env.example apps/reception-web/.env
 ```
 
-**必須項目**（Firebase コンソール → プロジェクト設定 → 全般 → マイアプリ からコピー）:
-```
-VITE_FIREBASE_API_KEY=<your-api-key>
-VITE_FIREBASE_AUTH_DOMAIN=<your-project>.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=<your-project-id>
-VITE_FIREBASE_APP_ID=<your-app-id>
-```
+**必須設定**（Firebase コンソール → プロジェクト設定 → 全般 → マイアプリ から取得）:
 
-> **注意**: 上記の `VITE_FIREBASE_*` が未設定の場合、アプリ起動時にブラウザのコンソールにエラーが出力され、管理画面ログインができません。
-
-**任意項目**:
-```
-# Cloud Functions の URL（本番環境では適宜変更）
-VITE_API_BASE_URL=http://localhost:5001/kuas-reception/us-central1
-
-# Firebase Emulator を使用する場合のみ true に設定
-# VITE_USE_FIREBASE_EMULATOR=true
-
-# Realtime Database を米国外（シンガポール等）に作成した場合は設定
-# VITE_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.asia-southeast1.firebasedatabase.app
+```env
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_APP_ID=your-app-id
 ```
 
-### 4. 管理者アカウントの設定
-Firebase コンソール → Authentication → Sign-in method で **Email/Password** を有効化し、
-**Users** タブ → **Add user** で管理者のメールアドレスとパスワードを登録してください。
-登録したメールアドレス/パスワードで管理画面からログインできます。
+**任意設定**:
 
-### 5. Firebase Functions のセットアップ
+```env
+# Cloud Functions の URL（開発環境はエミュレータのURLを使用）
+VITE_API_BASE_URL=http://localhost:5001/your-project-id/asia-northeast1/api
+
+# Firebase Emulator を使用する場合
+VITE_USE_FIREBASE_EMULATOR=true
+```
+
+> **注意**: `VITE_FIREBASE_*` の変数が未設定の場合、ブラウザコンソールにエラーが表示され、管理者ログインが使用できません。
+
+### 3. 管理者アカウントの作成
+
+Firebase コンソール → **Authentication** → **Sign-in method** で **Email/Password** を有効化し、
+**Users** タブ → **Add user** から管理者アカウントを作成してください。
+
+### 4. DeepL API キーの設定（任意）
+
 ```bash
-cd functions
-npm install
+firebase functions:config:set deepl.apikey="YOUR_DEEPL_API_KEY"
 ```
-- DeepL を利用する場合は、以下のコマンドで環境変数を登録します。
-```bash
-firebase functions:config:set deepl.apikey="YOUR_API_KEY"
+
+エミュレータ使用時は `functions/.runtimeconfig.json` に記述してください:
+
+```json
+{
+  "deepl": {
+    "apikey": "YOUR_DEEPL_API_KEY"
+  }
+}
 ```
-- エミュレータ利用時は `.runtimeconfig.json` に同様のキーを記述できます。
+
+---
 
 ## 開発フロー
-### クイックスタート（推奨）
-プロジェクトルートから以下のコマンドで開発サーバーを起動できます：
-```bash
-npm run dev
-```
-- ルートから実行すると自動的に `apps/reception-web` の Vite 開発サーバーが起動します。
-- デフォルトで `http://localhost:5173` でアクセス可能です。
 
-### その他の便利なコマンド
+### 開発サーバーの起動
+
 ```bash
-# ビルド
+# プロジェクトルートから
+npm run dev
+# → http://localhost:5173 でアクセス可能
+
+# LAN 内の他端末からも接続したい場合
+cd apps/reception-web && npm run dev -- --host
+```
+
+### Firebase エミュレータの起動
+
+```bash
+npm run emulators
+# Emulator UI: http://localhost:4000
+```
+
+エミュレータを起動した状態で開発サーバーを動かすことで、ローカル環境で完全な動作確認が可能です。
+
+### ビルドとデプロイ
+
+```bash
+# ビルドのみ
 npm run build
 
-# プレビュー（ビルド後の確認）
-npm run preview
-
-# Lint チェック
-npm run lint
-
-# 型チェック
-npm run typecheck
-
-# Firebase へデプロイ
+# Hosting のみデプロイ
 npm run deploy
 
-# Firebase Functions のみデプロイ
+# Functions のみデプロイ
 npm run deploy:functions
 
-# すべてをデプロイ（Hosting + Functions）
+# すべてデプロイ (Hosting + Functions)
 npm run deploy:all
 
-# Firebase エミュレータ起動
-npm run emulators
+# プレビュー（ビルド成果物の確認）
+npm run preview
 ```
 
-### Web アプリ (Vite) - 直接起動
-```bash
-cd apps/reception-web
-npm run dev -- --host
-```
-- LAN 内端末からの動作確認にも対応させるため `--host` 指定を推奨しています。
-
-### Firebase Emulator Suite
-```bash
-firebase emulators:start --only functions
-```
-- 必要に応じて Firestore / Auth を追加する場合は `--only functions,firestore,auth` のように指定してください。
-- 主なエンドポイント
-  - `GET http://localhost:5001/kuas-reception/us-central1/getPrograms`
-  - `POST http://localhost:5001/kuas-reception/us-central1/addReceptionRecord`
-  - `GET http://localhost:5001/kuas-reception/us-central1/getReceptionStats`
-  - `POST http://localhost:5001/kuas-reception/us-central1/translateText`
-
-### Firebase Hosting へのデプロイ
-```bash
-npx firebase login
-npm run deploy:reception-web
-```
-- 本番とは別にプレビュー用チャネルを作成する場合は次を実行します。
-```bash
-npm run build:reception-web
-npx firebase hosting:channel:deploy preview --only hosting:reception-web
-```
+---
 
 ## 品質チェック
-- `npm run lint`（`apps/reception-web` 内）で ESLint による静的解析を実行。
-- `npm run typecheck` で TypeScript プロジェクト参照による型検証を実行。
-- UI レグレッションを抑えるため、主要フローは Cypress/E2E 導入を検討中です（未導入）。
-- Pull Request 時は GitHub Actions によるデプロイ検証（`.github/workflows/firebase-deploy.yml`）を通過する構成です。
 
-## 翻訳と多言語対応
-- 既定言語は `ja`、ブラウザ検出により `en` へ自動切替。辞書は `apps/reception-web/src/i18n/locales/` 配下に JSON として配置します。
-- DeepL API を利用する自動翻訳は `/translateText` Functions を経由。API キーが無い場合はシンプルなフレーズ辞書でフォールバックします。
-- 固有名詞や学部固有ワードは `customGlossary` を活用し、必要に応じて辞書を追加してください。
+```bash
+# 静的解析 (ESLint)
+npm run lint
 
-## AI 調査・評価プロンプト
-- 現状把握と次アクション整理を AI に依頼する場合は `docs/ai-investigation-prompt.md` を利用してください。
+# 型検査 (TypeScript)
+npm run typecheck
+
+# ユニットテスト
+cd apps/reception-web && npm run test
+cd functions && npm test
+
+# E2E テスト (Playwright)
+cd apps/reception-web && npm run test:e2e
+```
+
+Pull Request 時は GitHub Actions (`.github/workflows/firebase-deploy.yml`) による自動検証が走ります。
+
+---
+
+## 多言語対応
+
+| 言語 | ファイル | ステータス |
+|------|---------|-----------|
+| 日本語 | `src/i18n/locales/ja.json` | ✅ 完全対応 |
+| 英語 | `src/i18n/locales/en.json` | ✅ 完全対応 |
+| インドネシア語 | `src/i18n/locales/id.json` | ✅ 基本対応 |
+
+- ブラウザの言語設定を自動検出し、対応言語に切り替えます
+- 翻訳は DeepL API 経由（未設定時はフレーズ辞書でフォールバック）
+- 新言語の追加は `src/i18n/locales/` に JSON を追加するだけです
+
+---
 
 ## ディレクトリガイド
-- `apps/reception-web/src/components/layout`: AppShell / Sidebar / Status Bar などの共通レイアウト。
-- `apps/reception-web/src/components/ui`: Button / Card / GlassField などの UI Primitive。
-- `apps/reception-web/src/features/reception`: 受付フロー画面・ステート管理。
-- `apps/reception-web/src/features/admin`: 管理ダッシュボードと統計ビュー。
-- `apps/reception-web/src/services/api.ts`: Cloud Functions 呼び出し用クライアント。
-- `apps/reception-web/src/services/firebase.ts`: Firestore / Auth ユーティリティ。
-- `functions/index.js`: HTTP Cloud Functions のエントリ。CORS/認証ヘッダー処理を実装済み。
+
+| パス | 役割 |
+|------|------|
+| `apps/reception-web/src/components/layout/` | AppShell・Sidebar・TopStatusBar・FlowStepper |
+| `apps/reception-web/src/components/ui/` | Button・Card・Badge・GlassField・EmptyState |
+| `apps/reception-web/src/features/reception/` | 来場者向け受付フロー |
+| `apps/reception-web/src/features/admin/` | 管理者ダッシュボード |
+| `apps/reception-web/src/services/api.ts` | HTTP クライアント（Bearer Token注入） |
+| `apps/reception-web/src/services/firebase.ts` | Firestore・Auth ユーティリティ |
+| `functions/app.js` | Express ルーティング（全APIエンドポイント） |
+| `functions/db.js` | Firestore トランザクションロジック |
+| `functions/schemas.js` | Zod バリデーションスキーマ |
+| `firestore.rules` | Firestore セキュリティルール |
+
+---
 
 ## 更新履歴
+
 | バージョン | 日付 | 主な変更点 |
 |-----------|------|------------|
-| v0.7.0 | 2025-10-28 | Firebase デプロイワークフロー整備、最新構成への README 更新、全体の設定整理 |
-| v0.6.0 | 2025-10-09 | DeepL 連携強化、デプロイパイプラインの安定化、言語切替改善 |
-| v0.5.0 | 2025-10-02 | モバイル最適化拡張、iPad 表示のバグ修正、Functions 調整 |
-| v0.4.0 | 2025-09-30 | Liquid Glass テーマ改良、マルチリンガル対応拡張（Arabic追加）、自動デプロイ実験 |
-| v0.3.0 | 2025-09-07 | スマートフォン/タブレット最適化、Firebase 設定アップデート、軽微なバグ修正 |
+| **v0.8.0** | 2026-03-27 | セキュリティ修正：status注入脆弱性の解消、バックエンドバリデーション強化（selections min, companions max）、モックデータフォールバック削除、統計カウントバグ修正 |
+| v0.7.0 | 2025-10-28 | Firebase デプロイワークフロー整備、README 更新、全体の設定整理 |
+| v0.6.0 | 2025-10-09 | DeepL 連携強化、デプロイパイプライン安定化、言語切替改善 |
+| v0.5.0 | 2025-10-02 | モバイル最適化、iPad 表示バグ修正、Functions 調整 |
+| v0.4.0 | 2025-09-30 | Liquid Glass テーマ改良、多言語対応拡張、自動デプロイ実験 |
+| v0.3.0 | 2025-09-07 | スマートフォン/タブレット最適化、Firebase 設定アップデート |
 | v0.2.0 | 2025-08-23 | 受付フロー拡張、同伴者情報・待機表導入、成功画面改善 |
-| v0.1.0 | 2025-08-16 | SPA 初期リリース、オフライン対応・セキュリティ強化、初期 README 整備 |
+| v0.1.0 | 2025-08-16 | SPA 初期リリース、オフライン対応・セキュリティ強化 |
+
+---
 
 ## ライセンス
+
 © KUAS OC improvement committee
+本リポジトリのコードは KUAS オープンキャンパス改善委員会が管理しています。

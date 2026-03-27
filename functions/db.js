@@ -313,8 +313,11 @@ const getReceptionStats = async () => {
         if (data.status === "waiting") stats.waiting++;
         if (data.status === "assigned") stats.assigned++;
         if (data.status === "cancelled") stats.cancelled++;
-        if (data.attendee?.reserved) stats.reserved++;
-        else stats.walkIn++;
+        // Only count non-cancelled receptions for reserved/walkIn breakdown
+        if (data.status !== "cancelled") {
+            if (data.attendee?.reserved) stats.reserved++;
+            else stats.walkIn++;
+        }
     });
     return stats;
 };
