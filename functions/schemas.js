@@ -7,15 +7,14 @@ const receptionSchema = z.object({
         furigana: z.string().optional(),
         school: z.string().optional(),
         grade: z.string().optional(), // accepted as string "grade1" etc.
-        companions: z.number().int().min(0).default(0),
+        companions: z.number().int().min(0).max(10).default(0),
         reserved: z.boolean().optional(),
     }),
     selections: z.array(z.object({
         id: z.string(),
         title: z.string().optional(),
-    })).max(3),
-    notes: z.string().optional(),
-    status: z.enum(["waiting", "assigned", "completed", "cancelled"]).default("waiting"),
+    })).min(1, "At least one program selection is required").max(3),
+    notes: z.string().max(300).optional(),
 });
 
 const translateSchema = z.object({
