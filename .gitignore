@@ -74,3 +74,4 @@ register_of_names/**
 *.local
 *.secret.*
 .env*
+!.env.example
