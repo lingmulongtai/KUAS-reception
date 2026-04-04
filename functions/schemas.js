@@ -17,11 +17,6 @@ const receptionSchema = z.object({
     notes: z.string().max(300).optional(),
 });
 
-const translateSchema = z.object({
-    text: z.string().min(1),
-    targetLang: z.string().min(2),
-});
-
 // Manual assignment request schema
 const manualAssignmentSchema = z.object({
     receptionId: z.string().min(1, "receptionId is required"),
@@ -30,6 +25,5 @@ const manualAssignmentSchema = z.object({
 
 module.exports = {
     receptionSchema,
-    translateSchema,
     manualAssignmentSchema,
 };
