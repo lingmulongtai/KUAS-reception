@@ -17,13 +17,19 @@
 
 ---
 
+> **Cornerstone Project:**  
+> This system is being developed and operated by a 5-member student team as a **Cornerstone Project** of the KUAS Faculty of Engineering.  
+> See the full project proposal here → [📄 Cornerstone Proposal](docs/cornerstone-proposal.md) *(Japanese)*
+
+---
+
 ## Overview
 
-A modern web application that unifies open campus reception operations for **visitors, reception staff, and administrators** under a single UI.
+A modern web application that unifies open campus reception operations for **visitors, reception staff, and administrators** under a single UI. Currently in active development, with a **demo launch at the June 2026 Open Campus** and **full production rollout in August 2026**.
 
-- **Visitors** complete registration and program selection from any tablet or smartphone
+- **Visitors** scan a pre-sent QR code for instant check-in (name/grade input available as fallback)
 - **Reception staff** manage real-time seat assignments and waitlist promotions
-- **Administrators** monitor statistics, manage programs, and control reception via an authenticated panel
+- **Administrators** monitor statistics, import Excel rosters, manage programs, and control reception via an authenticated panel
 
 Built as a React 19 + TypeScript SPA paired with Firebase Cloud Functions (Node.js 20), featuring **thread-safe seat assignment** via Firestore transactions.
 
@@ -33,77 +39,78 @@ Built as a React 19 + TypeScript SPA paired with Firebase Cloud Functions (Node.
 
 | User | Value |
 |------|-------|
-| **Visitors** | Select up to 3 program preferences and receive instant assignment results, for both pre-registered and walk-in guests |
-| **Reception Staff** | Manage the waitlist, manual assignments, and cancellations from a single screen |
-| **Administrators** | Operate a KPI dashboard, program editor, and reception controls through a secured admin panel |
+| **Visitors** | Zero-second QR check-in. Program, venue, and schedule info delivered by email right after registration |
+| **Reception Staff** | Near-zero matching errors. Manage waitlists, manual assignments, and cancellations from one screen |
+| **Administrators** | KPI dashboard, Excel roster import, and assignment mode switching via a secured admin panel |
+| **Admissions Center** | Repeat visitor attendance history auto-accumulated for data-driven Open Campus improvements |
 
 ---
 
 ## Key Features
 
-### Visitor Reception Flow
+### Currently Implemented
 
 ```
-[Start] → [Reserved / Walk-in] → [Enter Info] → [Select Programs (up to 3)] → [Review & Submit] → [Result]
+[Start] → [Name/Grade Input] → [Select Programs (up to 3)] → [Review & Submit] → [Result]
 ```
 
-- Preferences are evaluated in order; the highest-priority program with available seats is assigned automatically
-- If all preferences are full, the visitor is placed on a waitlist automatically
-- Companion count is factored into seat calculation (up to 10 companions)
-- Japanese / English UI switching
+| Category | Features |
+|----------|----------|
+| **Visitor Reception** | 4-step flow · auto assignment · waitlist & promotion |
+| **Admin** | KPI dashboard · manual assignment · program CRUD · open/close control |
+| **System** | Firestore transactions · Firebase Auth · multilingual (JP / EN / ID) |
+| **Infrastructure** | GitHub Actions CI/CD · Firebase Hosting + Cloud Functions |
 
-### Admin Dashboard
+### In Development (Planned)
 
-| Feature | Description |
-|---------|-------------|
-| **KPI Widgets** | Live counts of total visitors, assigned, waiting, completed, and cancelled |
-| **Assignment Board** | Manually assign waiting guests to programs; cancelled seats auto-promote the next in queue |
-| **Program Management** | Create, edit, and delete programs with capacity settings |
-| **Reception Settings** | Open/close reception, set max selections, event name, date, and welcome message |
-| **Reservation Manager** | Browse and filter all reception records by status |
+| Feature | Summary |
+|---------|---------|
+| **Excel Import** | Upload the university-provided .xlsx roster and have it processed automatically |
+| **QR Code Email Blast** | Auto-send personalized QR codes to all registered participants |
+| **QR Scan Check-in** | Hold the QR up to an iPad — check-in is instant. Name/grade input as fallback |
+| **Two Assignment Modes** | Type 1 (first-come) / Type 2 (batch assignment) switchable from admin settings |
+| **Post-Check-in Email** | Auto-send program, venue, instructor, and schedule info immediately after check-in |
+| **Repeat Visitor Tracking** | Accumulate attendance history per visitor for priority scoring and admissions analytics |
 
-### Backend Capabilities
-
-- **Firestore transactions** for atomic seat assignment (zero overbooking)
-- **Firebase Authentication** + Bearer Token protection on admin endpoints
-- **DeepL API** translation (rule-based fallback when no key is configured)
-- **Firestore Security Rules** enforcing collection-level access control
+> See the full design and timeline in the [📄 Cornerstone Proposal](docs/cornerstone-proposal.md) *(Japanese)*.
 
 ---
 
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Firebase Hosting                       │
-│              React 19 SPA (Vite 7 + TypeScript)          │
-│  ┌─────────────────┐    ┌──────────────────────────────┐ │
-│  │  Reception Flow  │    │     Admin Dashboard          │ │
-│  │  - Attendee form │    │  - KPI / Stats              │ │
-│  │  - Program pick  │    │  - Assignment board          │ │
-│  │  - Confirmation  │    │  - Program management        │ │
-│  └────────┬─────────┘    └─────────┬────────────────────┘ │
-└───────────┼───────────────────────┼──────────────────────┘
-            │ HTTP (Bearer Token)   │ Firestore onSnapshot
-            ▼                       ▼
-┌────────────────────────────────────────────────────────────┐
-│              Firebase Cloud Functions (Node.js 20)          │
-│  ┌──────────────┐  ┌───────────────┐  ┌─────────────────┐  │
-│  │  /programs   │  │  /receptions  │  │  /assignments   │  │
-│  │  GET (public)│  │  POST (public)│  │  POST (admin)   │  │
-│  └──────────────┘  └───────────────┘  └─────────────────┘  │
-│              ┌──────────────────────┐                       │
-│              │  Firestore Transaction                        │
-│              │  (thread-safe assign) │                       │
-│              └──────────────────────┘                       │
-└────────────────────────────┬───────────────────────────────┘
-                             │
-                             ▼
-             ┌───────────────────────────┐
-             │     Cloud Firestore        │
-             │  programs / receptions     │
-             │  assignments / settings    │
-             └───────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      Firebase Hosting                         │
+│               React 19 SPA (Vite 7 + TypeScript)             │
+│  ┌───────────────────────┐    ┌────────────────────────────┐  │
+│  │   Visitor Check-in    │    │     Admin Dashboard         │  │
+│  │   - QR scanner        │    │  - KPI / Stats             │  │
+│  │   - Name/grade input  │    │  - Assignment board         │  │
+│  │   - Program selection │    │  - Program management       │  │
+│  │   - Confirmation      │    │  - Excel import             │  │
+│  └──────────┬────────────┘    └────────────┬───────────────┘  │
+└─────────────┼───────────────────────────────┼────────────────┘
+              │ HTTP (Bearer Token)            │ Firestore onSnapshot
+              ▼                                ▼
+┌──────────────────────────────────────────────────────────────┐
+│              Firebase Cloud Functions (Node.js 20)            │
+│  ┌────────────┐  ┌─────────────┐  ┌──────────┐  ┌────────┐  │
+│  │ /programs  │  │ /receptions │  │ /import  │  │  /qr   │  │
+│  │ /assign... │  │ /stats      │  │ /email   │  │        │  │
+│  └────────────┘  └─────────────┘  └──────────┘  └────────┘  │
+│              ┌───────────────────────────┐                    │
+│              │   Firestore Transaction    │                    │
+│              │   (thread-safe assignment) │                    │
+│              └───────────────────────────┘                    │
+└──────────────────────────┬───────────────────────────────────┘
+                           │
+                           ▼
+           ┌──────────────────────────────┐
+           │       Cloud Firestore         │
+           │  programs / receptions        │
+           │  assignments / settings       │
+           │  participants / visitHistory  │  ← planned additions
+           └──────────────────────────────┘
 ```
 
 ### Directory Layout
@@ -135,6 +142,8 @@ KUAS-reception/
 │   ├── db.js                       # Firestore transaction logic
 │   ├── schemas.js                  # Zod validation schemas
 │   └── middleware/auth.js          # Firebase Token verification
+├── docs/
+│   └── cornerstone-proposal.md    # Project proposal (Japanese)
 ├── firestore.rules                 # Firestore Security Rules
 ├── firestore.indexes.json          # Composite index definitions
 └── firebase.json                   # Firebase configuration
@@ -143,6 +152,8 @@ KUAS-reception/
 ---
 
 ## Data Model (Firestore)
+
+### Current Collections
 
 ```
 programs/{id}
@@ -178,6 +189,26 @@ settings/reception-settings
   └── openTime / closeTime: string
 ```
 
+### Planned New Collections
+
+```
+participants/{id}                   # Created from Excel import
+  ├── name / furigana / school / prefecture / grade
+  ├── email: string                 # QR delivery target & visitHistory key
+  ├── companions: number
+  ├── selections: string[]          # CS 1st–3rd preferences
+  ├── listType: "capstone" | "intro" | "both"
+  ├── introTimeSlot: "am" | "pm"   # Engineering intro session slot
+  ├── qrCode: string               # QR code data URL
+  ├── qrSentAt: timestamp
+  └── eventId: string
+
+visitHistory/{email}               # Repeat visitor history
+  ├── email / name / school: string
+  ├── totalVisits: number          # Cumulative visit count
+  └── visits: [{eventId, eventName, eventDate, programId, grade, checkedInAt}]
+```
+
 ---
 
 ## Technology Stack
@@ -202,6 +233,9 @@ settings/reception-settings
 | Firebase | firebase-admin 12, firebase-functions 6 |
 | Validation | Zod 3 |
 | Translation | deepl-node 1 |
+| Excel parsing (planned) | exceljs |
+| Email delivery (planned) | @sendgrid/mail |
+| QR code generation (planned) | qrcode |
 
 ### Infrastructure
 
@@ -229,11 +263,14 @@ settings/reception-settings
 
 ### Admin-Only Endpoints (Firebase ID Token required)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `PATCH` | `/programs/:id` | Update program capacity |
-| `POST` | `/assignments/manual` | Manually assign a waiting guest |
-| `POST` | `/assignments/:id/cancel` | Cancel assignment & auto-promote next |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| `PATCH` | `/programs/:id` | Update program capacity | ✅ Live |
+| `POST` | `/assignments/manual` | Manually assign a waiting guest | ✅ Live |
+| `POST` | `/assignments/:id/cancel` | Cancel assignment & auto-promote next | ✅ Live |
+| `POST` | `/import/participants` | Import Excel roster | 🔜 Planned |
+| `POST` | `/participants/:id/send-qr` | Send QR code email | 🔜 Planned |
+| `POST` | `/assignments/batch` | Run Type 2 batch assignment | 🔜 Planned |
 
 ---
 
@@ -400,6 +437,7 @@ Pull Requests automatically trigger the validation workflow defined in `.github/
 | `functions/db.js` | Firestore transaction logic |
 | `functions/schemas.js` | Zod validation schemas |
 | `firestore.rules` | Firestore Security Rules |
+| `docs/cornerstone-proposal.md` | Cornerstone project proposal (Japanese) |
 
 ---
 
@@ -420,5 +458,5 @@ Pull Requests automatically trigger the validation workflow defined in `.github/
 
 ## License
 
-© KUAS OC improvement committee
+© KUAS OC improvement committee  
 This repository is maintained by the KUAS Open Campus Improvement Committee.
