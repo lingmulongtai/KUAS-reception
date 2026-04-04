@@ -58,7 +58,7 @@ Built as a React 19 + TypeScript SPA paired with Firebase Cloud Functions (Node.
 |----------|----------|
 | **Visitor Reception** | 4-step flow · auto assignment · waitlist & promotion |
 | **Admin** | KPI dashboard · manual assignment · program CRUD · open/close control |
-| **System** | Firestore transactions · Firebase Auth · multilingual (JP / EN / ID) |
+| **System** | Firestore transactions · Firebase Auth · multilingual (JP / EN) |
 | **Infrastructure** | GitHub Actions CI/CD · Firebase Hosting + Cloud Functions |
 
 ### In Development (Planned)
@@ -232,7 +232,6 @@ visitHistory/{email}               # Repeat visitor history
 | HTTP Server | Express 5 |
 | Firebase | firebase-admin 12, firebase-functions 6 |
 | Validation | Zod 3 |
-| Translation | deepl-node 1 |
 | Excel parsing (planned) | exceljs |
 | Email delivery (planned) | @sendgrid/mail |
 | QR code generation (planned) | qrcode |
@@ -259,7 +258,6 @@ visitHistory/{email}               # Repeat visitor history
 | `POST` | `/receptions` | Submit reception & auto-assign |
 | `GET` | `/receptions/stats` | Fetch live statistics |
 | `GET` | `/system/settings` | Get reception settings |
-| `POST` | `/translate` | Translate text via DeepL |
 
 ### Admin-Only Endpoints (Firebase ID Token required)
 
@@ -326,22 +324,6 @@ VITE_USE_FIREBASE_EMULATOR=true
 
 In the Firebase Console → **Authentication** → **Sign-in method**, enable **Email/Password**.
 Then go to the **Users** tab → **Add user** and create your admin credentials.
-
-### 4. Configure DeepL (optional)
-
-```bash
-firebase functions:config:set deepl.apikey="YOUR_DEEPL_API_KEY"
-```
-
-For the emulator, add the same key to `functions/.runtimeconfig.json`:
-
-```json
-{
-  "deepl": {
-    "apikey": "YOUR_DEEPL_API_KEY"
-  }
-}
-```
 
 ---
 
@@ -415,10 +397,8 @@ Pull Requests automatically trigger the validation workflow defined in `.github/
 |----------|------|--------|
 | Japanese | `src/i18n/locales/ja.json` | ✅ Full |
 | English | `src/i18n/locales/en.json` | ✅ Full |
-| Indonesian | `src/i18n/locales/id.json` | ✅ Basic |
 
 - The browser language is detected automatically and the UI switches accordingly
-- Translation is handled via the DeepL API; a phrase dictionary is used as fallback
 - Adding a new language only requires placing a new JSON file in the `locales/` directory
 
 ---

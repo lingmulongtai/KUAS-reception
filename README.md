@@ -58,7 +58,7 @@ React 19 + TypeScript SPA と Firebase Cloud Functions（Node.js 20）で構成�
 |----------|------|
 | **来場者受付** | 4ステップ受付フロー・先着順自動割当・ウェイティングリスト & 繰り上がり |
 | **管理者** | KPIダッシュボード・手動割当・プログラムCRUD・受付開閉設定 |
-| **システム** | Firestoreトランザクション・Firebase Auth・多言語対応（日/英/インドネシア語） |
+| **システム** | Firestoreトランザクション・Firebase Auth・多言語対応（日本語・英語） |
 | **インフラ** | GitHub Actions CI/CD 自動デプロイ・Firebase Hosting + Cloud Functions |
 
 ### 開発中（今後追加予定）
@@ -232,7 +232,6 @@ visitHistory/{email}               # リピーター来場履歴
 | HTTP サーバー | Express 5 |
 | Firebase | firebase-admin 12, firebase-functions 6 |
 | バリデーション | Zod 3 |
-| 翻訳 | deepl-node 1 |
 | Excel 解析（予定） | exceljs |
 | メール送信（予定） | @sendgrid/mail |
 | QRコード生成（予定） | qrcode |
@@ -259,7 +258,6 @@ visitHistory/{email}               # リピーター来場履歴
 | `POST` | `/receptions` | 受付登録・自動割当 |
 | `GET` | `/receptions/stats` | 統計情報取得 |
 | `GET` | `/system/settings` | 受付設定取得 |
-| `POST` | `/translate` | テキスト翻訳 |
 
 ### 管理者専用（Firebase ID Token 必須）
 
@@ -326,22 +324,6 @@ VITE_USE_FIREBASE_EMULATOR=true
 
 Firebase コンソール → **Authentication** → **Sign-in method** で **Email/Password** を有効化し、
 **Users** タブ → **Add user** から管理者アカウントを作成してください。
-
-### 4. DeepL API キーの設定（任意）
-
-```bash
-firebase functions:config:set deepl.apikey="YOUR_DEEPL_API_KEY"
-```
-
-エミュレータ使用時は `functions/.runtimeconfig.json` に記述してください:
-
-```json
-{
-  "deepl": {
-    "apikey": "YOUR_DEEPL_API_KEY"
-  }
-}
-```
 
 ---
 
@@ -415,10 +397,8 @@ Pull Request 時は GitHub Actions (`.github/workflows/firebase-deploy.yml`) に
 |------|---------|-----------|
 | 日本語 | `src/i18n/locales/ja.json` | ✅ 完全対応 |
 | 英語 | `src/i18n/locales/en.json` | ✅ 完全対応 |
-| インドネシア語 | `src/i18n/locales/id.json` | ✅ 基本対応 |
 
 - ブラウザの言語設定を自動検出し、対応言語に切り替えます
-- 翻訳は DeepL API 経由（未設定時はフレーズ辞書でフォールバック）
 - 新言語の追加は `src/i18n/locales/` に JSON を追加するだけです
 
 ---

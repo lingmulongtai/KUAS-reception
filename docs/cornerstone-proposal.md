@@ -95,7 +95,7 @@ flowchart TD
 | **管理者** | プログラムCRUD（作成・編集・削除・定員管理） | ✅ 実装済 |
 | **管理者** | 受付開閉・イベント設定 | ✅ 実装済 |
 | **システム** | Firestoreトランザクション（同時アクセス競合防止） | ✅ 実装済 |
-| **システム** | 多言語対応（日本語・英語・インドネシア語） | ✅ 実装済 |
+| **システム** | 多言語対応（日本語・英語） | ✅ 実装済 |
 | **システム** | Firebase Authentication（管理者ログイン） | ✅ 実装済 |
 | **システム** | GitHub Actions CI/CD 自動デプロイ | ✅ 実装済 |
 
@@ -108,14 +108,12 @@ graph TB
         V[Vite 7]
         T[Tailwind CSS]
         Q[TanStack Query]
-        I[i18next 多言語]
     end
 
     subgraph Backend["バックエンド (Cloud Functions)"]
         E[Express 5]
         Z[Zod バリデーション]
         FA[Firebase Admin SDK]
-        DL[DeepL 翻訳API]
     end
 
     subgraph Firebase["Firebase インフラ"]
