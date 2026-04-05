@@ -19,7 +19,7 @@
 
 > **コーナーストーンプロジェクト：**  
 > 本システムは京都先端科学大学 工学部の **コーナーストーンプロジェクト** として、学生チーム5名が開発・運用しています。  
-> 計画書・システム設計の詳細はこちら → [📄 コーナーストーン計画書](docs/cornerstone-proposal.md)
+> 📄 [詳細計画書（技術者向け）](docs/cornerstone-proposal.md)　／　📋 [概要書（一般向け）](docs/cornerstone-proposal-light.md)
 
 ---
 
