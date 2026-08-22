@@ -1,27 +1,10 @@
 {
   "name": "kuas-reception",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "KUAS Engineering Faculty Open Campus Reception System",
+  "description": "KUAS 工学部オープンキャンパス 受付管理システム（ローカル専用）",
   "scripts": {
-    "dev": "npm run dev --prefix apps/reception-web",
-    "build": "npm run build --prefix apps/reception-web",
-    "preview": "npm run preview --prefix apps/reception-web",
-    "lint": "npm run lint --prefix apps/reception-web",
-    "typecheck": "npm run typecheck --prefix apps/reception-web",
-    "deploy": "npm run build && firebase deploy --only hosting:reception-web",
-    "deploy:functions": "firebase deploy --only functions",
-    "deploy:all": "npm run build && firebase deploy",
-    "emulators": "firebase emulators:start",
-    "test": "echo \"No tests defined\" && exit 0"
-  },
-  "dependencies": {
-    "deepl-node": "^1.20.0"
-  },
-  "devDependencies": {
-    "firebase-tools": "^13.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "start": "node serve.js",
+    "start:lan": "node serve.js 5173 all"
   }
 }

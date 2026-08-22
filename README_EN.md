@@ -1,442 +1,116 @@
-<div align="center">
+# KUAS Reception App
 
-# KUAS Reception
+[日本語 README](README.md)
 
-**Open Campus Reception Management System — Kyoto University of Advanced Science, Faculty of Engineering**
+## Concept
+- Browser-based single-page app that handles reception and seating for KUAS Faculty of Engineering Open Campus
+- Runs **fully locally** end-to-end: roster import, reception, program assignment, progress tracking, and export
+- Makes no requests to any external service — it works in a venue with no connectivity
 
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Firebase](https://img.shields.io/badge/Firebase-Functions%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![License](https://img.shields.io/badge/License-KUAS_OC_Committee-green)](#license)
+> **About the online version**
+> The Firebase build (Auth / Firestore / Cloud Functions) is preserved on the
+> `backup/firebase-main` branch. This branch is that build with the cloud
+> dependencies removed.
 
-[🇯🇵 日本語 README](README.md) | [📋 Overview](#overview) | [🚀 Setup](#setup) | [📖 Docs](#directory-guide)
+## Core Features
+- Reception flow for reserved and walk-in attendees (name, school, grade, companions)
+- Program selection UI for 1st–3rd choices with capacity-aware validation
+- Auto-assignment, waiting list management, and color strap guidance screens
+- Admin panel for program editing, roster preview, and status visualization
+- Excel (`reception_status.xlsx`) and PDF export of final assignments
+- Multilingual UI (日本語 / English / 한국어 / 中文 / español / हिन्दी / नेपाली / العربية / Indonesia)
+- Light / Dark / Liquid Glass themes, automatic persistence via IndexedDB and localStorage
 
-</div>
-
----
-
-> **Cornerstone Project:**  
-> This system is being developed and operated by a 5-member student team as a **Cornerstone Project** of the KUAS Faculty of Engineering.  
-> See the full project proposal here → [📄 Cornerstone Proposal](docs/cornerstone-proposal.md) *(Japanese)*
-
----
-
-## Overview
-
-A modern web application that unifies open campus reception operations for **visitors, reception staff, and administrators** under a single UI. Currently in active development, with a **demo launch at the June 2026 Open Campus** and **full production rollout in August 2026**.
-
-- **Visitors** scan a pre-sent QR code for instant check-in (name/grade input available as fallback)
-- **Reception staff** manage real-time seat assignments and waitlist promotions
-- **Administrators** monitor statistics, import Excel rosters, manage programs, and control reception via an authenticated panel
-
-Built as a React 19 + TypeScript SPA paired with Firebase Cloud Functions (Node.js 20), featuring **thread-safe seat assignment** via Firestore transactions.
-
----
-
-## Audience & Value
-
-| User | Value |
-|------|-------|
-| **Visitors** | Zero-second QR check-in. Program, venue, and schedule info delivered by email right after registration |
-| **Reception Staff** | Near-zero matching errors. Manage waitlists, manual assignments, and cancellations from one screen |
-| **Administrators** | KPI dashboard, Excel roster import, and assignment mode switching via a secured admin panel |
-| **Admissions Center** | Repeat visitor attendance history auto-accumulated for data-driven Open Campus improvements |
-
----
-
-## Key Features
-
-### Currently Implemented
-
-```
-[Start] → [Name/Grade Input] → [Select Programs (up to 3)] → [Review & Submit] → [Result]
-```
-
-| Category | Features |
-|----------|----------|
-| **Visitor Reception** | 4-step flow · auto assignment · waitlist & promotion |
-| **Admin** | KPI dashboard · manual assignment · program CRUD · open/close control |
-| **System** | Firestore transactions · Firebase Auth · multilingual (JP / EN) |
-| **Infrastructure** | GitHub Actions CI/CD · Firebase Hosting + Cloud Functions |
-
-### In Development (Planned)
-
-| Feature | Summary |
-|---------|---------|
-| **Excel Import** | Upload the university-provided .xlsx roster and have it processed automatically |
-| **QR Code Email Blast** | Auto-send personalized QR codes to all registered participants |
-| **QR Scan Check-in** | Hold the QR up to an iPad — check-in is instant. Name/grade input as fallback |
-| **Two Assignment Modes** | Type 1 (first-come) / Type 2 (batch assignment) switchable from admin settings |
-| **Post-Check-in Email** | Auto-send program, venue, instructor, and schedule info immediately after check-in |
-| **Repeat Visitor Tracking** | Accumulate attendance history per visitor for priority scoring and admissions analytics |
-
-> See the full design and timeline in the [📄 Cornerstone Proposal](docs/cornerstone-proposal.md) *(Japanese)*.
-
----
-
-## System Architecture
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                      Firebase Hosting                         │
-│               React 19 SPA (Vite 7 + TypeScript)             │
-│  ┌───────────────────────┐    ┌────────────────────────────┐  │
-│  │   Visitor Check-in    │    │     Admin Dashboard         │  │
-│  │   - QR scanner        │    │  - KPI / Stats             │  │
-│  │   - Name/grade input  │    │  - Assignment board         │  │
-│  │   - Program selection │    │  - Program management       │  │
-│  │   - Confirmation      │    │  - Excel import             │  │
-│  └──────────┬────────────┘    └────────────┬───────────────┘  │
-└─────────────┼───────────────────────────────┼────────────────┘
-              │ HTTP (Bearer Token)            │ Firestore onSnapshot
-              ▼                                ▼
-┌──────────────────────────────────────────────────────────────┐
-│              Firebase Cloud Functions (Node.js 20)            │
-│  ┌────────────┐  ┌─────────────┐  ┌──────────┐  ┌────────┐  │
-│  │ /programs  │  │ /receptions │  │ /import  │  │  /qr   │  │
-│  │ /assign... │  │ /stats      │  │ /email   │  │        │  │
-│  └────────────┘  └─────────────┘  └──────────┘  └────────┘  │
-│              ┌───────────────────────────┐                    │
-│              │   Firestore Transaction    │                    │
-│              │   (thread-safe assignment) │                    │
-│              └───────────────────────────┘                    │
-└──────────────────────────┬───────────────────────────────────┘
-                           │
-                           ▼
-           ┌──────────────────────────────┐
-           │       Cloud Firestore         │
-           │  programs / receptions        │
-           │  assignments / settings       │
-           │  participants / visitHistory  │  ← planned additions
-           └──────────────────────────────┘
-```
-
-### Directory Layout
-
-```
-KUAS-reception/
-├── apps/
-│   └── reception-web/              # React SPA
-│       ├── public/                 # Static assets & logos
-│       └── src/
-│           ├── components/
-│           │   ├── layout/         # AppShell · Sidebar · TopStatusBar
-│           │   └── ui/             # Button · Card · Badge · GlassField
-│           ├── features/
-│           │   ├── reception/      # Full visitor reception flow
-│           │   │   ├── components/ # Step-by-step components
-│           │   │   ├── hooks/      # usePrograms etc.
-│           │   │   └── types.ts    # Zod schema definitions
-│           │   └── admin/          # Admin dashboard
-│           │       ├── components/ # Panel components
-│           │       └── hooks/      # useAdmin · useReservations etc.
-│           ├── services/
-│           │   ├── api.ts          # HTTP client (Bearer Token injection)
-│           │   └── firebase.ts     # Firestore / Auth wrappers
-│           └── i18n/
-│               └── locales/        # ja.json / en.json / id.json
-├── functions/                      # Cloud Functions
-│   ├── app.js                      # Express routing
-│   ├── db.js                       # Firestore transaction logic
-│   ├── schemas.js                  # Zod validation schemas
-│   └── middleware/auth.js          # Firebase Token verification
-├── docs/
-│   └── cornerstone-proposal.md    # Project proposal (Japanese)
-├── firestore.rules                 # Firestore Security Rules
-├── firestore.indexes.json          # Composite index definitions
-└── firebase.json                   # Firebase configuration
-```
-
----
-
-## Data Model (Firestore)
-
-### Current Collections
-
-```
-programs/{id}
-  ├── title: string
-  ├── description: string
-  ├── capacity: number        # Total seat count
-  ├── remaining: number       # Available seats (updated via transaction)
-  ├── startTime / endTime: string
-  ├── location: string
-  ├── isActive: boolean
-  └── order: number           # Display order
-
-receptions/{id}
-  ├── attendee
-  │   ├── name / furigana / school / grade
-  │   ├── companions: number  # Number of companions
-  │   └── reserved: boolean   # Pre-registered flag
-  ├── selections: [{id, title}]   # 1st–3rd preferences
-  ├── assignedProgram: {id, title, priority, assignedBy}
-  ├── status: "waiting" | "assigned" | "completed" | "cancelled"
-  └── createdAt: string
-
-assignments/{id}
-  ├── receptionId / programId
-  ├── attendeeName / priority
-  ├── status: "confirmed" | "cancelled"
-  └── assignedAt / cancelledAt: string
-
-settings/reception-settings
-  ├── isOpen: boolean
-  ├── maxSelections: number
-  ├── eventName / eventDate / welcomeMessage: string
-  └── openTime / closeTime: string
-```
-
-### Planned New Collections
-
-```
-participants/{id}                   # Created from Excel import
-  ├── name / furigana / school / prefecture / grade
-  ├── email: string                 # QR delivery target & visitHistory key
-  ├── companions: number
-  ├── selections: string[]          # CS 1st–3rd preferences
-  ├── listType: "capstone" | "intro" | "both"
-  ├── introTimeSlot: "am" | "pm"   # Engineering intro session slot
-  ├── qrCode: string               # QR code data URL
-  ├── qrSentAt: timestamp
-  └── eventId: string
-
-visitHistory/{email}               # Repeat visitor history
-  ├── email / name / school: string
-  ├── totalVisits: number          # Cumulative visit count
-  └── visits: [{eventId, eventName, eventDate, programId, grade, checkedInAt}]
-```
-
----
-
-## Technology Stack
-
-### Frontend
-
-| Category | Library |
-|----------|---------|
-| UI Framework | React 19, React Router 6 |
-| Data Fetching | TanStack Query 5 |
-| Forms | React Hook Form 7 + Zod |
-| Styling | Tailwind CSS 3, Lucide Icons |
-| i18n | i18next 24, react-i18next 15 |
-| Firebase | Firebase SDK 12 (Firestore + Auth) |
-| Build | Vite 7, TypeScript 5 |
-
-### Backend
-
-| Category | Library |
-|----------|---------|
-| HTTP Server | Express 5 |
-| Firebase | firebase-admin 12, firebase-functions 6 |
-| Validation | Zod 3 |
-| Excel parsing (planned) | exceljs |
-| Email delivery (planned) | @sendgrid/mail |
-| QR code generation (planned) | qrcode |
-
-### Infrastructure
-
-| Service | Purpose |
-|---------|---------|
-| Firebase Hosting | Static SPA hosting |
-| Cloud Functions | API server (asia-northeast1) |
-| Cloud Firestore | Real-time database |
-| Firebase Authentication | Admin authentication |
-| GitHub Actions | CI/CD (auto-deploy on main) |
-
----
-
-## API Reference
-
-### Public Endpoints (no authentication required)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/programs` | List all programs |
-| `POST` | `/receptions` | Submit reception & auto-assign |
-| `GET` | `/receptions/stats` | Fetch live statistics |
-| `GET` | `/system/settings` | Get reception settings |
-
-### Admin-Only Endpoints (Firebase ID Token required)
-
-| Method | Path | Description | Status |
-|--------|------|-------------|--------|
-| `PATCH` | `/programs/:id` | Update program capacity | ✅ Live |
-| `POST` | `/assignments/manual` | Manually assign a waiting guest | ✅ Live |
-| `POST` | `/assignments/:id/cancel` | Cancel assignment & auto-promote next | ✅ Live |
-| `POST` | `/import/participants` | Import Excel roster | 🔜 Planned |
-| `POST` | `/participants/:id/send-qr` | Send QR code email | 🔜 Planned |
-| `POST` | `/assignments/batch` | Run Type 2 batch assignment | 🔜 Planned |
-
----
+## Requirements
+- Browsers: Latest Microsoft Edge, Google Chrome, or Safari
+- OS: Windows 10/11, macOS, iPadOS
+- Node.js 18+ (only if you use the bundled local server)
+- Network: **not required**. Fonts, icons, and libraries are all vendored in the repository
 
 ## Setup
 
-### Prerequisites
+```bash
+npm start
+```
 
-- **Node.js** 20 LTS or later, **npm** 10 or later
-- **Firebase CLI**: `npm install -g firebase-tools`
-- A Firebase project with Firestore, Authentication, and Hosting enabled
-- DeepL API key (optional — for translation feature)
-
-### 1. Clone and Install Dependencies
+Open `http://127.0.0.1:5173`. To reach it from iPads or other devices on the same LAN:
 
 ```bash
-git clone <repository-url>
-cd KUAS-reception
-npm install
-cd apps/reception-web && npm install
-cd ../../functions && npm install
+npm run start:lan
 ```
 
-### 2. Configure Environment Variables
+Then browse to the LAN address printed in the console.
 
-Create a `.env` file inside `apps/reception-web/`:
+> Double-clicking `index.html` will not work. The app fetches its language
+> resources at runtime, and browsers block that over `file://`. Use `npm start`
+> or any local server (e.g. `py -m http.server 8080`).
 
-```bash
-cp apps/reception-web/.env.example apps/reception-web/.env
-```
+Enter the admin panel from the icon in the top right. The default password is
+`admin` (the `ADMIN_PASSWORD` constant in `script.js`).
 
-**Required** (find these in Firebase Console → Project Settings → General → Your Apps):
+## Event-Day Workflow
+1. **Preparation**: Update OS/browser, gather the latest roster files, allow pop-ups
+2. **Import Rosters**: Admin → File Load; import the reservation roster and briefing roster (xlsx) and complete column mapping
+3. **Reception**
+   - Reserved: match by name → confirm details → finalize with companions count
+   - Walk-in: input name/school/grade/companions → choose preferences → confirm
+4. **Auto Assignment**: Configure "Prioritize Reserved" and "Prioritize Grade (Walk-ins)" in Settings; run batch assignment for waiting attendees
+5. **Status Monitoring**: Use the Status tab (cards/table) to review program enrollment and waiting list
+6. **Export**: Generate Excel/PDF outputs and archive final results
 
-```env
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_APP_ID=your-app-id
-```
+## Data Specification
+### Excel Rosters
+| File | Required Columns (example) | Parsed Fields |
+| --- | --- | --- |
+| Capstone Reservation Roster | No, FamilyName, GivenName, Furigana, 1st–3rd, (opt) Companions | `name`, `furigana`, `choices[]`, `companions` |
+| Briefing Session Roster | No, Time, FamilyName, GivenName, Furigana, (opt) Companions | `name`, `furigana`, `time`, `companions` |
 
-**Optional**:
+### Local Persistence
+Everything is written to localStorage through `local-store.js` (`window.LocalStore`),
+namespaced under `kuas.reception.v1.*`.
 
-```env
-# Cloud Functions URL (use the emulator URL during development)
-VITE_API_BASE_URL=http://localhost:5001/your-project-id/asia-northeast1/api
+| Key | Contents |
+| --- | --- |
+| `kuas.reception.v1.programs` | Program definitions |
+| `kuas.reception.v1.reservations` | Reservation roster |
+| `kuas.reception.v1.briefings` | Briefing session roster |
+| `kuas.reception.v1.participants` | Checked-in attendees |
 
-# Set to true when using the Firebase Emulator
-VITE_USE_FIREBASE_EMULATOR=true
-```
+- Multiple tabs in the same browser stay in sync via the `storage` event
+- IndexedDB holds in-progress form input
+- "Reset Reception Data" in the admin panel clears every store
 
-> **Note**: If any `VITE_FIREBASE_*` variable is missing, a clear error appears in the browser console and admin login will be unavailable.
+> **Note:** data is tied to the browser profile. It is not shared across machines
+> or browsers. If several devices handle reception in parallel, export each one to
+> Excel and merge manually.
 
-### 3. Create an Admin Account
+## Directory Highlights
+- `index.html` / `script.js` / `style.css`: main app shell and UI logic
+- `local-store.js`: localStorage-backed data layer
+- `serve.js`: dependency-free local static server
+- `language-loader.js` & `locales/*.json`: lazy-loaded multilingual assets
+- `assets/fonts/`: bundled fonts (Inter / Noto Sans JP / Zen Maru Gothic)
+- `vendor/`: bundled libraries (Phosphor Icons / SortableJS / SheetJS)
+- `public/`: static images
+- `register_of_names/`: sample roster spreadsheets
+- `docs/design-proposal.html`: UI and feature design proposal
 
-In the Firebase Console → **Authentication** → **Sign-in method**, enable **Email/Password**.
-Then go to the **Users** tab → **Add user** and create your admin credentials.
+## Troubleshooting
+- **Reservation not found**: Re-import rosters and verify name spacing/notation
+- **Program full**: Move attendee to waiting list and run batch assignment later
+- **Layout issues / need reset**: Use the admin reset action and reload the page
+- **Blank screen or missing labels**: Check you are not opening it via `file://`; use `npm start`
+- **Data disappeared**: Private browsing and clearing history both wipe it. Always export to Excel before the event ends
+
+## Developer Notes
+- Program definitions and reception logic live in `script.js`
+- `confirmedAttendees` / `waitingList` / `programEnrollment` are derived from
+  `allParticipants` — update them through `syncDerivedLists()`, never directly
+- UI strings live in `locales/*.json`; add new languages with matching keys.
+  Missing keys fall back to English automatically
+- Section navigation goes through `navigateTo()` to avoid relying on browser history
+- SheetJS handles Excel parsing; SortableJS powers drag-and-drop; Phosphor Icons supply iconography
 
 ---
 
-## Development Workflow
-
-### Start the Dev Server
-
-```bash
-# From the project root
-npm run dev
-# → http://localhost:5173
-
-# To reach from other devices on the same LAN
-cd apps/reception-web && npm run dev -- --host
-```
-
-### Start the Firebase Emulator
-
-```bash
-npm run emulators
-# Emulator UI: http://localhost:4000
-```
-
-Running the emulator alongside the dev server gives you a fully local environment with no Firebase cloud calls.
-
-### Build & Deploy
-
-```bash
-# Build only
-npm run build
-
-# Deploy Hosting only
-npm run deploy
-
-# Deploy Functions only
-npm run deploy:functions
-
-# Deploy everything (Hosting + Functions)
-npm run deploy:all
-
-# Preview the built output locally
-npm run preview
-```
-
----
-
-## Quality Checks
-
-```bash
-# Static analysis (ESLint)
-npm run lint
-
-# Type checking (TypeScript)
-npm run typecheck
-
-# Unit tests
-cd apps/reception-web && npm run test
-cd functions && npm test
-
-# E2E tests (Playwright)
-cd apps/reception-web && npm run test:e2e
-```
-
-Pull Requests automatically trigger the validation workflow defined in `.github/workflows/firebase-deploy.yml`.
-
----
-
-## Multilingual Support
-
-| Language | File | Status |
-|----------|------|--------|
-| Japanese | `src/i18n/locales/ja.json` | ✅ Full |
-| English | `src/i18n/locales/en.json` | ✅ Full |
-
-- The browser language is detected automatically and the UI switches accordingly
-- Adding a new language only requires placing a new JSON file in the `locales/` directory
-
----
-
-## Directory Guide
-
-| Path | Role |
-|------|------|
-| `apps/reception-web/src/components/layout/` | AppShell · Sidebar · TopStatusBar · FlowStepper |
-| `apps/reception-web/src/components/ui/` | Button · Card · Badge · GlassField · EmptyState |
-| `apps/reception-web/src/features/reception/` | Visitor-facing reception flow |
-| `apps/reception-web/src/features/admin/` | Admin dashboard and analytics |
-| `apps/reception-web/src/services/api.ts` | HTTP client with Bearer Token injection |
-| `apps/reception-web/src/services/firebase.ts` | Firestore / Auth utilities |
-| `functions/app.js` | Express routing (all API endpoints) |
-| `functions/db.js` | Firestore transaction logic |
-| `functions/schemas.js` | Zod validation schemas |
-| `firestore.rules` | Firestore Security Rules |
-| `docs/cornerstone-proposal.md` | Cornerstone project proposal (Japanese) |
-
----
-
-## Release Notes
-
-| Version | Date | Highlights |
-|---------|------|------------|
-| **v0.8.0** | 2026-03-27 | Security fixes: removed client-injectable `status` field, added backend validation (`selections` min, `companions` max), removed mock data fallback, fixed stats double-counting bug |
-| v0.7.0 | 2025-10-28 | Hardened Firebase deploy workflow, refreshed documentation, configuration cleanup |
-| v0.6.0 | 2025-10-09 | DeepL integration improvements, stabilized deployment pipeline, enhanced language switching |
-| v0.5.0 | 2025-10-02 | Mobile experience updates, iPad bug fixes, Functions adjustments |
-| v0.4.0 | 2025-09-30 | Liquid Glass theme refinements, extended multilingual support, deployment experiments |
-| v0.3.0 | 2025-09-07 | Smartphone/tablet optimization, Firebase configuration updates, assorted bug fixes |
-| v0.2.0 | 2025-08-23 | Expanded reception flow, companion tracking, waitlist views, improved success screens |
-| v0.1.0 | 2025-08-16 | Initial SPA release with offline readiness and security hardening |
-
----
-
-## License
-
-© KUAS OC improvement committee  
-This repository is maintained by the KUAS Open Campus Improvement Committee.
+© KUAS Reception App Team. All rights reserved.
