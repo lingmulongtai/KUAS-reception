@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         saveData('userData', rosterData);
-        writeRostersToFirestore();
+        writeRostersToStore();
     }
 
     // データ削除
@@ -832,7 +832,7 @@ let adminEditorDirty = false;
     }
     // --- 割り当てと完了画面 ---
     function assignProgram(user) {
-        // Firestoreの最新データから現在のプログラム参加人数を計算
+        // 保存済みの受付データから現在のプログラム参加人数を計算
         const currentEnrollment = {};
         programs.forEach(p => { currentEnrollment[p.id] = 0; });
         allParticipants.forEach(p => {
@@ -1080,7 +1080,7 @@ let adminEditorDirty = false;
         });
         programs = newPrograms;
         saveStateToLocalStorage();
-        await saveProgramsToFirestore();
+        saveProgramsToStore();
         adminEditorDirty = false; // 保存完了で未保存状態を解消
         showCustomAlert('infoChangesSaved');
         renderAdminEditor();
@@ -2008,7 +2008,8 @@ function columnLetter(index) {
                 console.error("Failed to parse saved state:", e);
             }
         }
-        await Promise.all([loadProgramsFromFirestore(), loadRostersFromFirestore()]);
+        loadProgramsFromStore();
+        loadRostersFromStore();
     }
 
     // --- テーマ（ダークモード）関連 ---
@@ -2242,8 +2243,8 @@ function columnLetter(index) {
     }
 
     setupTopBarButtons();
-    // Firebase/Firestore 初期化をキック
-    setTimeout(initializeFirestore, 0);
+    // 受付データの購読を開始
+    setTimeout(subscribeToParticipants, 0);
 
     // 管理者ログインの初期化を一元化
     function setupAdminAuth() {
@@ -2596,9 +2597,8 @@ function columnLetter(index) {
         }
 
         try {
-            if (currentUser && window.firebase && window.firebase.firestore) {
-                const db = window.firebase.firestore();
-                await db.collection('participants').add({
+            if (currentUser) {
+                window.LocalStore.participants.add({
                     name: currentUser.name,
                     furigana: currentUser.furigana || '',
                     school: currentUser.school || '',
@@ -2606,8 +2606,7 @@ function columnLetter(index) {
                     companions: 0,
                     choices: [],
                     assignedProgramId: null,
-                    status: 'briefing_only',
-                    createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
+                    status: 'briefing_only'
                 });
             }
         } catch (e) {
@@ -2782,8 +2781,8 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     
     document.getElementById('btn-reset-data').addEventListener('click', () => {
         showCustomAlert('resetConfirm', () => {
-            // Firestoreのデータを削除する処理をここに追加（今回は未実装）
-            // ローカルのデータ削除
+            // 保存済みデータをすべて削除
+            window.LocalStore.clearAll();
             localStorage.removeItem('receptionData');
             localStorage.removeItem('noRosterDataLastShown');
             showCustomAlert('resetComplete', () => {
@@ -2825,44 +2824,27 @@ if (statusViewToggle) {
         const finalizeLocal = (program, wasWaiting) => {
             showSuccessScreen(currentUser.name, program, wasWaiting);
             showSaveIndicator(translations[currentLanguage]?.notificationDatabaseSaved || 'データを保存しました');
-            writeRostersToFirestore();
+            writeRostersToStore();
         };
 
-        const writeToFirestore = async (assignedProgramId, wasWaiting) => {
-            try {
-                if (!window.firebase || !window.firebase.firestore) {
-                    throw new Error('Firestore is not available');
-                }
-
-                const db = window.firebase.firestore();
-                const doc = {
-                    name: currentUser.name,
-                    furigana: currentUser.furigana || '',
-                    school: currentUser.school || '',
-                    grade: currentUser.grade || '',
-                    companions: currentUser.companions || 0,
-                    choices: currentUser.choices || [],
-                    assignedProgramId: assignedProgramId || null,
-                    status: assignedProgramId ? 'assigned' : (wasWaiting ? 'waiting' : 'registered'),
-                    createdAt: window.firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                const result = await db.collection('participants').add(doc);
-                if (!result || !result.id) {
-                    throw new Error('Firestore returned no document reference');
-                }
-            } catch (e) {
-                console.error('Firestore write error', e);
-                throw e;
-            }
-        };
-
-        writeToFirestore(assignedProgram ? assignedProgram.id : null, shouldHold)
-            .then(() => finalizeLocal(assignedProgram, shouldHold))
-            .catch(() => {
-                showCustomAlert('errorDatabaseWriteFailed');
-                navigateTo('reservation-confirmation-section');
+        try {
+            const assignedProgramId = assignedProgram ? assignedProgram.id : null;
+            window.LocalStore.participants.add({
+                name: currentUser.name,
+                furigana: currentUser.furigana || '',
+                school: currentUser.school || '',
+                grade: currentUser.grade || '',
+                companions: currentUser.companions || 0,
+                choices: currentUser.choices || [],
+                assignedProgramId: assignedProgramId,
+                status: assignedProgramId ? 'assigned' : (shouldHold ? 'waiting' : 'registered')
             });
+            finalizeLocal(assignedProgram, shouldHold);
+        } catch (e) {
+            console.error('LocalStore write error', e);
+            showCustomAlert('errorDatabaseWriteFailed');
+            navigateTo('reservation-confirmation-section');
+        }
     });
     
     document.getElementById('btn-back-to-home').addEventListener('click', showReceptionView);
@@ -2876,43 +2858,20 @@ if (statusViewToggle) {
 
     // トップバーのボタンは setupTopBarButtons で初期化済み
 
-    // Firestoreの初期化とリスナー設定
-    function initializeFirestore() {
-        if (!ensureFirebaseInitialized()) {
-            console.warn('Firebase app not initialized yet. Retrying...');
-            setTimeout(initializeFirestore, 200);
-            return;
-        }
-        if (window.firebase && window.firebase.firestore) {
-            const dbFS = window.firebase.firestore();
-            listenToParticipants(dbFS);
-            console.log("Firestore is initialized and listeners are set up.");
-        } else {
-            console.error("Firebase Firestore is not available.");
-        }
-    }
-
-    // participantsコレクションのリアルタイムリスナー
-    function listenToParticipants(dbFS) {
-        dbFS.collection('participants').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            const participantsData = [];
-            snapshot.forEach(doc => {
-                participantsData.push({ id: doc.id, ...doc.data() });
-            });
+    // 受付データの購読（LocalStore。同一ブラウザの別タブとも同期する）
+    function subscribeToParticipants() {
+        window.LocalStore.onParticipantsChange((participantsData) => {
             allParticipants = participantsData;
-            
-            console.log('Participants data updated from Firestore:', allParticipants);
 
             // データが更新されたら、表示も更新する
-            if (document.getElementById('admin-view').classList.contains('hidden') === false) {
+            const adminViewEl = document.getElementById('admin-view');
+            if (adminViewEl && !adminViewEl.classList.contains('hidden')) {
                 updateAdminViewData();
             }
-        }, error => {
-            console.error("Error listening to participants collection:", error);
         });
     }
 
-    // Firestoreのデータ変更を管理者ビューに反映する
+    // データ変更を管理者ビューに反映する
     function updateAdminViewData() {
         // 各コンポーネントを再描画
         updateStatusView();
@@ -2935,146 +2894,33 @@ if (statusViewToggle) {
         document.documentElement.classList.remove('lang-switching');
     });
 
-    async function ensureFirestore() {
-        if (!ensureFirebaseInitialized()) return null;
-        if (window.firebase && window.firebase.firestore) {
-            return window.firebase.firestore();
-        }
-        return null;
+    // --- データ永続化（LocalStore 経由。ネットワーク不要） ---
+
+    function loadProgramsFromStore() {
+        const stored = window.LocalStore.programs.load();
+        if (!stored) return;                 // 未保存ならスクリプト内の初期プログラムを使う
+        programs = stored;
+        renderProgramGrid();
+        renderAdminEditor();
+        saveStateToLocalStorage();
     }
 
-    async function loadProgramsFromFirestore() {
-        try {
-            const db = await ensureFirestore();
-            if (!db) return;
-            const snapshot = await db.collection('programs').orderBy('order', 'asc').get();
-            if (snapshot.empty) return;
-            const fetched = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                fetched.push({
-                    id: doc.id,
-                    title: data.title || '',
-                    description: data.description || '',
-                    title_en: data.title_en || '',
-                    description_en: data.description_en || '',
-                    capacity: data.capacity || 0,
-                    order: typeof data.order === 'number' ? data.order : fetched.length
-                });
-            });
-            programs = fetched.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            renderProgramGrid();
-            renderAdminEditor();
-            saveStateToLocalStorage();
-        } catch (error) {
-            console.error('Failed to load programs from Firestore', error);
-        }
-    }
-
-    async function saveProgramsToFirestore() {
-        try {
-            const db = await ensureFirestore();
-            if (!db) return;
-            const batch = db.batch();
-            const collectionRef = db.collection('programs');
-            const snapshot = await collectionRef.get();
-            snapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            programs.forEach((program, index) => {
-                const docRef = collectionRef.doc(program.id);
-                batch.set(docRef, {
-                    title: program.title,
-                    description: program.description,
-                    title_en: program.title_en || '',
-                    description_en: program.description_en || '',
-                    capacity: program.capacity || 0,
-                    order: index
-                });
-            });
-            await batch.commit();
-        } catch (error) {
-            console.error('Failed to save programs to Firestore', error);
+    function saveProgramsToStore() {
+        if (!window.LocalStore.programs.save(programs)) {
             showCustomAlert('errorDatabaseWriteFailed');
         }
     }
 
-    async function loadRostersFromFirestore() {
-        try {
-            const db = await ensureFirestore();
-            if (!db) return;
-            const reservationSnapshot = await db.collection('reservations').get();
-            const briefingSnapshot = await db.collection('briefings').get();
-            const reservationsData = [];
-            reservationSnapshot.forEach(doc => {
-                const data = doc.data();
-                reservationsData.push({
-                    id: doc.id,
-                    name: data.name || '',
-                    furigana: data.furigana || '',
-                    choices: Array.isArray(data.choices) ? data.choices : [],
-                    companions: data.companions || 0
-                });
-            });
-            const briefingData = [];
-            briefingSnapshot.forEach(doc => {
-                const data = doc.data();
-                briefingData.push({
-                    id: doc.id,
-                    name: data.name || '',
-                    furigana: data.furigana || '',
-                    time: data.time || '',
-                    companions: data.companions || 0
-                });
-            });
-            if (reservationsData.length > 0) {
-                reservations = reservationsData;
-            }
-            if (briefingData.length > 0) {
-                briefingSessionAttendees = briefingData;
-            }
-            renderRosterPreview();
-            renderStatusTable();
-        } catch (error) {
-            console.error('Failed to load rosters from Firestore', error);
-        }
+    function loadRostersFromStore() {
+        const stored = window.LocalStore.rosters.load();
+        if (stored.reservations) reservations = stored.reservations;
+        if (stored.briefings) briefingSessionAttendees = stored.briefings;
+        renderRosterPreview();
+        renderStatusTable();
     }
 
-    async function writeRostersToFirestore() {
-        try {
-            const db = await ensureFirestore();
-            if (!db) return;
-            const reservationsRef = db.collection('reservations');
-            const briefingRef = db.collection('briefings');
-            const reservationsBatch = db.batch();
-            const briefingBatch = db.batch();
-            const [reservationsSnapshot, briefingSnapshot] = await Promise.all([
-                reservationsRef.get(),
-                briefingRef.get()
-            ]);
-            reservationsSnapshot.forEach(doc => reservationsBatch.delete(doc.ref));
-            briefingSnapshot.forEach(doc => briefingBatch.delete(doc.ref));
-            reservations.forEach(reservation => {
-                const docRef = reservationsRef.doc(reservation.id || undefined);
-                reservationsBatch.set(docRef, {
-                    name: reservation.name,
-                    furigana: reservation.furigana || '',
-                    choices: Array.isArray(reservation.choices) ? reservation.choices : [],
-                    companions: reservation.companions || 0
-                });
-            });
-            briefingSessionAttendees.forEach(attendee => {
-                const docRef = briefingRef.doc(attendee.id || undefined);
-                briefingBatch.set(docRef, {
-                    name: attendee.name,
-                    furigana: attendee.furigana || '',
-                    time: attendee.time || '',
-                    companions: attendee.companions || 0
-                });
-            });
-            await Promise.all([reservationsBatch.commit(), briefingBatch.commit()]);
-        } catch (error) {
-            console.error('Failed to save rosters to Firestore', error);
+    function writeRostersToStore() {
+        if (!window.LocalStore.rosters.save(reservations, briefingSessionAttendees)) {
             showCustomAlert('errorDatabaseWriteFailed');
         }
     }
