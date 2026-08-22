@@ -3,27 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://www.gstatic.com; frame-src 'self' https://www.gstatic.com https://apis.google.com; child-src 'self' https://www.gstatic.com https://apis.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
     <meta name="referrer" content="no-referrer">
     <title>オープンキャンパス受付</title>
     <!-- CSSファイルを読み込み -->
     <link rel="stylesheet" href="style.css">
-    <!-- ローカルフォントとアイコン/CSS（オフライン用） -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="dns-prefetch" href="https://www.gstatic.com">
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- ローカル同梱フォント / アイコン（完全オフライン） -->
+    <link rel="stylesheet" href="assets/fonts/fonts.css">
+    <link rel="stylesheet" href="vendor/phosphor-icons/regular/style.css">
+    <link rel="stylesheet" href="vendor/phosphor-icons/fill/style.css">
     <link rel="preload" as="image" href="public/opencampus-img01.jpg">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-    <!-- ドラッグ＆ドロップとExcel操作のライブラリ（オンライン最適化：defer） -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+    <!-- ドラッグ＆ドロップとExcel操作のライブラリ（ローカル同梱） -->
+    <script src="vendor/sortablejs/Sortable.min.js" defer></script>
+    <script src="vendor/sheetjs/xlsx.full.min.js" defer></script>
 </head>
 <body class="fonts-loading">
 
@@ -362,15 +354,8 @@
     <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
     <!-- JavaScriptファイルを読み込み -->
-    <!-- Firebase 設定（firebase-config.js はローカルに用意してください。firebase-config.sample.js を参照） -->
-    <script src="firebase-config.js" defer></script>
-    <!-- Firebase SDK (compat) CDN -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js" defer></script>
-    <!-- Firebase 初期化 -->
-    <script src="firebase-init.js" defer></script>
     <script src="language-loader.js" defer></script>
+    <script src="local-store.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>
