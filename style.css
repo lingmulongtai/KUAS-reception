@@ -1901,7 +1901,7 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     #walk-in-section input, #walk-in-section select, #walk-in-section textarea { font-size: 16px; }
 
     /* 管理画面: タブ/入力/表のモバイル最適化 */
-    .admin-tabs { overflow-x: auto; white-space: nowrap; gap: 8px; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+    .admin-tabs { flex-wrap: wrap; gap: 8px; row-gap: 2px; padding-bottom: 6px; }
     .admin-tab { flex: 0 0 auto; padding: 8px 12px; font-size: 14px; }
     .admin-tab-content { padding: 0; }
     .editor-item-row { flex-direction: column; align-items: stretch; gap: 6px; }
@@ -2552,3 +2552,19 @@ input[type="number"] {
     font-feature-settings: "tnum" 1;
 }
 
+/* === 管理タブを折り返して横スクロールを出さない ====================
+   Windows のブラウザでは overflow-x のスクロールバーが常時見えてしまい、
+   タブ列の下に灰色の帯が残る。タブは 5 つしかないので折り返しで足りる。
+   ================================================================= */
+.admin-tabs {
+    flex-wrap: wrap;
+    overflow: visible;
+    row-gap: 2px;
+}
+/* 折り返すと下線インジケータの位置が合わなくなるため、各タブに直接引く */
+.admin-tabs::after { display: none; }
+.admin-tab {
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+}
+.admin-tab.active { border-bottom-color: var(--primary-color); }
