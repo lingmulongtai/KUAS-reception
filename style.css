@@ -133,56 +133,52 @@ body.fonts-loading {
     font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', Arial, sans-serif;
 }
 
-html[lang="ar"] body {
+/* === 右横書き（アラビア語ほか） ===================================
+   html[dir="rtl"] を script.js が付ける。ここでは物理プロパティで
+   組んである箇所だけを左右反転させる。
+   ================================================================= */
+
+html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+}
+
+/* 数値・メールアドレス・時刻など、中身がラテン文字のものは左横書きのまま */
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="number"],
+html[dir="rtl"] input[type="password"],
+html[dir="rtl"] .capacity-label,
+html[dir="rtl"] .program-no,
+html[dir="rtl"] .candidate-meta {
     direction: ltr;
-    text-align: left;
+    text-align: right;
 }
 
-html[lang="ar"] .content-wrapper,
-html[lang="ar"] .input-group,
-html[lang="ar"] .input-group label,
-html[lang="ar"] .input-group p,
-html[lang="ar"] #status-summary,
-html[lang="ar"] .status-summary,
-html[lang="ar"] .status-toggle-wrapper {
-    text-align: inherit;
-}
+html[dir="rtl"] .header-content { flex-direction: row-reverse; }
+html[dir="rtl"] .header-buttons { margin-right: 0; margin-left: 40px; }
 
-html[lang="ar"] .form-row {
-    flex-direction: row;
-    gap: 12px;
-}
+html[dir="rtl"] .back-btn i { transform: scaleX(-1); }
+html[dir="rtl"] .btn-return i { transform: scaleX(-1); }
 
-html[lang="ar"] .form-row .form-col {
-    text-align: inherit;
-}
+html[dir="rtl"] .lang-menu,
+html[dir="rtl"] .theme-menu { right: auto; left: 0; text-align: right; }
+html[dir="rtl"] #lang-menu a,
+html[dir="rtl"] #theme-menu a { text-align: right; }
 
-html[lang="ar"] input,
-html[lang="ar"] textarea,
-html[lang="ar"] select {
-    direction: ltr;
-    text-align: left;
-}
+html[dir="rtl"] .field-error,
+html[dir="rtl"] .field-note,
+html[dir="rtl"] .candidate-status,
+html[dir="rtl"] .candidate-item,
+html[dir="rtl"] .editor-item-hint,
+html[dir="rtl"] .program-grid,
+html[dir="rtl"] .confirmation-details { text-align: right; }
 
-html[lang="ar"] .button-group {
-    flex-direction: row;
-}
+html[dir="rtl"] .ui-table th,
+html[dir="rtl"] table th,
+html[dir="rtl"] table td { text-align: right; }
 
-html[lang="ar"] .lang-menu,
-html[lang="ar"] .theme-menu {
-    direction: ltr;
-    text-align: left;
-}
-
-html[lang="ar"] .header-buttons {
-    flex-direction: row;
-    gap: 12px;
-}
-
-html[lang="ar"] #lang-menu a,
-html[lang="ar"] #theme-menu a {
-    text-align: left;
-}
+html[dir="rtl"] .candidate-badge { margin-left: 0; margin-right: 8px; }
+html[dir="rtl"] .field-error::before { content: " ⚠"; }
 
 body.liquid-mode {
     --primary-color: rgba(0, 120, 255, 0.6);
@@ -2534,3 +2530,4 @@ body.dark-mode .full-overlay { background: none; }
     color: var(--text-secondary-color);
     text-align: left;
 }
+

@@ -569,6 +569,9 @@ let currentTheme = 'light';
 let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
 
+    // 右横書きの言語。増えたらここに足す。
+    const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
     async function updateLanguage(lang) {
         const wrapper = document.querySelector('#reception-view .content-wrapper');
         const heightContext = prepareHeightAnimation(wrapper);
@@ -576,6 +579,8 @@ let adminEditorDirty = false;
         await window.loadTranslations(lang);
         currentLanguage = lang;
         document.documentElement.setAttribute('lang', lang);
+        // アラビア語は右横書き。CSS 側は論理プロパティで追従させる。
+        document.documentElement.setAttribute('dir', RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr');
         document.documentElement.classList.add('lang-switching');
         requestAnimationFrame(() => {
             document.documentElement.classList.remove('lang-switching');
