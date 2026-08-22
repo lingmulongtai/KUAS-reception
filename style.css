@@ -2568,3 +2568,77 @@ input[type="number"] {
     margin-bottom: -1px;
 }
 .admin-tab.active { border-bottom-color: var(--primary-color); }
+
+/* === 割り当て方法の選択 ==========================================
+   当日の運用を決める設定なので、トグルではなく 4 択を並べて
+   どれが選ばれているか一目で分かる形にする。
+   ================================================================= */
+.mode-group {
+    border: none;
+    margin: 20px 0 0;
+    padding: 0;
+    text-align: left;
+}
+.mode-group legend {
+    padding: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.mode-group-note {
+    margin: 6px 0 14px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary-color);
+}
+
+.mode-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid var(--light-gray);
+    border-radius: 12px;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.mode-option + .mode-option { margin-top: 10px; }
+.mode-option:hover { border-color: var(--secondary-color); }
+.mode-option:focus-within {
+    border-color: var(--primary-color);
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+.mode-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background: rgba(15, 140, 82, .07);
+}
+body.dark-mode .mode-option:has(input:checked) { background: rgba(141, 191, 33, .12); }
+
+.mode-option input[type="radio"] {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin: 2px 0 0;
+    accent-color: var(--primary-color);
+}
+.mode-body { display: block; }
+.mode-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.mode-desc {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary-color);
+}
+
+/* :has() が無いブラウザ向けの保険。選択中でも読める見た目は保たれる。 */
+@supports not (selector(:has(*))) {
+    .mode-option { border-color: var(--light-gray); }
+}

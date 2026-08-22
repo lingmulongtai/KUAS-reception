@@ -149,5 +149,15 @@
     "remainingSeats": "残り{count}",
     "seatsFull": "満席",
     "imageLabel": "画像",
-    "imageHint": "画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。"
+    "imageHint": "画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。",
+    "assignmentModeTitle": "割り当て方法",
+    "assignmentModeNote": "プログラムをどの順番で埋めるかを決めます。先着順以外は、受付時にいったん待機にして、全員の受付が済んでから「受付状況」タブの「待機者を一括割り当て」で確定します。",
+    "modeFirstCome": "先着順",
+    "modeFirstComeDesc": "受付したその場で希望プログラムを確定します。待機は発生しません。",
+    "modeReserved": "予約者優先",
+    "modeReservedDesc": "事前予約のある方を先に確定し、残った枠を予約なしの方へ受付順に割り当てます。",
+    "modeGrade": "学年優先",
+    "modeGradeDesc": "高3 → 高2 → 高1 → その他 の順に割り当てます。受験学年の方を優先したいときに。",
+    "modeRepeat": "リピーター優先",
+    "modeRepeatDesc": "オープンキャンパスへの参加回数が多い方から割り当てます。名簿に参加回数の列が必要です。"
 }

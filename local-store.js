@@ -111,6 +111,7 @@
                                 name: r.name || '',
                                 furigana: r.furigana || '',
                                 email: r.email || '',
+                                visits: r.visits || 0,
                                 choices: Array.isArray(r.choices) ? r.choices : [],
                                 companions: r.companions || 0
                             };
@@ -137,6 +138,7 @@
                         name: r.name,
                         furigana: r.furigana || '',
                         email: r.email || '',
+                        visits: r.visits || 0,
                         choices: Array.isArray(r.choices) ? r.choices : [],
                         companions: r.companions || 0
                     };

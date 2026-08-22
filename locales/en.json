@@ -149,5 +149,15 @@
     "remainingSeats": "{count} left",
     "seatsFull": "Full",
     "imageLabel": "Image",
-    "imageHint": "Put the file in public/programs/ and enter its path here. Leave blank to show a placeholder."
+    "imageHint": "Put the file in public/programs/ and enter its path here. Leave blank to show a placeholder.",
+    "assignmentModeTitle": "Assignment method",
+    "assignmentModeNote": "Decides the order in which programs are filled. Every mode except first-come holds attendees on a waiting list at check-in; run \"Assign waiting list\" on the Status tab once everyone has arrived.",
+    "modeFirstCome": "First come, first served",
+    "modeFirstComeDesc": "Confirms the program at check-in. Nobody waits.",
+    "modeReserved": "Reservation holders first",
+    "modeReservedDesc": "Confirms pre-booked attendees first, then fills the rest in arrival order.",
+    "modeGrade": "By school year",
+    "modeGradeDesc": "Year 3 → Year 2 → Year 1 → other. Use when exam-year students should get priority.",
+    "modeRepeat": "Repeat visitors first",
+    "modeRepeatDesc": "Assigns those who have attended most often first. Requires a visit-count column in the roster."
 }

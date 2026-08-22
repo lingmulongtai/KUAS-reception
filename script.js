@@ -555,10 +555,28 @@ function getTranslatedValue(defaultValue, englishValue) {
 }
 
 let currentTheme = 'light';
+    /**
+     * 割り当て方法。
+     * firstCome 以外は受付時にいったん待機にし、全員の受付後に
+     * assignWaitingListParticipants() でまとめて確定する。
+     */
+    const ASSIGNMENT_MODES = ['firstCome', 'reserved', 'grade', 'repeat'];
+
     let settings = {
-        prioritizeReserved: true,
-        prioritizeGrade: true // 予約なしの学年優先（デフォルトON）
+        assignmentMode: 'grade'
     };
+
+    /** 旧設定（真偽値2つ）を新しい assignmentMode に読み替える。 */
+    function migrateSettings(loaded) {
+        if (!loaded) return;
+        if (ASSIGNMENT_MODES.includes(loaded.assignmentMode)) {
+            settings.assignmentMode = loaded.assignmentMode;
+            return;
+        }
+        if (loaded.prioritizeGrade) settings.assignmentMode = 'grade';
+        else if (loaded.prioritizeReserved) settings.assignmentMode = 'reserved';
+        else settings.assignmentMode = 'firstCome';
+    }
     // 管理者の認証状態（ローカルセッションで管理）
     // ローカル運用のため、パスワードはこの定数で管理する
     const ADMIN_PASSWORD = 'admin';
@@ -1500,6 +1518,7 @@ let adminEditorDirty = false;
                 renderSelect('第2希望列', 'map-choice-2', options, (resAuto.choiceIdxs?.[1] ?? -1), true),
                 renderSelect('第3希望列', 'map-choice-3', options, (resAuto.choiceIdxs?.[2] ?? -1), true),
                 renderSelect('メールアドレス列（任意）', 'map-email', options, (resAuto.emailIdx ?? -1), true),
+                renderSelect('参加回数列（任意・リピーター優先で使用）', 'map-visits', options, (resAuto.visitsIdx ?? -1), true),
                 renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         } else {
@@ -1542,6 +1561,7 @@ let adminEditorDirty = false;
         const furiSeiIdx = getIdx('map-furigana-sei');
         const furiMeiIdx = getIdx('map-furigana-mei');
         const emailIdx = getIdx('map-email');
+        const visitsIdx = getIdx('map-visits');
 
         if (type === 'reservations') {
             const c1 = getIdx('map-choice-1');
@@ -1553,6 +1573,7 @@ let adminEditorDirty = false;
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
                 choiceIdxs: [c1, c2, c3],
                 emailIdx: emailIdx,
+                visitsIdx: visitsIdx,
                 companionsIdx: compIdx
             };
             rosterMappingInfo.reservations = map;
@@ -1573,7 +1594,8 @@ let adminEditorDirty = false;
                     });
                     const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
                     const email = get(row, map.emailIdx);
-                    return { name, furigana: furigana || undefined, email: email || undefined, choices, companions };
+                    const visits = Math.max(0, parseInt(get(row, map.visitsIdx), 10) || 0);
+                    return { name, furigana: furigana || undefined, email: email || undefined, visits, choices, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             reservations = parsed;
@@ -2045,11 +2067,13 @@ function detectReservationHeaderMapping(headerRow) {
     const secondIdx = find(['第2希望','第二希望','2nd','second','第二','2希望']);
     const thirdIdx = find(['第3希望','第三希望','3rd','third','第三','3希望']);
     const emailIdx = find(['メール','ﾒｰﾙ','mail','e-mail','アドレス','address']);
+    const visitsIdx = find(['参加回数','来場回数','回数','visits','visit']);
     return {
         nameIdx: nameIdx >= 0 ? nameIdx : 0,
         furiganaIdxs,
         choiceIdxs: [firstIdx, secondIdx, thirdIdx].map(i => (i == null ? -1 : i)),
-        emailIdx
+        emailIdx,
+        visitsIdx
     };
 }
 
@@ -2124,9 +2148,7 @@ function columnLetter(index) {
         if (savedState) {
             try {
                 const state = JSON.parse(savedState);
-                if (state.settings) {
-                    settings = state.settings;
-                }
+                migrateSettings(state.settings);
             } catch (e) {
                 console.error("Failed to parse saved state:", e);
             }
@@ -2937,21 +2959,17 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
 	document.getElementById('briefing-session-file-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'briefing'));
 	document.getElementById('btn-export-excel').addEventListener('click', openExportPicker);
     
-    document.getElementById('prioritize-toggle-checkbox').checked = settings.prioritizeReserved;
-    document.getElementById('prioritize-toggle-checkbox').addEventListener('change', (e) => {
-        settings.prioritizeReserved = e.target.checked;
-        saveStateToLocalStorage();
-        showSaveIndicator(translations[currentLanguage].settingsSaved);
-    });
-    const prioritizeGradeEl = document.getElementById('prioritize-grade-toggle-checkbox');
-    if (prioritizeGradeEl) {
-        prioritizeGradeEl.checked = settings.prioritizeGrade;
-        prioritizeGradeEl.addEventListener('change', (e) => {
-            settings.prioritizeGrade = e.target.checked;
+    // 割り当て方法の選択
+    document.querySelectorAll('input[name="assignment-mode"]').forEach(radio => {
+        radio.checked = (radio.value === settings.assignmentMode);
+        radio.addEventListener('change', (e) => {
+            if (!e.target.checked) return;
+            settings.assignmentMode = e.target.value;
             saveStateToLocalStorage();
-            showSaveIndicator(translations[currentLanguage].settingsSaved);
+            renderProgramGrid();
+            showSaveIndicator(getTranslation('settingsSaved') || '設定を保存しました');
         });
-    }
+    });
     
     document.getElementById('btn-reset-data').addEventListener('click', () => {
         showCustomAlert('resetConfirm', () => {
@@ -2965,6 +2983,50 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
         }, true);
     });
 
+    // 学年の優先順。上にあるものほど先に割り当てる。
+    const GRADE_ORDER = ['高校3年生', '高校2年生', '高校1年生', 'その他'];
+
+    function gradeRank(grade) {
+        const index = GRADE_ORDER.indexOf(grade);
+        return index >= 0 ? index : GRADE_ORDER.length;
+    }
+
+    /** 事前予約のあった来場者か。受付時に立てたフラグを優先する。 */
+    function isReservedParticipant(participant) {
+        if (typeof participant.isReserved === 'boolean') return participant.isReserved;
+        return reservations.some(r => r.name === participant.name);
+    }
+
+    /** その来場者の過去の参加回数。名簿に列が無ければ 0。 */
+    function visitCount(participant) {
+        if (typeof participant.visits === 'number') return participant.visits;
+        const reservation = reservations.find(r => r.name === participant.name);
+        return (reservation && Number(reservation.visits)) || 0;
+    }
+
+    /**
+     * 一括割り当ての並び順。
+     * どのモードでも、決め手が同じ人どうしは受付順（先に来た人が先）になる。
+     */
+    function waitingComparator() {
+        const byArrival = (a, b) => (a.createdAt || 0) - (b.createdAt || 0);
+
+        switch (settings.assignmentMode) {
+            case 'reserved':
+                return (a, b) => {
+                    const ar = isReservedParticipant(a) ? 0 : 1;
+                    const br = isReservedParticipant(b) ? 0 : 1;
+                    return (ar - br) || byArrival(a, b);
+                };
+            case 'grade':
+                return (a, b) => (gradeRank(a.grade) - gradeRank(b.grade)) || byArrival(a, b);
+            case 'repeat':
+                return (a, b) => (visitCount(b) - visitCount(a)) || byArrival(a, b);
+            default:
+                return byArrival;
+        }
+    }
+
     // 待機者を空きのあるプログラムへ繰り上げる
     function assignWaitingListParticipants() {
         if (waitingList.length === 0) {
@@ -2972,8 +3034,7 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
             return;
         }
 
-        // 受付順（古い順）に処理する
-        const queue = waitingList.slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        const queue = waitingList.slice().sort(waitingComparator());
         let assignedCount = 0;
 
         queue.forEach(user => {
@@ -2987,6 +3048,9 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
                 furigana: user.furigana || '',
                 school: user.school || '',
                 grade: user.grade || '',
+                email: user.email || '',
+                visits: user.visits || 0,
+                isReserved: !!user.isReserved,
                 companions: user.companions || 0,
                 choices: user.choices || [],
                 assignedProgramId: program.id,
@@ -3021,8 +3085,9 @@ if (statusViewToggle) {
             return;
         }
 
-        const isReserved = reservations.some(r => r.name === currentUser.name);
-        const shouldHold = settings.prioritizeReserved && !isReserved;
+        // 先着順以外は、その場では確定させず待機に積む。
+        // 全員の受付が済んでから一括で割り当てる運用を前提にしている。
+        const shouldHold = settings.assignmentMode !== 'firstCome';
         const assignedProgram = shouldHold ? null : assignProgram(currentUser);
         if (!shouldHold && assignedProgram === null) {
             showCustomAlert('errorProgramFull');
@@ -3037,11 +3102,16 @@ if (statusViewToggle) {
 
         try {
             const assignedProgramId = assignedProgram ? assignedProgram.id : null;
+            const reservation = reservations.find(r => r.name === currentUser.name);
             window.LocalStore.participants.add({
                 name: currentUser.name,
                 furigana: currentUser.furigana || '',
                 school: currentUser.school || '',
                 grade: currentUser.grade || '',
+                email: currentUser.email || (reservation && reservation.email) || '',
+                // 並べ替えの材料は受付時点で固定しておく（名簿を入れ直しても結果が動かない）
+                visits: Number(currentUser.visits ?? (reservation && reservation.visits)) || 0,
+                isReserved: !!reservation,
                 companions: currentUser.companions || 0,
                 choices: currentUser.choices || [],
                 assignedProgramId: assignedProgramId,
