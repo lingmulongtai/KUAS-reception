@@ -464,66 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentLanguage = window.currentLanguage || 'ja';
     let allParticipants = [];
 
-    let offlineOverlay = null;
-    let offlineToast = null;
-    let offlineTitleEl = null;
-    let offlineMessageEl = null;
-    let offlineToastTextEl = null;
-
-    const isOnline = () => (typeof navigator.onLine === 'boolean' ? navigator.onLine : true);
-
-    function ensureNetworkNoticeElements() {
-        if (!offlineOverlay) {
-            offlineOverlay = document.createElement('div');
-            offlineOverlay.id = 'offline-overlay';
-            offlineOverlay.innerHTML = `
-                <div class="offline-overlay-content">
-                    <i class="ph ph-wifi-slash"></i>
-                    <h2 class="offline-title"></h2>
-                    <p class="offline-message"></p>
-                </div>
-            `;
-            document.body.appendChild(offlineOverlay);
-            offlineTitleEl = offlineOverlay.querySelector('.offline-title');
-            offlineMessageEl = offlineOverlay.querySelector('.offline-message');
-        }
-        if (!offlineToast) {
-            offlineToast = document.createElement('div');
-            offlineToast.id = 'offline-toast';
-            offlineToast.innerHTML = `
-                <i class="ph ph-warning-circle"></i>
-                <span class="offline-toast-text"></span>
-            `;
-            document.body.appendChild(offlineToast);
-            offlineToastTextEl = offlineToast.querySelector('.offline-toast-text');
-        }
-        updateOfflineNoticeTexts();
-    }
-
-    function updateOfflineNoticeTexts() {
-        const lang = currentLanguage || document.documentElement.getAttribute('lang') || 'ja';
-        const title = getTranslation('offlineRequiredTitle') || (lang === 'ja' ? 'ネットワークに接続してください' : 'Please connect to the network');
-        const message = getTranslation('offlineRequiredDesc') || (lang === 'ja' ? 'このアプリを利用するにはインターネット接続が必要です。接続状況を確認してください。' : 'This app requires an internet connection. Check your connection and try again.');
-        const toast = getTranslation('offlineToastMessage') || (lang === 'ja' ? 'ネットワークに接続できません' : 'Network connection lost');
-        if (offlineTitleEl) offlineTitleEl.textContent = title;
-        if (offlineMessageEl) offlineMessageEl.textContent = message;
-        if (offlineToastTextEl) offlineToastTextEl.textContent = toast;
-    }
-
-    function setOfflineState(forceOffline) {
-        ensureNetworkNoticeElements();
-        const isOffline = forceOffline;
-        document.body.classList.toggle('offline', isOffline);
-        if (offlineOverlay) offlineOverlay.classList.toggle('visible', isOffline);
-        if (offlineToast) offlineToast.classList.toggle('visible', isOffline);
-    }
-
-    function refreshNetworkState() {
-        setOfflineState(!isOnline());
-    }
-
-    window.addEventListener('online', refreshNetworkState);
-    window.addEventListener('offline', refreshNetworkState);
 
 // Bridge: mimic old `translations[currentLanguage].key` API using locales in window.translations
 const translations = new Proxy({}, {
@@ -614,7 +554,6 @@ let adminEditorDirty = false;
             updateStatusView();
             renderRosterPreview();
         }
-        refreshNetworkState();
         if (currentUser) {
             showConfirmation(currentUser);
         }
@@ -2539,12 +2478,6 @@ function columnLetter(index) {
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
     document.getElementById('btn-no-capstone-complete').addEventListener('click', async () => {
-        if (!isOnline()) {
-            refreshNetworkState();
-            showCustomAlert('errorNetworkUnavailable');
-            return;
-        }
-
         try {
             if (currentUser) {
                 window.LocalStore.participants.add({
@@ -2753,12 +2686,6 @@ if (statusViewToggle) {
     document.getElementById('btn-confirm-reservation').addEventListener('click', () => {
         if (!currentUser) {
             showCustomAlert('errorUnexpected');
-            return;
-        }
-
-        if (!isOnline()) {
-            refreshNetworkState();
-            showCustomAlert('errorNetworkUnavailable');
             return;
         }
 
