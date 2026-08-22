@@ -1,0 +1,1673 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KUAS受付 デザインボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+/* ============================================================
+   トークン
+   ============================================================ */
+:root {
+    --canvas:        #E8EAE9;
+    --canvas-grid:   #D8DDDA;
+    --surface:       #FFFFFF;
+    --surface-sunk:  #F2F4F3;
+    --ink:           #1B2420;
+    --ink-muted:     #64756C;
+    --ink-faint:     #8A9990;
+    --rule:          #D0D6D2;
+    --rule-strong:   #B4BEB8;
+    --mark:          #C21D5E;
+    --mark-soft:     #FBE9F0;
+    --brand:         #0F8C52;
+    --on-brand:      #FFFFFF;
+    --shadow:        0 1px 2px rgba(27, 36, 32, .06), 0 8px 24px rgba(27, 36, 32, .07);
+
+    --font-display: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    --font-body:    "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    --font-mono:    "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --canvas:        #121614;
+        --canvas-grid:   #1C221F;
+        --surface:       #1D2421;
+        --surface-sunk:  #171D1A;
+        --ink:           #E4EDE8;
+        --ink-muted:     #97A79E;
+        --ink-faint:     #6E7E75;
+        --rule:          #2E3833;
+        --rule-strong:   #45514B;
+        --mark:          #FF6B9D;
+        --mark-soft:     #351622;
+        --brand:         #3FB77C;
+        --on-brand:      #101613;
+        --shadow:        0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    }
+}
+
+:root[data-theme="dark"] {
+    --canvas:        #121614;
+    --canvas-grid:   #1C221F;
+    --surface:       #1D2421;
+    --surface-sunk:  #171D1A;
+    --ink:           #E4EDE8;
+    --ink-muted:     #97A79E;
+    --ink-faint:     #6E7E75;
+    --rule:          #2E3833;
+    --rule-strong:   #45514B;
+    --mark:          #FF6B9D;
+    --mark-soft:     #351622;
+    --brand:         #3FB77C;
+    --on-brand:      #101613;
+    --shadow:        0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background-color: var(--canvas);
+    background-image:
+        linear-gradient(var(--canvas-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   レイアウト
+   ============================================================ */
+.board {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 32px 120px;
+}
+
+@media (max-width: 900px) {
+    .board { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 18px 80px; }
+    .rail  { display: none; }
+}
+
+/* --- ヘッダー --- */
+.masthead {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 56px 32px 40px;
+}
+.masthead .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--mark);
+    margin: 0 0 14px;
+}
+.masthead h1 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.15;
+    letter-spacing: -.02em;
+    margin: 0 0 16px;
+    text-wrap: balance;
+}
+.masthead .lede {
+    max-width: 60ch;
+    color: var(--ink-muted);
+    margin: 0 0 28px;
+}
+.meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+}
+.meta-strip b { color: var(--ink-muted); font-weight: 500; }
+
+@media (max-width: 900px) { .masthead { padding: 36px 18px 28px; } }
+
+/* --- 索引レール --- */
+.rail {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+}
+.rail-title {
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 10px;
+}
+.rail a {
+    display: block;
+    padding: 5px 0 5px 12px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+}
+.rail a:hover, .rail a:focus-visible {
+    color: var(--ink);
+    border-left-color: var(--mark);
+    outline: none;
+}
+.rail .rail-group {
+    margin-top: 16px;
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .06em;
+}
+
+/* --- セクション --- */
+.chapter { padding-top: 8px; scroll-margin-top: 24px; }
+.chapter + .chapter { margin-top: 72px; }
+
+.chapter-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+.chapter-head .idx {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mark);
+    letter-spacing: .1em;
+}
+.chapter-head h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 21px;
+    letter-spacing: -.01em;
+    margin: 0;
+}
+.chapter-note {
+    color: var(--ink-muted);
+    font-size: 14px;
+    max-width: 66ch;
+    margin: 0 0 32px;
+}
+
+/* --- フレーム（アートボード） --- */
+.frames {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 44px 36px;
+    align-items: flex-start;
+}
+.frame { width: 372px; max-width: 100%; }
+.frame.wide { width: 100%; max-width: 780px; }
+
+.frame-label {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+}
+.frame-label .n { color: var(--mark); font-weight: 700; }
+.frame-label .nm { color: var(--ink-muted); font-weight: 500; }
+.frame-label .dim { margin-left: auto; }
+
+.frame-body {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* --- 注釈 --- */
+.notes {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.notes li {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 9px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+}
+.notes .pin {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--mark);
+    background: var(--mark-soft);
+    border-radius: 999px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    margin-top: 3px;
+}
+.notes b { color: var(--ink); font-weight: 700; }
+
+/* ============================================================
+   モックアップ内部 — アプリ実物の見た目を再現する
+   ドキュメントのテーマとは独立させ、常にアプリのライトテーマを描く
+   ============================================================ */
+.ui {
+    --p:  #0F8C52;
+    --s:  #46A679;
+    --a:  #8DBF21;
+    --t:  #2D5A3D;
+    --t2: #5A7A5A;
+    --bd: #dde2e7;
+    --dg: #dc3545;
+    font-family: "Zen Kaku Gothic New", "Noto Sans JP", sans-serif;
+    color: var(--t);
+    background:
+        linear-gradient(135deg, rgba(15, 140, 82, .45), rgba(70, 166, 121, .45)),
+        linear-gradient(160deg, #7fa88c, #4d7a63);
+    padding: 0 0 18px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.ui.dark {
+    --t:  #eaf6f1;
+    --t2: #bfd7ce;
+    --bd: #384e46;
+    background:
+        linear-gradient(135deg, rgba(10, 90, 58, .55), rgba(45, 107, 79, .55)),
+        linear-gradient(160deg, #2b4a3c, #16261f);
+}
+.ui.dark .ui-card { background: #244236; border-color: #384e46; }
+.ui.dark .ui-input, .ui.dark .ui-select { background: #1e332b; border-color: #46615a; color: #eaf6f1; }
+.ui.dark .ui-bar { background: rgba(24, 44, 36, .92); }
+.ui.dark .ui-chip { background: #1e332b; border-color: #46615a; }
+
+/* トップバー */
+.ui-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, .92);
+    backdrop-filter: blur(8px);
+}
+.ui-logo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--p);
+    border: 1.5px solid var(--p);
+    border-radius: 2px;
+    padding: 2px 6px;
+}
+.ui-icons { display: flex; gap: 6px; }
+.ui-icons span {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(15, 140, 82, .1);
+    display: grid; place-items: center;
+    font-size: 11px;
+    color: var(--p);
+}
+
+/* コンテンツカード */
+.ui-card {
+    background: #fff;
+    border: 1px solid rgba(255, 255, 255, .6);
+    border-radius: 14px;
+    margin: 14px 14px 0;
+    padding: 18px 16px;
+    box-shadow: 0 6px 20px rgba(20, 60, 40, .16);
+}
+.ui-h1 {
+    font-size: 17px; font-weight: 700; line-height: 1.35;
+    margin: 0 0 4px; text-wrap: balance;
+}
+.ui-h2 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+.ui-sub { font-size: 12px; color: var(--t2); margin: 0 0 14px; }
+
+/* ボタン */
+.ui-btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%;
+    padding: 12px 14px;
+    border: none; border-radius: 10px;
+    font: inherit; font-weight: 700; font-size: 14px;
+    color: #fff; background: var(--p);
+    cursor: default;
+}
+.ui-btn.sec { background: var(--s); }
+.ui-btn.gho { background: transparent; color: var(--t2); border: 1.5px solid var(--bd); font-weight: 500; }
+.ui-btn.dan { background: var(--dg); }
+.ui-btn.lg  { padding: 18px 14px; font-size: 15px; border-radius: 12px; }
+.ui-btn.sm  { padding: 7px 12px; font-size: 12px; border-radius: 8px; width: auto; }
+.ui-stack { display: flex; flex-direction: column; gap: 10px; }
+.ui-row   { display: flex; gap: 10px; }
+.ui-row > * { flex: 1; }
+
+/* フォーム */
+.ui-field { margin-bottom: 12px; }
+.ui-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; margin-bottom: 5px;
+}
+.ui-req {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 700;
+    color: #fff; background: var(--dg);
+    border-radius: 3px; padding: 1px 4px;
+}
+.ui-input, .ui-select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1.5px solid var(--bd);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit; font-size: 13px;
+    color: var(--t2);
+}
+.ui-select::after { content: "▾"; }
+.ui-hint { font-size: 11px; color: var(--t2); margin: 4px 0 0; }
+
+/* プログラムカード */
+.ui-prog {
+    border: 1.5px solid var(--bd);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+.ui-prog.picked { border-color: var(--p); box-shadow: 0 0 0 2px rgba(15, 140, 82, .16); }
+.ui-prog.full   { opacity: .55; }
+.ui-prog-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.ui-prog-no {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--p); background: rgba(15, 140, 82, .1);
+    border-radius: 4px; padding: 1px 5px;
+}
+.ui-prog-t { font-size: 13px; font-weight: 700; }
+.ui-prog-d { font-size: 11px; color: var(--t2); margin: 0 0 9px; }
+.ui-picks { display: flex; gap: 6px; }
+.ui-pick {
+    flex: 1; text-align: center;
+    padding: 6px 0;
+    border: 1.5px solid var(--bd); border-radius: 7px;
+    font-size: 11px; font-weight: 700; color: var(--t2);
+}
+.ui-pick.on { background: var(--p); border-color: var(--p); color: #fff; }
+
+/* 定員バー */
+.ui-cap { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.ui-cap-bar { flex: 1; height: 5px; border-radius: 999px; background: rgba(15, 140, 82, .14); overflow: hidden; }
+.ui-cap-bar i { display: block; height: 100%; background: var(--p); border-radius: 999px; }
+.ui-cap-n { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--t2); }
+
+/* 成功画面 */
+.ui-success { text-align: center; padding: 26px 16px; }
+.ui-tick {
+    width: 54px; height: 54px; margin: 0 auto 12px;
+    border-radius: 50%; background: var(--a);
+    display: grid; place-items: center;
+    color: #fff; font-size: 26px; font-weight: 700;
+}
+.ui-role {
+    display: inline-block;
+    font-size: 12px; font-weight: 700;
+    padding: 7px 12px; border-radius: 8px;
+    margin: 10px 0;
+}
+.ui-role.red  { background: #fdecef; color: #b32639; }
+.ui-role.blue { background: #e8f1fb; color: #1d5fa8; }
+
+/* 管理画面 */
+.ui-tabs {
+    display: flex; gap: 2px;
+    border-bottom: 1.5px solid var(--bd);
+    margin: 0 0 14px;
+    overflow-x: auto;
+}
+.ui-tab {
+    padding: 8px 11px;
+    font-size: 12px; font-weight: 500; color: var(--t2);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+.ui-tab.on { color: var(--p); font-weight: 700; border-bottom-color: var(--p); }
+
+.ui-kpi { display: flex; gap: 10px; margin-bottom: 14px; }
+.ui-kpi > div {
+    flex: 1;
+    border: 1.5px solid var(--bd); border-radius: 10px;
+    padding: 9px 11px;
+}
+.ui-kpi .k { font-size: 10px; color: var(--t2); font-weight: 500; }
+.ui-kpi .v {
+    font-family: var(--font-mono); font-size: 21px; font-weight: 700;
+    color: var(--p); font-variant-numeric: tabular-nums;
+}
+.ui-kpi .v.warn { color: #b8860b; }
+
+.ui-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.ui-table th {
+    text-align: left; font-weight: 700; font-size: 10px;
+    color: var(--t2); padding: 6px 8px;
+    border-bottom: 1.5px solid var(--bd);
+    white-space: nowrap;
+}
+.ui-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--bd);
+    font-variant-numeric: tabular-nums;
+}
+.ui-scroll { overflow-x: auto; }
+
+.ui-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+.ui-dot.g { background: var(--a); }
+.ui-dot.y { background: #e0a800; }
+.ui-dot.r { background: var(--dg); }
+
+.ui-chip {
+    display: inline-block;
+    font-size: 10.5px;
+    padding: 2px 7px; margin: 0 3px 3px 0;
+    border: 1px solid var(--bd); border-radius: 999px;
+    background: #fff;
+}
+
+.ui-switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; }
+.ui-switch .lbl { font-size: 12px; font-weight: 700; }
+.ui-toggle {
+    width: 40px; height: 23px; border-radius: 999px;
+    background: var(--bd); position: relative; flex: none;
+}
+.ui-toggle::after {
+    content: ""; position: absolute; top: 2.5px; left: 2.5px;
+    width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+}
+.ui-toggle.on { background: var(--p); }
+.ui-toggle.on::after { left: auto; right: 2.5px; }
+
+.ui-drop {
+    border: 1.5px dashed var(--bd); border-radius: 10px;
+    padding: 20px 12px; text-align: center;
+    font-size: 12px; color: var(--t2);
+}
+
+.ui-modal {
+    background: rgba(20, 45, 34, .55);
+    padding: 34px 20px;
+    display: grid; place-items: center;
+}
+.ui-modal .ui-card { margin: 0; width: 100%; }
+
+/* ============================================================
+   トークン / 仕様表示
+   ============================================================ */
+.swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+.swatch { width: 128px; }
+.swatch .chipc {
+    height: 62px; border-radius: 4px;
+    border: 1px solid var(--rule-strong);
+}
+.swatch .nm { font-size: 12px; font-weight: 700; margin-top: 7px; }
+.swatch .hx {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--ink-faint); text-transform: uppercase;
+}
+.swatch .use { font-size: 11px; color: var(--ink-muted); line-height: 1.5; }
+
+.spec-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.spec-table th {
+    text-align: left; font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 500;
+    padding: 0 14px 8px 0; border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+}
+.spec-table td {
+    padding: 11px 14px 11px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-muted);
+}
+.spec-table td:first-child { color: var(--ink); font-weight: 700; white-space: nowrap; }
+.spec-table code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--surface-sunk); border-radius: 3px; padding: 1px 5px;
+    color: var(--ink);
+}
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; padding: 18px 20px; box-shadow: var(--shadow); }
+
+.type-row {
+    display: flex; align-items: baseline; gap: 20px;
+    padding: 14px 0; border-bottom: 1px solid var(--rule);
+    flex-wrap: wrap;
+}
+.type-row:last-child { border-bottom: none; }
+.type-row .spec {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--ink-faint); width: 170px; flex: none;
+    letter-spacing: .04em;
+}
+
+/* --- 提案カード --- */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 16px; }
+.card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 18px 20px;
+    box-shadow: var(--shadow);
+}
+.card h3 {
+    font-family: var(--font-display);
+    font-size: 15px; font-weight: 700;
+    margin: 10px 0 7px;
+    text-wrap: balance;
+}
+.card p { margin: 0; font-size: 13px; color: var(--ink-muted); line-height: 1.7; }
+.tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9.5px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 2px;
+}
+.tag.now  { background: var(--brand); color: var(--on-brand); }
+.tag.next { background: var(--mark-soft); color: var(--mark); }
+.tag.idea { background: var(--surface-sunk); color: var(--ink-faint); border: 1px solid var(--rule); }
+
+/* --- 論点 --- */
+.questions { display: flex; flex-direction: column; gap: 2px; }
+.q {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 18px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 16px 18px;
+    align-items: start;
+}
+.q + .q { border-top: none; }
+.q:first-child { border-radius: 3px 3px 0 0; }
+.q:last-child  { border-radius: 0 0 3px 3px; }
+.q .qn {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--mark); padding-top: 3px;
+}
+.q h4 { font-size: 14px; font-weight: 700; margin: 0 0 5px; font-family: var(--font-display); }
+.q p  { margin: 0; font-size: 13px; color: var(--ink-muted); }
+.q .opts {
+    margin: 9px 0 0; padding: 0; list-style: none;
+    display: flex; flex-wrap: wrap; gap: 6px;
+}
+.q .opts li {
+    font-size: 12px;
+    border: 1px solid var(--rule-strong); border-radius: 999px;
+    padding: 3px 11px; color: var(--ink-muted);
+}
+
+/* --- フッター --- */
+.colophon {
+    max-width: 1400px; margin: 0 auto;
+    padding: 40px 32px 64px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--ink-faint); line-height: 1.9;
+}
+@media (max-width: 900px) { .colophon { padding: 32px 18px 48px; } }
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
+</style>
+
+<header class="masthead">
+    <p class="eyebrow">Design review — v1</p>
+    <h1>オープンキャンパス受付アプリ<br>デザインボード</h1>
+    <p class="lede">
+        ローカル専用版に戻した現行アプリの全画面を、Figma のキャンバスのように並べたものです。
+        各フレームには番号付きの注釈を付けています。この番号を指して「3-2 のここを変えたい」と
+        言ってもらえれば、そのまま直せます。
+    </p>
+    <div class="meta-strip">
+        <span><b>対象</b> KUAS-reception / local-only</span>
+        <span><b>構成</b> Vanilla JS + localStorage</span>
+        <span><b>画面数</b> 受付 7 ／ 管理 6</span>
+        <span><b>更新</b> 2026-08-23</span>
+    </div>
+</header>
+
+<div class="board">
+
+    <nav class="rail" aria-label="目次">
+        <div class="rail-title">Contents</div>
+        <div class="rail-group">01 基礎</div>
+        <a href="#tokens">配色</a>
+        <a href="#type">タイポグラフィ</a>
+        <a href="#components">コンポーネント</a>
+        <div class="rail-group">02 受付フロー</div>
+        <a href="#flow">7画面</a>
+        <div class="rail-group">03 管理画面</div>
+        <a href="#admin">6画面</a>
+        <div class="rail-group">04 テーマ</div>
+        <a href="#themes">ダーク / Liquid</a>
+        <div class="rail-group">05 これから</div>
+        <a href="#roadmap">機能候補</a>
+        <a href="#questions">決めたいこと</a>
+    </nav>
+
+    <main>
+
+        <!-- ============================================================
+             01 — 配色
+             ============================================================ -->
+        <section class="chapter" id="tokens">
+            <div class="chapter-head">
+                <span class="idx">01-A</span>
+                <h2>配色</h2>
+            </div>
+            <p class="chapter-note">
+                現行の <code>style.css</code> がそのまま持っている値です。KUAS のコーポレートグリーンを
+                主役に、明度を三段に振って役割を分けています。ここを動かすと全画面に効くので、
+                変えるなら最初に決めたいところ。
+            </p>
+
+            <div class="swatches">
+                <div class="swatch">
+                    <div class="chipc" style="background:#0F8C52"></div>
+                    <div class="nm">Primary</div>
+                    <div class="hx">#0F8C52</div>
+                    <div class="use">主ボタン、選択中の希望、確定件数</div>
+                </div>
+                <div class="swatch">
+                    <div class="chipc" style="background:#46A679"></div>
+                    <div class="nm">Secondary</div>
+                    <div class="hx">#46A679</div>
+                    <div class="use">副ボタン（予約なし・希望変更）</div>
+                </div>
+                <div class="swatch">
+                    <div class="chipc" style="background:#8DBF21"></div>
+                    <div class="nm">Accent</div>
+                    <div class="hx">#8DBF21</div>
+                    <div class="use">受付完了のチェック、成功状態</div>
+                </div>
+                <div class="swatch">
+                    <div class="chipc" style="background:#2D5A3D"></div>
+                    <div class="nm">Text</div>
+                    <div class="hx">#2D5A3D</div>
+                    <div class="use">本文。緑寄りの墨色</div>
+                </div>
+                <div class="swatch">
+                    <div class="chipc" style="background:#5A7A5A"></div>
+                    <div class="nm">Text sub</div>
+                    <div class="hx">#5A7A5A</div>
+                    <div class="use">補足文、プレースホルダ</div>
+                </div>
+                <div class="swatch">
+                    <div class="chipc" style="background:#dc3545"></div>
+                    <div class="nm">Danger</div>
+                    <div class="hx">#DC3545</div>
+                    <div class="use">必須マーク、データリセット</div>
+                </div>
+            </div>
+
+            <ul class="notes" style="margin-top:20px; max-width:66ch">
+                <li><span class="pin">1</span><span><b>役割色は別系統。</b> 受付後に案内する手首ストラップの色（赤／青）は、UI の緑とは無関係な意味を持つ色です。画面上でも「システムの色」と混ざらないよう、面ではなく淡いバッジで出しています。</span></li>
+                <li><span class="pin">2</span><span><b>定員の警告色が無い。</b> 現状は満席でもカードが薄くなるだけ。残りわずかを示す黄色を足すか、要検討。</span></li>
+            </ul>
+        </section>
+
+        <!-- ============================================================
+             01-B — タイポグラフィ
+             ============================================================ -->
+        <section class="chapter" id="type">
+            <div class="chapter-head">
+                <span class="idx">01-B</span>
+                <h2>タイポグラフィ</h2>
+            </div>
+            <p class="chapter-note">
+                フォントは全部リポジトリに同梱済みなので、会場に回線が無くても崩れません。
+                iPad を来場者に触ってもらう前提で、本文は 15px 相当より小さくしない方針です。
+            </p>
+
+            <div class="table-wrap">
+                <div class="type-row">
+                    <span class="spec">Zen Maru Gothic 700 / 24px</span>
+                    <span style="font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:24px;line-height:1.3">工学部ミニキャップストーン体験 受付</span>
+                </div>
+                <div class="type-row">
+                    <span class="spec">Noto Sans JP 700 / 17px</span>
+                    <span style="font-weight:700;font-size:17px">希望プログラムを選択してください</span>
+                </div>
+                <div class="type-row">
+                    <span class="spec">Noto Sans JP 400 / 15px</span>
+                    <span style="font-size:15px">第1〜第3希望まで選択できます。</span>
+                </div>
+                <div class="type-row">
+                    <span class="spec">Noto Sans JP 400 / 13px · sub</span>
+                    <span style="font-size:13px;color:var(--ink-muted)">※ 姓と名の間にスペースを入力してください</span>
+                </div>
+                <div class="type-row">
+                    <span class="spec">JetBrains Mono 700 / 21px · 数値</span>
+                    <span style="font-family:var(--font-mono);font-weight:700;font-size:21px;font-variant-numeric:tabular-nums;color:var(--brand)">12 / 15</span>
+                </div>
+            </div>
+
+            <ul class="notes" style="margin-top:20px; max-width:66ch">
+                <li><span class="pin">1</span><span><b>数字だけ等幅にしたい。</b> 受付状況の人数が更新のたびに横幅で揺れます。<code>tabular-nums</code> を当てるだけで直ります。</span></li>
+                <li><span class="pin">2</span><span><b>アラビア語のとき右寄せが不完全。</b> <code>html[lang="ar"]</code> の RTL 対応がメニューにしか効いていません。</span></li>
+            </ul>
+        </section>
+
+        <!-- ============================================================
+             01-C — コンポーネント
+             ============================================================ -->
+        <section class="chapter" id="components">
+            <div class="chapter-head">
+                <span class="idx">01-C</span>
+                <h2>コンポーネント</h2>
+            </div>
+            <p class="chapter-note">
+                画面をまたいで使い回している部品です。ここの形が決まれば、あとは並べるだけになります。
+            </p>
+
+            <div class="frames">
+
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">ボタン</span><span class="dim">4 variants</span></div>
+                    <div class="frame-body">
+                        <div class="ui" style="background:none;padding:16px">
+                            <div class="ui-stack">
+                                <button class="ui-btn lg">✓ &nbsp;予約あり</button>
+                                <button class="ui-btn sec lg">＋ &nbsp;予約なし</button>
+                                <button class="ui-btn">この内容で確定</button>
+                                <button class="ui-btn gho">キャップストーン体験に参加しない</button>
+                                <button class="ui-btn dan">受付データをリセット</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span>来場者が押すボタンは高さ 56px。手袋やスタイラスでも外さない大きさ。</span></li>
+                        <li><span class="pin">2</span><span><b>破壊的操作の扱い。</b> リセットは今も確認ダイアログが出ますが、赤ボタンを管理画面の底に置いたままで良いか。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">入力フィールド</span></div>
+                    <div class="frame-body">
+                        <div class="ui" style="background:none;padding:16px">
+                            <div class="ui-field">
+                                <div class="ui-label">お名前 <span class="ui-req">必須</span></div>
+                                <p class="ui-hint" style="margin:0 0 5px">※ 姓と名の間にスペースを入力してください</p>
+                                <div class="ui-input">例：山田 太郎</div>
+                            </div>
+                            <div class="ui-field">
+                                <div class="ui-label">フリガナ <span class="ui-req">必須</span></div>
+                                <div class="ui-input">例：ヤマダ タロウ</div>
+                            </div>
+                            <div class="ui-row">
+                                <div class="ui-field">
+                                    <div class="ui-label">学年 <span class="ui-req">必須</span></div>
+                                    <div class="ui-select">選択してください&nbsp; ▾</div>
+                                </div>
+                                <div class="ui-field">
+                                    <div class="ui-label">同伴者 <span class="ui-req">必須</span></div>
+                                    <div class="ui-select">0&nbsp; ▾</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>フリガナは手入力のまま。</b> 名前から自動変換するか、そもそも省くか。入力が一番詰まる箇所です。</span></li>
+                        <li><span class="pin">2</span><span>未入力のフィールドは赤枠でハイライトされますが、何が足りないかは文章で出ません。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">プログラムカード</span><span class="dim">3 states</span></div>
+                    <div class="frame-body">
+                        <div class="ui" style="background:none;padding:16px">
+                            <div class="ui-prog picked">
+                                <div class="ui-prog-top"><span class="ui-prog-no">#1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
+                                <p class="ui-prog-d">紙の構造で強さをつくる。手を動かして学ぶ構造力学。</p>
+                                <div class="ui-picks">
+                                    <div class="ui-pick on">第1希望</div>
+                                    <div class="ui-pick">第2希望</div>
+                                    <div class="ui-pick">第3希望</div>
+                                </div>
+                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:60%"></i></div><span class="ui-cap-n">9 / 15</span></div>
+                            </div>
+                            <div class="ui-prog">
+                                <div class="ui-prog-top"><span class="ui-prog-no">#2</span><span class="ui-prog-t">ChatGPT を操ろう！</span></div>
+                                <p class="ui-prog-d">生成AIの仕組みと、うまく指示を出すコツ。</p>
+                                <div class="ui-picks">
+                                    <div class="ui-pick">第1希望</div>
+                                    <div class="ui-pick">第2希望</div>
+                                    <div class="ui-pick">第3希望</div>
+                                </div>
+                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:33%"></i></div><span class="ui-cap-n">5 / 15</span></div>
+                            </div>
+                            <div class="ui-prog full">
+                                <div class="ui-prog-top"><span class="ui-prog-no">#3</span><span class="ui-prog-t">現代の金属魔法？</span></div>
+                                <p class="ui-prog-d">金属を溶かして、固めて、性質を変える。</p>
+                                <div class="ui-picks">
+                                    <div class="ui-pick">満席</div>
+                                    <div class="ui-pick">満席</div>
+                                    <div class="ui-pick">満席</div>
+                                </div>
+                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:100%"></i></div><span class="ui-cap-n">15 / 15</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>定員バーは提案です。</b> 現行にはありません。来場者に残枠を見せるか、スタッフだけが見るかは判断が要ります。</span></li>
+                        <li><span class="pin">2</span><span>満席カードは今は薄くなるだけ。「満席」の文字を出した方が伝わります。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">スイッチ・タブ・チップ</span></div>
+                    <div class="frame-body">
+                        <div class="ui" style="background:none;padding:16px">
+                            <div class="ui-tabs" style="margin-bottom:16px">
+                                <div class="ui-tab on">プログラム編集</div>
+                                <div class="ui-tab">ファイル読み込み</div>
+                                <div class="ui-tab">名簿</div>
+                                <div class="ui-tab">受付状況</div>
+                            </div>
+                            <div class="ui-switch">
+                                <span class="lbl">予約者優先割り当て</span>
+                                <span class="ui-toggle on"></span>
+                            </div>
+                            <div class="ui-switch">
+                                <span class="lbl">学年優先割り当て</span>
+                                <span class="ui-toggle"></span>
+                            </div>
+                            <div style="margin-top:12px">
+                                <span class="ui-chip">山田 太郎（同伴者:2）</span>
+                                <span class="ui-chip">佐藤 花子</span>
+                                <span class="ui-chip">鈴木 一郎</span>
+                            </div>
+                            <div style="margin-top:12px;font-size:11.5px;color:var(--t2)">
+                                <span class="ui-dot g"></span>確定済み
+                                <span class="ui-dot y" style="margin-left:12px"></span>待機中
+                                <span class="ui-dot r" style="margin-left:12px"></span>未受付
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span>タブは 5 つあり、iPad 縦だと横スクロールが発生します。アイコン併記で詰めるか、2 段にするか。</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================================
+             02 — 受付フロー
+             ============================================================ -->
+        <section class="chapter" id="flow">
+            <div class="chapter-head">
+                <span class="idx">02</span>
+                <h2>受付フロー — 来場者が見る 7 画面</h2>
+            </div>
+            <p class="chapter-note">
+                番号は実際の遷移順です。予約ありは 1→2→3→6、予約なしは 1→4→5→6、
+                キャップストーン体験に参加しない人は 1→4→7 に分かれます。
+            </p>
+
+            <div class="frames">
+
+                <!-- 1 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">1</span><span class="nm">初期選択</span><span class="dim">#initial-selection</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card" style="text-align:center">
+                                <p class="ui-h1">工学部ミニキャップストーン体験 受付</p>
+                                <p class="ui-sub">ご予約の有無を選んでください</p>
+                                <div class="ui-stack" style="margin-top:22px">
+                                    <button class="ui-btn lg">✓ &nbsp;予約あり</button>
+                                    <button class="ui-btn sec lg">＋ &nbsp;予約なし</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>ここが一番人が滞留する画面。</b> 高校生が自分で操作するので、二択以外は何も置かない方が速い。</span></li>
+                        <li><span class="pin">2</span><span>言語切替が右上のアイコンに埋もれています。外国籍の来場者が自力で見つけられるか要検証。</span></li>
+                        <li><span class="pin">3</span><span>管理画面への歯車が来場者から見える位置にあります。長押しや隠しジェスチャーに変える案あり。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 2 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">2</span><span class="nm">予約あり — 名前照合</span><span class="dim">#name-input-section</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card">
+                                <div style="font-size:11.5px;color:var(--t2);margin-bottom:10px">← 戻る</div>
+                                <p class="ui-h1">予約あり - お名前入力</p>
+                                <p class="ui-sub">お名前をフルネームで入力してください</p>
+                                <p class="ui-hint" style="margin:0 0 7px">※ 姓と名の間にスペースを入力してください</p>
+                                <div class="ui-input" style="margin-bottom:16px">例：山田 太郎</div>
+                                <button class="ui-btn">予約を確認する</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>スペースの有無で照合が落ちる。</b> 名簿側は「姓」「名」が別列、入力は 1 本。全角空白は正規化していますが、そもそも姓・名を分けて入力させる案も。</span></li>
+                        <li><span class="pin">2</span><span>見つからなかったときの導線が「エラーを出して終わり」。予約なしフローへ流す案内を出したい。</span></li>
+                        <li><span class="pin">3</span><span>将来 QR で置き換えるなら、この画面は代替手段に降格します。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 3 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">3</span><span class="nm">予約内容の確認</span><span class="dim">#reservation-confirmation</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card">
+                                <p class="ui-h2">ご予約内容の確認</p>
+                                <div style="border:1.5px solid var(--bd);border-radius:10px;padding:12px;margin:12px 0">
+                                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px"><span style="color:var(--t2)">お名前</span><b>山田 太郎</b></div>
+                                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px"><span style="color:var(--t2)">フリガナ</span><b>ヤマダ タロウ</b></div>
+                                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px"><span style="color:var(--t2)">第1希望</span><b>"紙"技エンジニアリング！</b></div>
+                                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px"><span style="color:var(--t2)">第2希望</span><b>ChatGPT を操ろう！</b></div>
+                                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px"><span style="color:var(--t2)">第3希望</span><b>現代の金属魔法？</b></div>
+                                </div>
+                                <div class="ui-field">
+                                    <div class="ui-label">同伴者人数</div>
+                                    <div class="ui-select">0&nbsp; ▾</div>
+                                </div>
+                                <div class="ui-stack" style="margin-top:14px">
+                                    <button class="ui-btn">この内容で確定</button>
+                                    <button class="ui-btn sec">希望を変更する</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>同伴者はここで初めて聞かれる。</b> 保護者が一緒に立っているので、この位置は理にかなっています。</span></li>
+                        <li><span class="pin">2</span><span>希望が満席だった場合、この時点では何も表示されません。確定を押して初めて待機になります。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 4 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">4</span><span class="nm">予約なし — 情報入力</span><span class="dim">#walk-in-section</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card">
+                                <p class="ui-h1">予約なし - お名前入力</p>
+                                <div class="ui-row">
+                                    <div class="ui-field">
+                                        <div class="ui-label">お名前 <span class="ui-req">必須</span></div>
+                                        <div class="ui-input">例：山田 太郎</div>
+                                    </div>
+                                    <div class="ui-field">
+                                        <div class="ui-label">フリガナ <span class="ui-req">必須</span></div>
+                                        <div class="ui-input">例：ヤマダ タロウ</div>
+                                    </div>
+                                </div>
+                                <div class="ui-field">
+                                    <div class="ui-label">学校名</div>
+                                    <div class="ui-input">例：〇〇高等学校</div>
+                                </div>
+                                <div class="ui-row">
+                                    <div class="ui-field">
+                                        <div class="ui-label">学年 <span class="ui-req">必須</span></div>
+                                        <div class="ui-select">選択してください&nbsp; ▾</div>
+                                    </div>
+                                    <div class="ui-field">
+                                        <div class="ui-label">同伴者 <span class="ui-req">必須</span></div>
+                                        <div class="ui-select">選択してください&nbsp; ▾</div>
+                                    </div>
+                                </div>
+                                <div class="ui-stack" style="margin-top:6px">
+                                    <button class="ui-btn">プログラム選択へ</button>
+                                    <button class="ui-btn gho">キャップストーン体験に参加しない</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>必須が 4 つ。</b> 学校名だけ任意ですが、見た目では区別しづらい。行列ができる時間帯に一番効いてきます。</span></li>
+                        <li><span class="pin">2</span><span><b>下の逃げ道が目立ちすぎる。</b> 「参加しない」が主導線と同じ幅で並んでいて、誤タップの余地があります。</span></li>
+                        <li><span class="pin">3</span><span>学年は高1〜高3＋その他の 4 択。既卒・保護者・引率教員をどう扱うか未定です。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 5 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">5</span><span class="nm">プログラム選択</span><span class="dim">#program-selection</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card">
+                                <p class="ui-h2">希望プログラムを選択してください</p>
+                                <p class="ui-sub">第1〜第3希望まで選択できます。</p>
+                                <div class="ui-prog picked">
+                                    <div class="ui-prog-top"><span class="ui-prog-no">#1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
+                                    <div class="ui-picks">
+                                        <div class="ui-pick on">第1希望</div>
+                                        <div class="ui-pick">第2希望</div>
+                                        <div class="ui-pick">第3希望</div>
+                                    </div>
+                                </div>
+                                <div class="ui-prog picked">
+                                    <div class="ui-prog-top"><span class="ui-prog-no">#2</span><span class="ui-prog-t">ChatGPT を操ろう！</span></div>
+                                    <div class="ui-picks">
+                                        <div class="ui-pick">第1希望</div>
+                                        <div class="ui-pick on">第2希望</div>
+                                        <div class="ui-pick">第3希望</div>
+                                    </div>
+                                </div>
+                                <div class="ui-prog">
+                                    <div class="ui-prog-top"><span class="ui-prog-no">#3</span><span class="ui-prog-t">現代の金属魔法？</span></div>
+                                    <div class="ui-picks">
+                                        <div class="ui-pick">第1希望</div>
+                                        <div class="ui-pick">第2希望</div>
+                                        <div class="ui-pick">第3希望</div>
+                                    </div>
+                                </div>
+                                <button class="ui-btn" style="margin-top:14px">選択を確定する</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>5 プログラム × 3 希望 = 15 ボタン。</b> 縦に長くなり、確定ボタンまでスクロールが要ります。確定ボタンを画面下に固定する案。</span></li>
+                        <li><span class="pin">2</span><span><b>第2・第3希望は本当に要るか。</b> 現状は 3 つ全部埋めないと確定できません。第1希望だけで通す運用も選べるようにするか。</span></li>
+                        <li><span class="pin">3</span><span>プログラムの説明文がカードに入りますが、選択画面では畳んでも良いかもしれません。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 6 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">6</span><span class="nm">受付完了</span><span class="dim">#success-section</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card ui-success">
+                                <div class="ui-tick">✓</div>
+                                <p class="ui-h2" style="margin-bottom:8px">受付が完了しました！</p>
+                                <p style="font-size:15px;font-weight:700;margin:0 0 4px">山田 太郎 様</p>
+                                <span class="ui-role red">あなたは「赤色」です。スタッフが手首にストラップをつけます</span>
+                                <p class="ui-sub" style="margin:6px 0 12px">あなたは以下のプログラムに確定しました。</p>
+                                <div class="ui-prog picked" style="text-align:left;margin:0">
+                                    <div class="ui-prog-top"><span class="ui-prog-no">#1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
+                                    <p class="ui-prog-d" style="margin:0">10:30 開始 ／ 3号館 201教室</p>
+                                </div>
+                                <button class="ui-btn" style="margin-top:18px">最初の画面に戻る</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>会場と時刻はまだ出ていない。</b> プログラムに開始時刻・教室のフィールドが無いため。追加するとこの画面が一番効きます。</span></li>
+                        <li><span class="pin">2</span><span>紙吹雪が 6.5 秒流れます。行列時は待ち時間になるので、短縮 or スキップ可にするか。</span></li>
+                        <li><span class="pin">3</span><span><b>待機になった場合の表示。</b> 同じ画面で文言だけ変わります。「後で呼びます」がどこまで伝わるか要検証。</span></li>
+                    </ul>
+                </div>
+
+                <!-- 7 -->
+                <div class="frame">
+                    <div class="frame-label"><span class="n">7</span><span class="nm">説明会のみ — 完了</span><span class="dim">#no-capstone-section</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card ui-success">
+                                <div class="ui-tick">✓</div>
+                                <p class="ui-h2" style="margin-bottom:8px">受付完了</p>
+                                <p class="ui-sub" style="margin-bottom:6px">キャップストーン体験に参加しない場合の受付が完了しました。</p>
+                                <span class="ui-role blue">あなたは「青色」です。スタッフが手首にストラップをつけます</span>
+                                <div style="border:1.5px solid var(--bd);border-radius:10px;padding:12px;margin-top:12px;font-size:12px;text-align:left">
+                                    工学部説明会は <b>11:00</b> から 1号館ホールで行います。
+                                </div>
+                                <button class="ui-btn" style="margin-top:18px">最初の画面に戻る</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span>説明会の時刻は名簿の「時間」列から引いています。名簿が未読込みだと空欄になります。</span></li>
+                        <li><span class="pin">2</span><span>6 番と 7 番でレイアウトがほぼ同じ。色（赤／青）だけが違うので、色以外にも差を付けたいところ。</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================================
+             03 — 管理画面
+             ============================================================ -->
+        <section class="chapter" id="admin">
+            <div class="chapter-head">
+                <span class="idx">03</span>
+                <h2>管理画面 — スタッフが見る 6 画面</h2>
+            </div>
+            <p class="chapter-note">
+                右上の歯車から入ります。パスワードは <code>admin</code> 固定。5 つのタブと
+                ログインモーダルで構成されています。
+            </p>
+
+            <div class="frames">
+
+                <div class="frame">
+                    <div class="frame-label"><span class="n">3-0</span><span class="nm">管理者ログイン</span><span class="dim">modal</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-modal">
+                                <div class="ui-card">
+                                    <p class="ui-h2">管理者ログイン</p>
+                                    <div class="ui-field" style="margin-top:12px">
+                                        <div class="ui-label">メールアドレス</div>
+                                        <div class="ui-input">staff@kuas.ac.jp</div>
+                                    </div>
+                                    <div class="ui-field">
+                                        <div class="ui-label">パスワード</div>
+                                        <div class="ui-input">••••••</div>
+                                    </div>
+                                    <div class="ui-row" style="margin-top:6px">
+                                        <button class="ui-btn">ログイン</button>
+                                        <button class="ui-btn gho">キャンセル</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>メール欄は今や飾り。</b> Firebase Auth を外したので、実際に照合しているのはパスワードだけです。表示名として残すか、消すか。</span></li>
+                        <li><span class="pin">2</span><span>パスワードがソースに直書き（<code>ADMIN_PASSWORD</code>）。ローカル専用なら許容範囲ですが、当日の運用ルールは決めておきたい。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="n">3-1</span><span class="nm">プログラム編集</span><span class="dim">#tab-editor</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-card" style="margin:14px">
+                                <p class="ui-h2">管理パネル</p>
+                                <div class="ui-tabs">
+                                    <div class="ui-tab on">プログラム編集</div>
+                                    <div class="ui-tab">ファイル</div>
+                                    <div class="ui-tab">名簿</div>
+                                    <div class="ui-tab">受付状況</div>
+                                    <div class="ui-tab">設定</div>
+                                </div>
+                                <div class="ui-switch" style="padding-top:0">
+                                    <span class="lbl">英語翻訳表示</span><span class="ui-toggle"></span>
+                                </div>
+                                <div class="ui-prog" style="margin-top:8px">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                                        <span style="color:var(--t2)">⠿</span>
+                                        <b style="font-size:12px">プログラム 1</b>
+                                        <span style="margin-left:auto;color:var(--dg);font-size:11px">削除</span>
+                                    </div>
+                                    <div class="ui-input" style="margin-bottom:6px">"紙"技エンジニアリング！</div>
+                                    <div class="ui-input" style="margin-bottom:6px">紙の構造で強さをつくる。</div>
+                                    <div class="ui-row">
+                                        <div class="ui-input">定員 15</div>
+                                        <div class="ui-input">現在 9</div>
+                                    </div>
+                                </div>
+                                <div class="ui-prog">
+                                    <div style="display:flex;align-items:center;gap:8px">
+                                        <span style="color:var(--t2)">⠿</span>
+                                        <b style="font-size:12px">プログラム 2</b>
+                                        <span style="margin-left:auto;color:var(--dg);font-size:11px">削除</span>
+                                    </div>
+                                </div>
+                                <div class="ui-row" style="margin-top:12px">
+                                    <button class="ui-btn sec">＋ 追加</button>
+                                    <button class="ui-btn">変更を保存</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span>ドラッグで並べ替えできます（SortableJS）。並び順がそのまま来場者側の表示順です。</span></li>
+                        <li><span class="pin">2</span><span><b>開始時刻・教室のフィールドが無い。</b> 完了画面で案内を出すには、ここに 2 項目足す必要があります。</span></li>
+                        <li><span class="pin">3</span><span>英語名は手入力。翻訳連携は外したので、当面このままです。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="n">3-2</span><span class="nm">ファイル読み込み</span><span class="dim">#tab-loader</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-card" style="margin:14px">
+                                <div class="ui-tabs">
+                                    <div class="ui-tab">プログラム編集</div>
+                                    <div class="ui-tab on">ファイル</div>
+                                    <div class="ui-tab">名簿</div>
+                                    <div class="ui-tab">受付状況</div>
+                                    <div class="ui-tab">設定</div>
+                                </div>
+                                <p style="font-size:12px;font-weight:700;margin:0 0 7px">① ミニキャップストーン体験 予約者名簿 (xlsx)</p>
+                                <div class="ui-drop" style="margin-bottom:14px">ファイルを選択 / ここにドロップ</div>
+                                <p style="font-size:12px;font-weight:700;margin:0 0 7px">② 工学部説明会 予約者名簿 (xlsx)</p>
+                                <div class="ui-drop" style="margin-bottom:14px">ファイルを選択 / ここにドロップ</div>
+                                <div style="border:1.5px solid var(--p);border-radius:10px;padding:10px;font-size:11.5px;background:rgba(15,140,82,.06)">
+                                    <b>読み込み完了：</b> 予約者 128 件 ／ 説明会 64 件<br>
+                                    列の対応: 氏名=B+C, フリガナ=D+E, 希望列=[F, G, H]
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>列マッピングは自動検出。</b> 外したときだけモーダルで手動指定に落ちます。大学から来る名簿の書式が毎回変わるので、ここが当日の事故ポイント。</span></li>
+                        <li><span class="pin">2</span><span>読み込み前に管理画面を開くと「名簿未読込み」の通知が出ます。この通知の文言と出し方は要調整。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame wide">
+                    <div class="frame-label"><span class="n">3-3</span><span class="nm">受付状況</span><span class="dim">#tab-status</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-card" style="margin:14px">
+                                <div class="ui-tabs">
+                                    <div class="ui-tab">プログラム編集</div>
+                                    <div class="ui-tab">ファイル</div>
+                                    <div class="ui-tab">名簿</div>
+                                    <div class="ui-tab on">受付状況</div>
+                                    <div class="ui-tab">設定</div>
+                                </div>
+                                <div class="ui-kpi">
+                                    <div><div class="k">確定済み合計</div><div class="v">47</div></div>
+                                    <div><div class="k">待機中合計</div><div class="v warn">6</div></div>
+                                    <div><div class="k">受付合計</div><div class="v">53 / 75</div></div>
+                                </div>
+                                <button class="ui-btn sm" style="margin-bottom:14px">待機者を一括割り当て</button>
+                                <div class="ui-scroll">
+                                    <table class="ui-table">
+                                        <thead><tr><th>#</th><th>プログラム</th><th>参加者</th><th>定員</th></tr></thead>
+                                        <tbody>
+                                            <tr><td>1</td><td>"紙"技エンジニアリング！</td><td><span class="ui-chip">山田 太郎（同伴者:2）</span><span class="ui-chip">佐藤 花子</span></td><td>9 / 15</td></tr>
+                                            <tr><td>2</td><td>ChatGPT を操ろう！</td><td><span class="ui-chip">鈴木 一郎</span></td><td>5 / 15</td></tr>
+                                            <tr><td>3</td><td>現代の金属魔法？</td><td><span class="ui-chip">田中 次郎</span></td><td>15 / 15</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p style="font-size:12px;font-weight:700;margin:16px 0 6px">待機者リスト</p>
+                                <div class="ui-scroll">
+                                    <table class="ui-table">
+                                        <thead><tr><th>#</th><th>氏名</th><th>第1希望</th><th>第2希望</th><th>第3希望</th></tr></thead>
+                                        <tbody>
+                                            <tr><td>1</td><td>高橋 美咲</td><td>現代の金属魔法？</td><td>"紙"技エンジニアリング！</td><td>ChatGPT を操ろう！</td></tr>
+                                            <tr><td>2</td><td>渡辺 健</td><td>現代の金属魔法？</td><td>ChatGPT を操ろう！</td><td>"紙"技エンジニアリング！</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button class="ui-btn sm" style="margin-top:14px">書き出し（Excel / PDF）</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>当日ここを一番見ます。</b> カード表示と表表示をトグルで切り替えられますが、既定はカード。大画面に映すなら表の方が向いています。</span></li>
+                        <li><span class="pin">2</span><span><b>「一括割り当て」が何をするか読み取れない。</b> 押すと待機者が受付順に空きへ入ります。実行前にプレビューを見せる案。</span></li>
+                        <li><span class="pin">3</span><span>更新は自動（別タブとも同期）。ただし別 PC とは同期しません。複数台で分担する場合の運用が未定です。</span></li>
+                        <li><span class="pin">4</span><span>プログラム別の残枠が数値だけ。バーやヒートマップにすると一瞥で分かります。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame wide">
+                    <div class="frame-label"><span class="n">3-4</span><span class="nm">名簿プレビュー</span><span class="dim">#tab-roster</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-card" style="margin:14px">
+                                <div class="ui-tabs">
+                                    <div class="ui-tab">プログラム編集</div>
+                                    <div class="ui-tab">ファイル</div>
+                                    <div class="ui-tab on">名簿</div>
+                                    <div class="ui-tab">受付状況</div>
+                                    <div class="ui-tab">設定</div>
+                                </div>
+                                <div class="ui-input" style="margin-bottom:10px">🔍 氏名／フリガナで検索</div>
+                                <div style="font-size:11.5px;color:var(--t2);margin-bottom:10px">
+                                    <span class="ui-dot g"></span>確定済み
+                                    <span class="ui-dot y" style="margin-left:12px"></span>待機中
+                                    <span class="ui-dot r" style="margin-left:12px"></span>未受付
+                                </div>
+                                <p style="font-size:12px;font-weight:700;margin:0 0 6px">ミニキャップストーン体験 予約者名簿 <span style="color:var(--t2);font-weight:400">128 件</span></p>
+                                <div class="ui-scroll">
+                                    <table class="ui-table">
+                                        <thead><tr><th></th><th>氏名</th><th>フリガナ</th><th>第1希望</th><th>第2希望</th><th>第3希望</th><th>同伴</th></tr></thead>
+                                        <tbody>
+                                            <tr><td><span class="ui-dot g"></span></td><td>山田 太郎</td><td>ヤマダ タロウ</td><td>"紙"技</td><td>ChatGPT</td><td>金属魔法</td><td>2</td></tr>
+                                            <tr><td><span class="ui-dot y"></span></td><td>高橋 美咲</td><td>タカハシ ミサキ</td><td>金属魔法</td><td>"紙"技</td><td>ChatGPT</td><td>0</td></tr>
+                                            <tr><td><span class="ui-dot r"></span></td><td>伊藤 大輔</td><td>イトウ ダイスケ</td><td>ChatGPT</td><td>金属魔法</td><td>"紙"技</td><td>1</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span>検索は氏名とフリガナの部分一致。スペースは無視して比較しています。</span></li>
+                        <li><span class="pin">2</span><span><b>ここから直接受付できない。</b> 名前を見つけても、受付画面に戻って打ち直す必要があります。行から直接確定できると当日かなり速くなります。</span></li>
+                        <li><span class="pin">3</span><span>「その他」表は、名簿に無い当日参加者が入ります。名前が分かりにくいので改名候補。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="n">3-5</span><span class="nm">設定</span><span class="dim">#tab-settings</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-card" style="margin:14px">
+                                <div class="ui-tabs">
+                                    <div class="ui-tab">プログラム編集</div>
+                                    <div class="ui-tab">ファイル</div>
+                                    <div class="ui-tab">名簿</div>
+                                    <div class="ui-tab">受付状況</div>
+                                    <div class="ui-tab on">設定</div>
+                                </div>
+                                <div class="ui-switch">
+                                    <span class="lbl">予約者優先割り当て</span><span class="ui-toggle on"></span>
+                                </div>
+                                <p class="ui-hint" style="margin:0 0 14px">ONのとき、予約なしの参加者は受付時に「割り当て待機」になります。全員の受付後に一括割り当てを実行してください。</p>
+                                <div class="ui-switch">
+                                    <span class="lbl">学年優先割り当て（予約なし）</span><span class="ui-toggle on"></span>
+                                </div>
+                                <p class="ui-hint" style="margin:0 0 20px">ONのとき、待機者を高3→高2→高1→その他の順で割り当てます。OFFなら先着順。</p>
+                                <button class="ui-btn dan">受付データをリセット</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>この 2 つのトグルが当日の運用を決める。</b> それなのに管理画面の一番奥にあります。当日の朝に必ず確認する項目なので、起動時チェックリストに出す案。</span></li>
+                        <li><span class="pin">2</span><span><b>学年優先は実装が未完。</b> トグルは保存されますが、割り当て処理は先着順のままです。</span></li>
+                        <li><span class="pin">3</span><span>リセットは全消去です。Excel 書き出しを促す確認を挟みたい。</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================================
+             04 — テーマ
+             ============================================================ -->
+        <section class="chapter" id="themes">
+            <div class="chapter-head">
+                <span class="idx">04</span>
+                <h2>テーマ</h2>
+            </div>
+            <p class="chapter-note">
+                ライト／ダーク／Liquid Glass の 3 つ。右上の月アイコンから切り替えます。
+                会場の照明が読めないので、当日どれを既定にするかは決めておきたいところです。
+            </p>
+
+            <div class="frames">
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">Light</span><span class="dim">既定</span></div>
+                    <div class="frame-body">
+                        <div class="ui">
+                            <div class="ui-bar">
+                                <span class="ui-logo">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card" style="text-align:center">
+                                <p class="ui-h1">工学部ミニキャップストーン体験 受付</p>
+                                <div class="ui-stack" style="margin-top:16px">
+                                    <button class="ui-btn lg">✓ &nbsp;予約あり</button>
+                                    <button class="ui-btn sec lg">＋ &nbsp;予約なし</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">Dark</span></div>
+                    <div class="frame-body">
+                        <div class="ui dark">
+                            <div class="ui-bar">
+                                <span class="ui-logo" style="color:#8DBF21;border-color:#8DBF21">KUAS</span>
+                                <span class="ui-icons"><span>?</span><span>☀</span><span>文</span><span>⚙</span></span>
+                            </div>
+                            <div class="ui-card" style="text-align:center">
+                                <p class="ui-h1">工学部ミニキャップストーン体験 受付</p>
+                                <div class="ui-stack" style="margin-top:16px">
+                                    <button class="ui-btn lg">✓ &nbsp;予約あり</button>
+                                    <button class="ui-btn sec lg">＋ &nbsp;予約なし</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span>背景写真が暗幕越しに残ります。文字とのコントラストは足りていますが、屋外光下では未検証。</span></li>
+                    </ul>
+                </div>
+
+                <div class="frame">
+                    <div class="frame-label"><span class="nm">Liquid Glass</span><span class="dim">実験的</span></div>
+                    <div class="frame-body">
+                        <div class="ui" style="background:linear-gradient(150deg,#3f7fb8,#1d3f66)">
+                            <div class="ui-bar" style="background:rgba(255,255,255,.18);backdrop-filter:blur(14px)">
+                                <span class="ui-logo" style="color:#fff;border-color:rgba(255,255,255,.7)">KUAS</span>
+                                <span class="ui-icons"><span style="background:rgba(255,255,255,.2);color:#fff">?</span><span style="background:rgba(255,255,255,.2);color:#fff">☾</span><span style="background:rgba(255,255,255,.2);color:#fff">文</span><span style="background:rgba(255,255,255,.2);color:#fff">⚙</span></span>
+                            </div>
+                            <div class="ui-card" style="text-align:center;background:rgba(255,255,255,.16);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.4);color:#fff">
+                                <p class="ui-h1" style="color:#fff">工学部ミニキャップストーン体験 受付</p>
+                                <div class="ui-stack" style="margin-top:16px">
+                                    <button class="ui-btn lg" style="background:rgba(255,255,255,.3);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.5)">✓ &nbsp;予約あり</button>
+                                    <button class="ui-btn lg" style="background:rgba(255,255,255,.16);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.4)">＋ &nbsp;予約なし</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="notes">
+                        <li><span class="pin">1</span><span><b>KUAS の緑が消える。</b> 見た目は目を引きますが、大学のブランドカラーが画面から無くなります。来場者向けに使うかは要判断。</span></li>
+                        <li><span class="pin">2</span><span>backdrop-filter が重く、古い iPad では描画が落ちます。</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             05 — 機能候補
+             ============================================================ -->
+        <section class="chapter" id="roadmap">
+            <div class="chapter-head">
+                <span class="idx">05</span>
+                <h2>機能候補</h2>
+            </div>
+            <p class="chapter-note">
+                ローカル専用という制約の中で実現できるものだけを挙げています。
+                <span style="color:var(--brand);font-weight:700">実装済</span> ／
+                <span style="color:var(--mark);font-weight:700">次にやる</span> ／
+                <span style="color:var(--ink-faint);font-weight:700">検討中</span> の 3 段階。
+            </p>
+
+            <div class="cards">
+                <div class="card">
+                    <span class="tag now">実装済</span>
+                    <h3>先着順の自動割り当て</h3>
+                    <p>第1希望から順に空きを探し、全部埋まっていれば待機に回します。定員は管理画面から変更できます。</p>
+                </div>
+                <div class="card">
+                    <span class="tag now">実装済</span>
+                    <h3>待機者の一括繰り上げ</h3>
+                    <p>受付順に待機者を走査し、空きのあるプログラムへ入れます。空きが無い人は待機のまま残ります。</p>
+                </div>
+                <div class="card">
+                    <span class="tag now">実装済</span>
+                    <h3>Excel 名簿の取り込み</h3>
+                    <p>列の対応は自動検出。外したときだけ手動でマッピングを指定します。</p>
+                </div>
+                <div class="card">
+                    <span class="tag now">実装済</span>
+                    <h3>9 言語の UI</h3>
+                    <p>日本語・英語・韓国語・中国語・スペイン語・ヒンディー語・ネパール語・アラビア語・インドネシア語。未訳のキーは英語に落ちます。</p>
+                </div>
+                <div class="card">
+                    <span class="tag next">次にやる</span>
+                    <h3>プログラムに時刻と教室を持たせる</h3>
+                    <p>完了画面で「10:30 / 3号館 201」まで案内できるようになります。データ構造とプログラム編集タブに 2 項目足すだけ。</p>
+                </div>
+                <div class="card">
+                    <span class="tag next">次にやる</span>
+                    <h3>名簿から直接受付</h3>
+                    <p>名簿プレビューの行をタップして、その場で確定できるようにします。予約者の受付が一番速くなる導線です。</p>
+                </div>
+                <div class="card">
+                    <span class="tag next">次にやる</span>
+                    <h3>学年優先の割り当て</h3>
+                    <p>トグルは既にありますが、割り当て処理が先着順のままです。高3から順に入れる実装を足します。</p>
+                </div>
+                <div class="card">
+                    <span class="tag next">次にやる</span>
+                    <h3>自動バックアップ</h3>
+                    <p>localStorage は履歴削除で消えます。一定件数ごとに Excel を自動書き出しして、事故に備えます。</p>
+                </div>
+                <div class="card">
+                    <span class="tag idea">検討中</span>
+                    <h3>受付番号の発行</h3>
+                    <p>待機になった人に番号を渡し、呼び出しに使う。紙の整理券をやめられます。</p>
+                </div>
+                <div class="card">
+                    <span class="tag idea">検討中</span>
+                    <h3>複数台での分担</h3>
+                    <p>今は 1 台完結。LAN 内で 1 台を親にして同期する方式なら、クラウド無しでも実現できます。</p>
+                </div>
+                <div class="card">
+                    <span class="tag idea">検討中</span>
+                    <h3>QR による受付</h3>
+                    <p>事前に配った QR をかざして 0 秒受付。ただし QR の発行と配布は別途手段が要ります。</p>
+                </div>
+                <div class="card">
+                    <span class="tag idea">検討中</span>
+                    <h3>キオスクモード</h3>
+                    <p>来場者に iPad を渡す運用向け。管理画面への入口を隠し、完了後に自動で初期画面へ戻します。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             06 — 論点
+             ============================================================ -->
+        <section class="chapter" id="questions">
+            <div class="chapter-head">
+                <span class="idx">06</span>
+                <h2>決めたいこと</h2>
+            </div>
+            <p class="chapter-note">
+                実装を進める前に方針が要るものです。ここが決まれば、あとは手を動かすだけになります。
+            </p>
+
+            <div class="questions">
+                <div class="q">
+                    <span class="qn">Q1</span>
+                    <div>
+                        <h4>希望は何個まで取るか</h4>
+                        <p>今は第1〜第3を全部埋めないと確定できません。入力の手数と、割り当ての柔軟さのトレードオフです。</p>
+                        <ul class="opts"><li>3つ必須（現行）</li><li>第1のみ必須、2・3は任意</li><li>第1のみ</li></ul>
+                    </div>
+                </div>
+                <div class="q">
+                    <span class="qn">Q2</span>
+                    <div>
+                        <h4>予約なしの人を即時に確定させるか</h4>
+                        <p>「予約者優先」ON なら全員が待機に回り、受付完了後に一括で割り当てます。OFF なら先着で即確定。</p>
+                        <ul class="opts"><li>予約者優先 ON（現行の既定）</li><li>OFF・先着即確定</li><li>時間帯で切り替える</li></ul>
+                    </div>
+                </div>
+                <div class="q">
+                    <span class="qn">Q3</span>
+                    <div>
+                        <h4>残枠を来場者に見せるか</h4>
+                        <p>見せれば納得感は上がりますが、埋まっているプログラムを避ける動きが起きて偏りが出ます。</p>
+                        <ul class="opts"><li>見せない（現行）</li><li>満席のみ表示</li><li>残数まで表示</li></ul>
+                    </div>
+                </div>
+                <div class="q">
+                    <span class="qn">Q4</span>
+                    <div>
+                        <h4>受付端末は何台か</h4>
+                        <p>ローカル専用なので端末間でデータが共有されません。2 台以上なら同期の仕組みが要ります。</p>
+                        <ul class="opts"><li>1台完結</li><li>2〜3台・LAN同期</li><li>複数台・手動統合</li></ul>
+                    </div>
+                </div>
+                <div class="q">
+                    <span class="qn">Q5</span>
+                    <div>
+                        <h4>既定のテーマ</h4>
+                        <p>会場の照明条件次第です。当日の朝に切り替える運用でも構いません。</p>
+                        <ul class="opts"><li>Light（現行）</li><li>Dark</li><li>Liquid Glass</li></ul>
+                    </div>
+                </div>
+                <div class="q">
+                    <span class="qn">Q6</span>
+                    <div>
+                        <h4>来場者に端末を触らせるか</h4>
+                        <p>触らせるならキオスクモードと大きめのタップ領域、スタッフ入力なら情報密度を上げた方が速くなります。設計の前提が変わります。</p>
+                        <ul class="opts"><li>来場者が自分で操作</li><li>スタッフが代理入力</li><li>予約者はスタッフ・当日は本人</li></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<footer class="colophon">
+    KUAS-reception / local-only branch<br>
+    Vanilla JS + localStorage · 外部通信なし · 同梱フォント & ライブラリで完全オフライン動作<br>
+    このボードは <code>docs/design-proposal.html</code> にあります。フレーム番号を指して修正を依頼してください。
+</footer>
