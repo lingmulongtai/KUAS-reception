@@ -108,6 +108,7 @@
                                 id: r.id || newId('reservation'),
                                 name: r.name || '',
                                 furigana: r.furigana || '',
+                                email: r.email || '',
                                 choices: Array.isArray(r.choices) ? r.choices : [],
                                 companions: r.companions || 0
                             };
@@ -119,6 +120,7 @@
                                 id: b.id || newId('briefing'),
                                 name: b.name || '',
                                 furigana: b.furigana || '',
+                                email: b.email || '',
                                 time: b.time || '',
                                 companions: b.companions || 0
                             };
@@ -132,6 +134,7 @@
                         id: r.id || newId('reservation'),
                         name: r.name,
                         furigana: r.furigana || '',
+                        email: r.email || '',
                         choices: Array.isArray(r.choices) ? r.choices : [],
                         companions: r.companions || 0
                     };
@@ -141,6 +144,7 @@
                         id: b.id || newId('briefing'),
                         name: b.name,
                         furigana: b.furigana || '',
+                        email: b.email || '',
                         time: b.time || '',
                         companions: b.companions || 0
                     };

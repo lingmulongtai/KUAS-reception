@@ -1410,6 +1410,7 @@ let adminEditorDirty = false;
                 renderSelect('第1希望列', 'map-choice-1', options, (resAuto.choiceIdxs?.[0] ?? -1), false),
                 renderSelect('第2希望列', 'map-choice-2', options, (resAuto.choiceIdxs?.[1] ?? -1), true),
                 renderSelect('第3希望列', 'map-choice-3', options, (resAuto.choiceIdxs?.[2] ?? -1), true),
+                renderSelect('メールアドレス列（任意）', 'map-email', options, (resAuto.emailIdx ?? -1), true),
                 renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         } else {
@@ -1422,6 +1423,7 @@ let adminEditorDirty = false;
                 renderSelect('セイ（フリガナ）列（任意）', 'map-furigana-sei', options, (briAuto.furiganaIdxs?.[0] ?? -1), true),
                 renderSelect('メイ（フリガナ）列（任意）', 'map-furigana-mei', options, (briAuto.furiganaIdxs?.[1] ?? -1), true),
                 renderSelect('時間列', 'map-time', options, timeAutoIdx, false),
+                renderSelect('メールアドレス列（任意）', 'map-email', options, (briAuto.emailIdx ?? -1), true),
                 renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         }
@@ -1450,6 +1452,7 @@ let adminEditorDirty = false;
         const firstIdx = getIdx('map-first-name');
         const furiSeiIdx = getIdx('map-furigana-sei');
         const furiMeiIdx = getIdx('map-furigana-mei');
+        const emailIdx = getIdx('map-email');
 
         if (type === 'reservations') {
             const c1 = getIdx('map-choice-1');
@@ -1460,6 +1463,7 @@ let adminEditorDirty = false;
                 nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
                 choiceIdxs: [c1, c2, c3],
+                emailIdx: emailIdx,
                 companionsIdx: compIdx
             };
             rosterMappingInfo.reservations = map;
@@ -1479,7 +1483,8 @@ let adminEditorDirty = false;
                         return v || null;
                     });
                     const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
-                    return { name, furigana: furigana || undefined, choices, companions };
+                    const email = get(row, map.emailIdx);
+                    return { name, furigana: furigana || undefined, email: email || undefined, choices, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             reservations = parsed;
@@ -1492,6 +1497,7 @@ let adminEditorDirty = false;
                 nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
                 timeIdx: timeIdx,
+                emailIdx: emailIdx,
                 companionsIdx: compIdx
             };
             rosterMappingInfo.briefing = map;
@@ -1508,7 +1514,8 @@ let adminEditorDirty = false;
                     const furigana = furiParts.filter(i => i >= 0).map(i => get(row, i)).filter(Boolean).join(' ');
                     const time = get(row, map.timeIdx);
                     const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
-                    return { name, furigana: furigana || undefined, time: time || undefined, companions };
+                    const email = get(row, map.emailIdx);
+                    return { name, furigana: furigana || undefined, email: email || undefined, time: time || undefined, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             briefingSessionAttendees = parsed;
@@ -1948,10 +1955,12 @@ function detectReservationHeaderMapping(headerRow) {
     const firstIdx = find(['第1希望','第一希望','1st','first','第一','1希望']);
     const secondIdx = find(['第2希望','第二希望','2nd','second','第二','2希望']);
     const thirdIdx = find(['第3希望','第三希望','3rd','third','第三','3希望']);
+    const emailIdx = find(['メール','ﾒｰﾙ','mail','e-mail','アドレス','address']);
     return {
         nameIdx: nameIdx >= 0 ? nameIdx : 0,
         furiganaIdxs,
-        choiceIdxs: [firstIdx, secondIdx, thirdIdx].map(i => (i == null ? -1 : i))
+        choiceIdxs: [firstIdx, secondIdx, thirdIdx].map(i => (i == null ? -1 : i)),
+        emailIdx
     };
 }
 
@@ -1967,7 +1976,8 @@ function detectBriefingHeaderMapping(headerRow) {
         const singleFuri = find(['フリガナ','ふりがな','kana','yomi','読み']);
         if (singleFuri >= 0) furiganaIdxs = [singleFuri, singleFuri];
     }
-    return { nameIdx: nameIdx >= 0 ? nameIdx : 0, furiganaIdxs };
+    const emailIdx = find(['メール','ﾒｰﾙ','mail','e-mail','アドレス','address']);
+    return { nameIdx: nameIdx >= 0 ? nameIdx : 0, furiganaIdxs, emailIdx };
 }
 
 function updateRosterMappingText() {
