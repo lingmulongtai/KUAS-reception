@@ -139,5 +139,6 @@
     "errorDatabaseWriteFailed": "データベースに保存できませんでした。スタッフにお問い合わせください。",
     "notificationDatabaseSaved": "データを保存しました。",
     "noWaitingParticipants": "待機中の来場者はいません。",
-    "waitingAssigned": "{count}名を繰り上げました"
+    "waitingAssigned": "{count}名を繰り上げました",
+    "errorFieldRequired": "{field}を入力してください。"
 }

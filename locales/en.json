@@ -139,5 +139,6 @@
     "errorDatabaseWriteFailed": "Failed to save to the database. Please contact staff for assistance.",
     "notificationDatabaseSaved": "Data saved successfully.",
     "noWaitingParticipants": "There are no participants on the waiting list.",
-    "waitingAssigned": "Assigned {count} participant(s) from the waiting list."
+    "waitingAssigned": "Assigned {count} participant(s) from the waiting list.",
+    "errorFieldRequired": "Please enter {field}."
 }

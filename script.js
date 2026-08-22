@@ -1239,18 +1239,88 @@ let adminEditorDirty = false;
     }
 
     // --- 入力検証 ---
+    // --- 入力エラーの表示 ---
+
+    /** そのフィールドの直後に置くエラー文の要素を用意する。 */
+    function fieldErrorElement(el) {
+        if (!el) return null;
+        const id = (el.id || 'field') + '-error';
+        let node = document.getElementById(id);
+        if (!node) {
+            node = document.createElement('p');
+            node.id = id;
+            node.className = 'field-error';
+            node.setAttribute('role', 'alert');
+            el.insertAdjacentElement('afterend', node);
+        }
+        return node;
+    }
+
+    /** フィールドを赤枠にし、理由を文章で添える。 */
+    function showFieldError(el, message) {
+        if (!el) return;
+        el.classList.add('input-error');
+        el.setAttribute('aria-invalid', 'true');
+        const node = fieldErrorElement(el);
+        if (node) {
+            node.textContent = message;
+            node.classList.add('visible');
+            el.setAttribute('aria-describedby', node.id);
+        }
+    }
+
+    function clearFieldError(el) {
+        if (!el) return;
+        el.classList.remove('input-error');
+        el.removeAttribute('aria-invalid');
+        const node = document.getElementById((el.id || 'field') + '-error');
+        if (node) {
+            node.textContent = '';
+            node.classList.remove('visible');
+        }
+    }
+
+    /** フィールドの表示名。ラベルから拾い、無ければ id をそのまま使う。 */
+    function fieldLabelText(el) {
+        if (!el) return '';
+        const label = el.id ? document.querySelector('label[for="' + el.id + '"]') : null;
+        return label ? label.textContent.trim() : (el.id || '');
+    }
+
+    /**
+     * 未入力のフィールドを赤枠にし、それぞれの下に理由を出す。
+     * 戻り値は「全部埋まっているか」。従来どおり真偽値だけ見れば動く。
+     */
     function validateAndHighlight(elements) {
         let allValid = true;
+        const missing = [];
         elements.forEach(el => {
+            if (!el) return;
             if (!el.value) {
-                el.classList.add('input-error');
+                const tmpl = getTranslation('errorFieldRequired') || '{field}を入力してください。';
+                showFieldError(el, tmpl.replace('{field}', fieldLabelText(el)));
+                missing.push(el);
                 allValid = false;
             } else {
-                el.classList.remove('input-error');
+                clearFieldError(el);
             }
         });
+        // 最初の未入力へ移動して、どこを直せばよいか分かるようにする
+        if (missing.length > 0) missing[0].focus();
         return allValid;
     }
+
+    // 入力し直したらエラー表示を消す
+    document.addEventListener('input', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('input-error') && e.target.value) {
+            clearFieldError(e.target);
+        }
+    });
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('input-error') && e.target.value) {
+            clearFieldError(e.target);
+        }
+    });
     
     // プログラム選択画面の同伴者入力の表示/非表示を切り替え
     function setProgramCompanionsVisibility(visible) {
@@ -2345,7 +2415,6 @@ function columnLetter(index) {
     document.getElementById('btn-check-reservation').addEventListener('click', () => {
         const nameInput = document.getElementById('student-name');
         if (!validateAndHighlight([nameInput])) {
-            showCustomAlert('errorEnterName');
             return;
         }
         const name = nameInput.value.trim().replace(/　/g, ' ');
@@ -2411,7 +2480,6 @@ function columnLetter(index) {
         const companionsEl = document.getElementById('walk-in-companions');
         
         if (!validateAndHighlight([nameEl, furiganaEl, gradeEl, companionsEl])) {
-            showCustomAlert('errorAllFields');
             return;
         }
         
@@ -2445,7 +2513,6 @@ function columnLetter(index) {
         const gradeEl = document.getElementById('walk-in-grade');
         
         if (!validateAndHighlight([nameEl, furiganaEl, gradeEl])) {
-            showCustomAlert('errorAllFields');
             return;
         }
         
