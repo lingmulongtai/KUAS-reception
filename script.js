@@ -1002,8 +1002,6 @@ let adminEditorDirty = false;
                 adminEditorDirty = true; // 並び替えで未保存変更
             }
         });
-        
-        document.getElementById('json-editor').value = JSON.stringify(programs, null, 2);
 
         // 入力・変更で未保存フラグを立てる
         editorList.querySelectorAll('input, textarea').forEach(el => {
