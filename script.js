@@ -573,7 +573,7 @@ let adminEditorDirty = false;
         }
         if (document.getElementById('admin-view').classList.contains('hidden') === false) {
             renderAdminEditor();
-            updateStatusView();
+            renderStatusTable();
             renderRosterPreview();
         }
         if (currentUser) {
@@ -2740,7 +2740,7 @@ document.getElementById('btn-assign-waiting').addEventListener('click', assignWa
 const statusViewToggle = document.getElementById('status-view-toggle');
 if (statusViewToggle) {
     statusViewToggle.addEventListener('change', () => {
-        updateStatusView();
+        renderStatusTable();
     });
 }
     // 完了処理
@@ -2812,8 +2812,8 @@ if (statusViewToggle) {
     // データ変更を管理者ビューに反映する
     function updateAdminViewData() {
         // 各コンポーネントを再描画
-        updateStatusView();
-        renderRosterTables();
+        renderStatusTable();
+        renderRosterPreview();
     }
 
     document.querySelectorAll('[data-lang-key]').forEach(el => {
