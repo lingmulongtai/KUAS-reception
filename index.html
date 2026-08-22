@@ -67,9 +67,11 @@
                 <div id="name-input-section" class="section section-hidden">
                     <h1 data-lang-key="reservedNameInputTitle">予約あり - お名前入力</h1>
                     <div class="input-group">
-                        <label for="student-name" data-lang-key="enterFullName">お名前をフルネームで入力してください</label>
-                        <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
-                        <input type="text" id="student-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
+                        <label for="student-name" data-lang-key="enterFullName">お名前を入力してください</label>
+                        <p class="field-note" data-lang-key="nameSearchNote">姓だけ・名だけでも探せます。ひらがな、カタカナ、ローマ字、メールアドレスでも構いません。</p>
+                        <input type="text" id="student-name" data-lang-key-placeholder="nameSearchPlaceholder" placeholder="例：やまだ / 山田 / yamada" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="reservation-candidates-status" aria-controls="reservation-candidates">
+                        <p id="reservation-candidates-status" class="candidate-status" role="status" aria-live="polite"></p>
+                        <div id="reservation-candidates" class="candidate-list" role="listbox" aria-label="該当する来場者"></div>
                         <button id="btn-check-reservation" class="btn btn-primary" data-lang-key="checkReservation">予約を確認する</button>
                     </div>
                 </div>
@@ -356,6 +358,7 @@
     <!-- JavaScriptファイルを読み込み -->
     <script src="language-loader.js" defer></script>
     <script src="local-store.js" defer></script>
+    <script src="name-match.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>

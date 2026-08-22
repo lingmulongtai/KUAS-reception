@@ -140,5 +140,10 @@
     "notificationDatabaseSaved": "Data saved successfully.",
     "noWaitingParticipants": "There are no participants on the waiting list.",
     "waitingAssigned": "Assigned {count} participant(s) from the waiting list.",
-    "errorFieldRequired": "Please enter {field}."
+    "errorFieldRequired": "Please enter {field}.",
+    "nameSearchNote": "Family name or given name alone will do. Kana, romaji, or email also work.",
+    "nameSearchPlaceholder": "e.g. yamada / 山田 / やまだ",
+    "candidatesFound": "{count} found. Select the right person.",
+    "candidatesNone": "No matching reservation. Try a different spelling, or check in as a walk-in.",
+    "alreadyReceived": "Checked in"
 }

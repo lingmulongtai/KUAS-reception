@@ -1516,6 +1516,7 @@ let adminEditorDirty = false;
             if (statusEl) statusEl.innerHTML += `<p>工学部説明会名簿を読み込みました。${briefingSessionAttendees.length}件</p>`;
         }
 
+        indexRosters();
         saveStateToLocalStorage();
         saveRosterData();
         updateRosterMappingText();
@@ -2412,54 +2413,160 @@ function columnLetter(index) {
         }
     });
     
+    // --- 予約者の照合（NameMatch による候補リスト方式） ---
+
+    const candidateListEl = document.getElementById('reservation-candidates');
+    const candidateStatusEl = document.getElementById('reservation-candidates-status');
+    const studentNameInput = document.getElementById('student-name');
+
+    /** その名前が既に受付済みか。受付済みなら候補として出すが選べなくする。 */
+    function isAlreadyReceived(name) {
+        return confirmedAttendees.some(a => a.name === name)
+            || waitingList.some(a => a.name === name);
+    }
+
+    /** 予約レコードを受付フローに載せる。希望未入力ならプログラム選択へ回す。 */
+    function beginReceptionFor(reservation) {
+        const trim = (v) => (v || '').toString().trim();
+        const rawChoices = Array.isArray(reservation.choices) ? reservation.choices : [];
+        const hasNoPreference = rawChoices.length === 0 || rawChoices.every(v => {
+            const t = trim(v);
+            return !t || t === '-' || t === '希望なし' || t.toLowerCase() === 'none' || t === 'N/A';
+        });
+
+        currentUser = Object.assign({}, reservation, {
+            choices: normalizeChoicesToProgramIds(reservation.choices)
+        });
+
+        if (hasNoPreference) {
+            showCustomAlert('noChoicesProvided');
+            currentChoices = { 1: null, 2: null, 3: null };
+            renderProgramGrid();
+            updateProgramSelectionUI();
+            navigateTo('program-selection-section');
+            setProgramCompanionsVisibility(true);
+            setProgramCompanionsFromCurrentUser();
+            document.querySelector('.content-wrapper').classList.add('has-back-btn');
+            return;
+        }
+
+        showConfirmation(currentUser);
+        navigateTo('reservation-confirmation-section');
+    }
+
+    /** 候補を1件ぶんのボタンとして組み立てる。 */
+    function renderCandidateItem(reservation) {
+        const done = isAlreadyReceived(reservation.name);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'candidate-item' + (done ? ' is-done' : '');
+        button.setAttribute('role', 'option');
+        button.disabled = done;
+
+        const meta = [];
+        if (reservation.furigana) meta.push(reservation.furigana);
+        if (reservation.school) meta.push(reservation.school);
+        if (reservation.email) meta.push(reservation.email);
+
+        const choiceTitles = normalizeChoicesToProgramIds(reservation.choices)
+            .map((id, i) => {
+                const program = programs.find(prog => prog.id === id);
+                if (!program) return null;
+                const label = getTranslation('choice' + (i + 1)) || ('第' + (i + 1) + '希望');
+                return escapeHTML(label) + ': ' + escapeHTML(extractBaseTitle(getTranslatedValue(program.title, program.title_en)));
+            })
+            .filter(Boolean);
+
+        const doneBadge = done
+            ? '<span class="candidate-badge is-done">' + escapeHTML(getTranslation('alreadyReceived') || '受付済み') + '</span>'
+            : '';
+
+        button.innerHTML =
+            '<div class="candidate-name">' + escapeHTML(reservation.name) + doneBadge + '</div>'
+            + (meta.length ? '<div class="candidate-meta">' + meta.map(m => '<span>' + escapeHTML(m) + '</span>').join('') + '</div>' : '')
+            + (choiceTitles.length ? '<div class="candidate-choices">' + choiceTitles.join(' / ') + '</div>' : '');
+
+        if (!done) {
+            button.addEventListener('click', () => {
+                clearCandidates();
+                beginReceptionFor(reservation);
+            });
+        }
+        return button;
+    }
+
+    function clearCandidates() {
+        if (candidateListEl) candidateListEl.innerHTML = '';
+        if (candidateStatusEl) {
+            candidateStatusEl.textContent = '';
+            candidateStatusEl.classList.remove('is-empty');
+        }
+    }
+
+    /** 直近の検索結果。「予約を確認する」ボタンが参照する。 */
+    let candidateHits = [];
+
+    function refreshCandidates() {
+        if (!candidateListEl || !studentNameInput) return;
+        const query = studentNameInput.value;
+        candidateHits = [];
+
+        if (!query.trim()) {
+            clearCandidates();
+            return;
+        }
+
+        candidateHits = window.NameMatch.search(query, reservations, { limit: 20 });
+        candidateListEl.innerHTML = '';
+
+        if (candidateHits.length === 0) {
+            candidateStatusEl.textContent = getTranslation('candidatesNone')
+                || '該当する予約が見つかりません。表記を変えて試すか、「予約なし」で受付してください。';
+            candidateStatusEl.classList.add('is-empty');
+            return;
+        }
+
+        candidateStatusEl.classList.remove('is-empty');
+        const tmpl = getTranslation('candidatesFound') || '{count}件見つかりました。該当する方を選んでください。';
+        candidateStatusEl.textContent = tmpl.replace('{count}', candidateHits.length);
+
+        const fragment = document.createDocumentFragment();
+        candidateHits.forEach(hit => fragment.appendChild(renderCandidateItem(hit.record)));
+        candidateListEl.appendChild(fragment);
+    }
+
+    if (studentNameInput) {
+        studentNameInput.addEventListener('input', refreshCandidates);
+    }
+
     document.getElementById('btn-check-reservation').addEventListener('click', () => {
         const nameInput = document.getElementById('student-name');
         if (!validateAndHighlight([nameInput])) {
             return;
         }
-        const name = nameInput.value.trim().replace(/　/g, ' ');
 
-        // 既に登録済みかチェック
-        const isAlreadyConfirmed = confirmedAttendees.some(attendee => attendee.name === name);
-        const isAlreadyWaiting = waitingList.some(attendee => attendee.name === name);
-        
-        if (isAlreadyConfirmed || isAlreadyWaiting) {
-            showCustomAlert('errorAlreadyRegistered');
+        refreshCandidates();
+
+        const selectable = candidateHits.filter(hit => !isAlreadyReceived(hit.record.name));
+
+        if (selectable.length === 1) {
+            // 1人に絞れているなら確認を挟まず進める
+            clearCandidates();
+            beginReceptionFor(selectable[0].record);
+            return;
+        }
+        if (selectable.length === 0) {
+            if (candidateHits.length > 0) {
+                showCustomAlert('errorAlreadyRegistered');
+            } else {
+                showCustomAlert('errorNotFound');
+            }
             nameInput.focus();
             return;
         }
-
-        const student = reservations.find(r => r.name === name);
-        if (student) {
-            // Excelの値で "希望なし" 等が入っている場合の判定
-            const normalize = (v) => (v || '').toString().trim();
-            const rawChoices = Array.isArray(student.choices) ? student.choices : [];
-            const hasNoPreference = rawChoices.length === 0 || rawChoices.every(v => {
-                const s = normalize(v);
-                return !s || s === '-' || s === '希望なし' || s.toLowerCase() === 'none' || s === 'N/A';
-            });
-
-            // 予約レコードからchoicesをID配列に正規化
-            const normalized = normalizeChoicesToProgramIds(student.choices);
-            currentUser = {...student, choices: normalized};
-            if (hasNoPreference) {
-                // 希望が未入力の場合は希望選択画面へ誘導
-                showCustomAlert('noChoicesProvided');
-                currentChoices = { 1: null, 2: null, 3: null };
-                renderProgramGrid();
-                updateProgramSelectionUI();
-                navigateTo('program-selection-section');
-                setProgramCompanionsVisibility(true); // 予約あり（希望未入力）は表示
-                setProgramCompanionsFromCurrentUser();
-                document.querySelector('.content-wrapper').classList.add('has-back-btn');
-                return;
-            }
-            showConfirmation(currentUser);
-            navigateTo('reservation-confirmation-section');
-        } else {
-            showCustomAlert('errorNotFound');
-            nameInput.focus();
-        }
+        // 複数該当。候補リストから選んでもらう
+        const firstItem = candidateListEl.querySelector('.candidate-item:not([disabled])');
+        if (firstItem) firstItem.focus();
     });
 
     document.getElementById('btn-change-reservation').addEventListener('click', () => {
@@ -2918,8 +3025,16 @@ if (statusViewToggle) {
         const stored = window.LocalStore.rosters.load();
         if (stored.reservations) reservations = stored.reservations;
         if (stored.briefings) briefingSessionAttendees = stored.briefings;
+        indexRosters();
         renderRosterPreview();
         renderStatusTable();
+    }
+
+    /** 名簿が入れ替わったら照合用の検索キーを作り直す。 */
+    function indexRosters() {
+        if (!window.NameMatch) return;
+        window.NameMatch.indexRecords(reservations);
+        window.NameMatch.indexRecords(briefingSessionAttendees);
     }
 
     function writeRostersToStore() {
