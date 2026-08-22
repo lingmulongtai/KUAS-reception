@@ -137,5 +137,7 @@
     "offlineToastMessage": "Unable to reach the network",
     "errorNetworkUnavailable": "Network connection lost. Please check your connection and try again.",
     "errorDatabaseWriteFailed": "Failed to save to the database. Please contact staff for assistance.",
-    "notificationDatabaseSaved": "Data saved successfully."
+    "notificationDatabaseSaved": "Data saved successfully.",
+    "noWaitingParticipants": "There are no participants on the waiting list.",
+    "waitingAssigned": "Assigned {count} participant(s) from the waiting list."
 }
