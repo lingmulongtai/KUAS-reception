@@ -2531,3 +2531,24 @@ body.dark-mode .full-overlay { background: none; }
     text-align: left;
 }
 
+
+/* === 数字の桁を揃える ============================================
+   受付状況の人数は数秒おきに書き換わる。プロポーショナル数字のままだと
+   桁が変わるたびに横幅が動いて読みにくいので、等幅数字に固定する。
+   ================================================================= */
+.capacity-label,
+.program-no,
+.roster-count,
+.status-summary,
+#status-summary,
+#status-table td,
+#waiting-list-table td,
+#roster-reservations-table td,
+#roster-briefing-table td,
+#roster-others-table td,
+.total-progress .label,
+input[type="number"] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
