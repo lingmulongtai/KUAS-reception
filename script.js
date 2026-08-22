@@ -471,18 +471,41 @@ let currentLanguage = window.currentLanguage || 'ja';
     // 直接書き換えず、syncDerivedLists() 経由で更新する。
     let confirmedAttendees = [];   // プログラムに割り当て済みの来場者
     let waitingList = [];          // 満席で待機中の来場者
-    let programEnrollment = {};    // プログラムIDごとの確定人数
+    let programEnrollment = {};    // プログラムIDごとの確定人数（未受付の予約者を含む）
+    let programReservedHold = {};  // うち、まだ受付に来ていない予約者のぶん
+
+    /** その氏名が既に受付を済ませているか。 */
+    function hasBeenReceived(name) {
+        return allParticipants.some(p => p.name === name);
+    }
 
     function syncDerivedLists() {
         confirmedAttendees = allParticipants.filter(p => !!p.assignedProgramId);
         waitingList = allParticipants.filter(p => p.status === 'waiting');
 
         programEnrollment = {};
-        programs.forEach(p => { programEnrollment[p.id] = 0; });
+        programReservedHold = {};
+        programs.forEach(p => {
+            programEnrollment[p.id] = 0;
+            programReservedHold[p.id] = 0;
+        });
+
+        // 受付済みの割り当て
         confirmedAttendees.forEach(p => {
             if (programEnrollment[p.assignedProgramId] !== undefined) {
                 programEnrollment[p.assignedProgramId]++;
             }
+        });
+
+        // まだ来ていない予約者の第1希望も、確保済みとして定員から差し引く。
+        // この画面を見るのは当日の飛び込み参加者なので、予約者のぶんを空きに
+        // 見せてしまうと定員を超える。
+        reservations.forEach(r => {
+            if (hasBeenReceived(r.name)) return;   // 受付済みなら上で数えている
+            const firstChoice = normalizeChoicesToProgramIds(r.choices)[0];
+            if (!firstChoice || programEnrollment[firstChoice] === undefined) return;
+            programEnrollment[firstChoice]++;
+            programReservedHold[firstChoice]++;
         });
     }
 
@@ -788,14 +811,14 @@ let adminEditorDirty = false;
     }
     // --- 割り当てと完了画面 ---
     function assignProgram(user) {
-        // 保存済みの受付データから現在のプログラム参加人数を計算
-        const currentEnrollment = {};
-        programs.forEach(p => { currentEnrollment[p.id] = 0; });
-        allParticipants.forEach(p => {
-            if (p.assignedProgramId && currentEnrollment[p.assignedProgramId] !== undefined) {
-                currentEnrollment[p.assignedProgramId]++;
-            }
-        });
+        // 現在の埋まり具合。予約者の確保ぶんも含めた programEnrollment を使う。
+        // ただし本人が予約者なら、自分が確保している枠は空きとして扱う。
+        const currentEnrollment = Object.assign({}, programEnrollment);
+        const ownReservation = reservations.find(r => r.name === user.name);
+        if (ownReservation && !hasBeenReceived(user.name)) {
+            const held = normalizeChoicesToProgramIds(ownReservation.choices)[0];
+            if (held && currentEnrollment[held] > 0) currentEnrollment[held]--;
+        }
 
         for (const choiceId of user.choices) {
             if (choiceId && (currentEnrollment[choiceId] || 0) < programs.find(p => p.id === choiceId).capacity) {
@@ -3040,11 +3063,17 @@ if (statusViewToggle) {
         renderStatusTable();
     }
 
-    /** 名簿が入れ替わったら照合用の検索キーを作り直す。 */
+    /**
+     * 名簿が入れ替わったときの後始末。
+     * 照合用の検索キーを作り直し、定員の数え直しも走らせる
+     * （未受付の予約者ぶんを定員に含めているため）。
+     */
     function indexRosters() {
-        if (!window.NameMatch) return;
-        window.NameMatch.indexRecords(reservations);
-        window.NameMatch.indexRecords(briefingSessionAttendees);
+        if (window.NameMatch) {
+            window.NameMatch.indexRecords(reservations);
+            window.NameMatch.indexRecords(briefingSessionAttendees);
+        }
+        syncDerivedLists();
     }
 
     function writeRostersToStore() {
