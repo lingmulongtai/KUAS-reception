@@ -574,7 +574,9 @@ let currentTheme = 'light';
         prioritizeReserved: true,
         prioritizeGrade: true // 予約なしの学年優先（デフォルトON）
     };
-    // 管理者の認証状態（Firebase/フォールバックを統一管理）
+    // 管理者の認証状態（ローカルセッションで管理）
+    // ローカル運用のため、パスワードはこの定数で管理する
+    const ADMIN_PASSWORD = 'admin';
     let isAdminAuthenticated = false;
     let lastReceptionSection = 'initial-selection';
     let pendingAdminAccess = false;
@@ -793,13 +795,6 @@ let adminEditorDirty = false;
         adminView.classList.remove('hidden');
         if (adminLoginModal) adminLoginModal.classList.remove('visible');
         document.body.classList.remove('home-locked');
-        try {
-            if (window.firebase && window.firebase.auth) {
-                const user = window.firebase.auth().currentUser;
-                const emailSpan = document.getElementById('admin-user-email');
-                if (emailSpan) emailSpan.textContent = (user && user.email) ? user.email : '';
-            }
-        } catch (_) {}
         renderAdminEditor();
         renderStatusTable();
         navigationHistory = [];
@@ -2265,10 +2260,6 @@ function columnLetter(index) {
             setTimeout(() => (emailInput && emailInput.focus()), 0);
         }
 
-        function getFirebaseAuth() {
-            return (window.firebase && window.firebase.auth) ? window.firebase.auth() : null;
-        }
-
         // エントリーボタン（未ログイン時のみモーダルを表示）
         safeOn(adminEntryBtn, 'click', () => {
             const isInAdmin = adminView && !adminView.classList.contains('hidden');
@@ -2277,11 +2268,9 @@ function columnLetter(index) {
                 return;
             }
 
-            const auth = getFirebaseAuth();
-            const user = auth ? auth.currentUser : null;
-            const fallbackSession = (!auth && localStorage.getItem('adminSession') === 'true');
+            const hasSession = localStorage.getItem('adminSession') === 'true';
 
-            if (isAdminAuthenticated || user || fallbackSession) {
+            if (isAdminAuthenticated || hasSession) {
                 showAdminView();
                 return;
             }
@@ -2305,30 +2294,25 @@ function columnLetter(index) {
             try {
                 const email = (emailInput.value || '').trim();
                 const password = passwordInput.value || '';
-                const auth = getFirebaseAuth();
-                if (auth) {
-                    await auth.signInWithEmailAndPassword(email, password);
-                    // 遷移は onAuthStateChanged に委譲
+                if (password === ADMIN_PASSWORD) {
+                    adminLoginModal.classList.remove('visible');
+                    passwordInput.value = '';
+                    try { localStorage.setItem('adminSession', 'true'); } catch (_) {}
+                    try { localStorage.setItem('adminEmail', email); } catch (_) {}
+                    if (emailSpan) emailSpan.textContent = email;
+                    pendingAdminAccess = false;
+                    showAdminView();
+                    updateAdminEntryVisual(true);
+                    isAdminAuthenticated = true;
+                    setTheme(currentTheme || 'light', { announce: false });
                 } else {
-                    if (password === 'admin') {
-                        adminLoginModal.classList.remove('visible');
-                        passwordInput.value = '';
-                        try { localStorage.setItem('adminSession', 'true'); } catch (_) {}
-                        showAdminView();
-                        updateAdminEntryVisual(true);
-                        isAdminAuthenticated = true;
-                        setTheme(currentTheme || 'light', { announce: false });
-                    } else {
-                        const msg = getTranslation('wrongPassword') || 'Wrong password.';
-                        showCustomAlert('wrongPassword');
-                        errorEl.textContent = msg;
-                    }
+                    const msg = getTranslation('wrongPassword') || 'Wrong password.';
+                    showCustomAlert('wrongPassword');
+                    errorEl.textContent = msg;
                 }
             } catch (e) {
                 console.error(e);
-                const msg = (e && e.code === 'auth/wrong-password') || (e && e.code === 'auth/user-not-found')
-                    ? (getTranslation('wrongPassword') || 'Wrong password.')
-                    : (e && e.message) || 'Error';
+                const msg = (e && e.message) || 'Error';
                 showCustomAlert('wrongPassword');
                 errorEl.textContent = msg;
             } finally {
@@ -2341,14 +2325,9 @@ function columnLetter(index) {
         safeOn(passwordInput, 'keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); performLogin(); } });
 
         // ログアウト
-        safeOn(logoutBtn, 'click', async () => {
-            try {
-                const auth = getFirebaseAuth();
-                if (auth) {
-                    await auth.signOut();
-                }
-            } catch (e) { console.error(e); }
+        safeOn(logoutBtn, 'click', () => {
             try { localStorage.removeItem('adminSession'); } catch (_) {}
+            try { localStorage.removeItem('adminEmail'); } catch (_) {}
             pendingAdminAccess = false;
             if (emailSpan) emailSpan.textContent = '';
             showReceptionView();
@@ -2356,27 +2335,13 @@ function columnLetter(index) {
             isAdminAuthenticated = false;
         });
 
-        // 状態監視（Firebaseがある場合）
+        // 保存済みセッションの復元
         try {
-            const auth = getFirebaseAuth();
-            if (auth) {
-                auth.onAuthStateChanged((user) => {
-                    isAdminAuthenticated = !!user;
-                    updateAdminEntryVisual(isAdminAuthenticated);
-                    if (user) {
-                        if (emailSpan) emailSpan.textContent = user.email || '';
-                        adminLoginModal.classList.remove('visible');
-                        if (pendingAdminAccess) {
-                            pendingAdminAccess = false;
-                            showAdminView();
-                        }
-                    }
-                });
-            } else {
-                const fallbackSession = localStorage.getItem('adminSession') === 'true';
-                isAdminAuthenticated = fallbackSession;
-                updateAdminEntryVisual(isAdminAuthenticated);
+            isAdminAuthenticated = localStorage.getItem('adminSession') === 'true';
+            if (isAdminAuthenticated && emailSpan) {
+                emailSpan.textContent = localStorage.getItem('adminEmail') || '';
             }
+            updateAdminEntryVisual(isAdminAuthenticated);
         } catch (_) {}
     }
 
@@ -2385,22 +2350,6 @@ function columnLetter(index) {
     // 汎用セーフリスナー
     const addListener = (el, type, handler) => { if (el) el.addEventListener(type, handler); };
 
-    // Firebase 初期化が未完了でも自動で補完する
-    function ensureFirebaseInitialized() {
-        try {
-            const fb = window.firebase;
-            if (!fb || !fb.initializeApp) return false;
-            if (fb.apps && fb.apps.length > 0) return true;
-            if (window.firebaseConfig) {
-                fb.initializeApp(window.firebaseConfig);
-                return true;
-            }
-            return false;
-        } catch (e) {
-            console.error('ensureFirebaseInitialized error', e);
-            return false;
-        }
-    }
 
     // カスタムアラートの閉じるボタン
     addListener(document.getElementById('btn-alert-ok'), 'click', () => {
