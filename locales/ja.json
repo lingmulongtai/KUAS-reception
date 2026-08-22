@@ -145,5 +145,7 @@
     "nameSearchPlaceholder": "例：やまだ / 山田 / yamada",
     "candidatesFound": "{count}件見つかりました。該当する方を選んでください。",
     "candidatesNone": "該当する予約が見つかりません。表記を変えて試すか、「予約なし」で受付してください。",
-    "alreadyReceived": "受付済み"
+    "alreadyReceived": "受付済み",
+    "remainingSeats": "残り{count}",
+    "seatsFull": "満席"
 }

@@ -145,5 +145,7 @@
     "nameSearchPlaceholder": "e.g. yamada / 山田 / やまだ",
     "candidatesFound": "{count} found. Select the right person.",
     "candidatesNone": "No matching reservation. Try a different spelling, or check in as a walk-in.",
-    "alreadyReceived": "Checked in"
+    "alreadyReceived": "Checked in",
+    "remainingSeats": "{count} left",
+    "seatsFull": "Full"
 }

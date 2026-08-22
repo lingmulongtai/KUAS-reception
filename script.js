@@ -1065,35 +1065,89 @@ let adminEditorDirty = false;
 
     // 自動英訳機能は削除済み
 
+    // 残席がこの割合を下回ったら「残りわずか」として黄色にする
+    const LOW_CAPACITY_RATIO = 0.8;
+
+    /** プログラムの埋まり具合を 'full' | 'low' | 'open' で返す。 */
+    function capacityLevel(program) {
+        const capacity = program.capacity || 0;
+        if (capacity <= 0) return 'open';
+        const enrolled = programEnrollment[program.id] || 0;
+        if (enrolled >= capacity) return 'full';
+        if (enrolled / capacity >= LOW_CAPACITY_RATIO) return 'low';
+        return 'open';
+    }
+
+    /**
+     * 定員バー。埋まり具合に応じて緑 → 黄 → 赤に変わる。
+     * 満席のときは数値ではなく「満席」と出す。
+     */
+    function renderCapacityBar(program) {
+        const capacity = program.capacity || 0;
+        const enrolled = programEnrollment[program.id] || 0;
+        const level = capacityLevel(program);
+        const ratio = capacity > 0 ? Math.min(100, Math.round((enrolled / capacity) * 100)) : 0;
+
+        let label;
+        if (level === 'full') {
+            // バッジに載せるので、説明文ではなく短い語を使う
+            label = escapeHTML(getTranslation('seatsFull') || '満席');
+        } else {
+            const remaining = Math.max(0, capacity - enrolled);
+            const tmpl = getTranslation('remainingSeats') || '残り{count}';
+            label = escapeHTML(tmpl.replace('{count}', remaining));
+        }
+
+        return `
+            <div class="capacity" data-level="${level}">
+                <div class="capacity-bar" role="img" aria-label="${escapeHTML(String(enrolled))} / ${escapeHTML(String(capacity))}">
+                    <span style="width:${ratio}%"></span>
+                </div>
+                <span class="capacity-label">${label}</span>
+            </div>`;
+    }
+
+    /** 画像が未設定のプログラム用のプレースホルダ。番号だけを大きく出す。 */
+    function renderProgramThumb(program, index) {
+        const alt = escapeHTML(getTranslatedValue(program.title, program.title_en));
+        if (program.image) {
+            return `<div class="program-thumb"><img src="${escapeHTML(program.image)}" alt="${alt}" loading="lazy" decoding="async"></div>`;
+        }
+        return `<div class="program-thumb is-placeholder" aria-hidden="true"><span>${index + 1}</span></div>`;
+    }
+
     function renderProgramGrid() {
         const grid = document.getElementById('program-grid');
-        if (grid) {
-            grid.classList.toggle('disabled', document.body.classList.contains('offline'));
-        }
+        if (!grid) return;
         grid.innerHTML = '';
-        programs.forEach(p => {
+        programs.forEach((p, index) => {
             const card = document.createElement('div');
+            const level = capacityLevel(p);
+            const isFull = level === 'full';
             card.className = 'program-card';
             card.id = `card-${p.id}`;
-            const isFull = (programEnrollment[p.id] || 0) >= p.capacity;
-            if (isFull) {
-                card.classList.add('is-full');
-            }
+            card.dataset.capacity = level;
+            if (isFull) card.classList.add('is-full');
+
             const title = getTranslatedValue(p.title, p.title_en);
             const description = getTranslatedValue(p.description, p.description_en);
-            let fullOverlayHTML = '';
-            const fullText = getTranslation('full');
-            if (isFull && fullText) {
-                fullOverlayHTML = `<div class="full-overlay"><span>${escapeHTML(fullText)}</span></div>`;
-            }
+            const fullText = getTranslation('seatsFull') || '満席';
+            const fullOverlayHTML = isFull
+                ? `<div class="full-overlay"><span>${escapeHTML(fullText)}</span></div>`
+                : '';
+
             card.innerHTML = `
                 ${fullOverlayHTML}
-                <h3>${escapeHTML(title)}</h3>
-                <p>${escapeHTML(description)}</p>
-                <div class="program-choice-btns" data-program-id="${p.id}">
-                    <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
-                    <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
-                    <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
+                ${renderProgramThumb(p, index)}
+                <div class="program-body">
+                    <h3><span class="program-no">${index + 1}</span>${escapeHTML(title)}</h3>
+                    <p>${escapeHTML(description)}</p>
+                    ${renderCapacityBar(p)}
+                    <div class="program-choice-btns" data-program-id="${p.id}">
+                        <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
+                        <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
+                        <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
+                    </div>
                 </div>`;
             grid.appendChild(card);
         });
@@ -1115,7 +1169,7 @@ let adminEditorDirty = false;
                         return;
                     }
                     // 満員
-                    const isFull = (programEnrollment[program.id] || 0) >= program.capacity;
+                    const isFull = capacityLevel(program) === 'full';
                     if (isFull) {
                         showCustomAlert('errorProgramFull');
                         return;

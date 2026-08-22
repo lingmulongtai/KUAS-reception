@@ -2392,3 +2392,136 @@ body.home-locked #reception-view .content-wrapper {
 .field-error::before {
     content: "⚠ ";
 }
+
+/* === プログラムカード：サムネイル枠と定員バー ======================
+   サムネイルは将来ここに写真を入れるための枠。未設定のあいだは
+   番号を大きく出したプレースホルダを描いておく。
+   ================================================================= */
+
+:root {
+    --warning-color: #C77700;   /* 残りわずか。黄色系だが白背景で読める濃さにする */
+    --warning-bg: #FFF4E0;
+}
+body.dark-mode {
+    --warning-color: #F0B450;
+    --warning-bg: #43331A;
+}
+
+.program-card { overflow: hidden; padding: 0; }
+.program-body { padding: 18px 20px 20px; }
+
+.program-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--light-gray);
+    overflow: hidden;
+}
+.program-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.program-thumb.is-placeholder {
+    display: grid;
+    place-items: center;
+    background:
+        repeating-linear-gradient(
+            135deg,
+            rgba(15, 140, 82, .07) 0 14px,
+            rgba(15, 140, 82, .12) 14px 28px
+        ),
+        var(--card-bg);
+}
+.program-thumb.is-placeholder span {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--primary-color);
+    opacity: .5;
+    font-variant-numeric: tabular-nums;
+}
+body.dark-mode .program-thumb.is-placeholder {
+    background:
+        repeating-linear-gradient(
+            135deg,
+            rgba(141, 191, 33, .09) 0 14px,
+            rgba(141, 191, 33, .15) 14px 28px
+        ),
+        var(--card-bg);
+}
+body.dark-mode .program-thumb.is-placeholder span { color: var(--accent-color); }
+
+.program-card h3 { display: flex; align-items: baseline; gap: 10px; }
+.program-no {
+    flex: none;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(15, 140, 82, .12);
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+}
+body.dark-mode .program-no { background: rgba(141, 191, 33, .18); color: var(--accent-color); }
+
+/* --- 定員バー --- */
+.capacity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+.capacity-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--light-gray);
+    overflow: hidden;
+}
+.capacity-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary-color);
+    transition: width .3s ease;
+}
+.capacity-label {
+    flex: none;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.capacity[data-level="low"] .capacity-bar span { background: var(--warning-color); }
+.capacity[data-level="low"] .capacity-label     { color: var(--warning-color); }
+.capacity[data-level="full"] .capacity-bar span { background: var(--danger-color); }
+.capacity[data-level="full"] .capacity-label {
+    color: #fff;
+    background: var(--danger-color);
+    padding: 2px 10px;
+    border-radius: 999px;
+}
+
+/* 満席カードは赤枠で、薄くしすぎず「読めるが選べない」状態にする */
+.program-card.is-full { opacity: 1; border-color: var(--danger-color); }
+.program-card.is-full .program-thumb { filter: grayscale(1); opacity: .55; }
+.full-overlay {
+    background: none;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
+}
+.full-overlay span {
+    background: var(--danger-color);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+body.dark-mode .full-overlay { background: none; }
