@@ -464,6 +464,28 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentLanguage = window.currentLanguage || 'ja';
     let allParticipants = [];
 
+    // Excel 名簿を読み込んだときの列マッピング。未読み込みなら null。
+    let rosterMappingInfo = { reservations: null, briefing: null };
+
+    // ここから下は allParticipants から導出する表示用の状態。
+    // 直接書き換えず、syncDerivedLists() 経由で更新する。
+    let confirmedAttendees = [];   // プログラムに割り当て済みの来場者
+    let waitingList = [];          // 満席で待機中の来場者
+    let programEnrollment = {};    // プログラムIDごとの確定人数
+
+    function syncDerivedLists() {
+        confirmedAttendees = allParticipants.filter(p => !!p.assignedProgramId);
+        waitingList = allParticipants.filter(p => p.status === 'waiting');
+
+        programEnrollment = {};
+        programs.forEach(p => { programEnrollment[p.id] = 0; });
+        confirmedAttendees.forEach(p => {
+            if (programEnrollment[p.assignedProgramId] !== undefined) {
+                programEnrollment[p.assignedProgramId]++;
+            }
+        });
+    }
+
 
 // Bridge: mimic old `translations[currentLanguage].key` API using locales in window.translations
 const translations = new Proxy({}, {
@@ -1918,8 +1940,7 @@ function columnLetter(index) {
     return s;
 }
     function initializeEnrollment() {
-        programEnrollment = {};
-        programs.forEach(p => { programEnrollment[p.id] = 0; });
+        syncDerivedLists();
     }
 
     // --- LocalStorage 関連 ---
@@ -2738,6 +2759,7 @@ if (statusViewToggle) {
     function subscribeToParticipants() {
         window.LocalStore.onParticipantsChange((participantsData) => {
             allParticipants = participantsData;
+            syncDerivedLists();
 
             // データが更新されたら、表示も更新する
             const adminViewEl = document.getElementById('admin-view');
