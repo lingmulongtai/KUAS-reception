@@ -171,6 +171,16 @@
                 notifyParticipants();
                 return record;
             },
+            remove: function (id) {
+                const list = read(KEY.participants, []);
+                const next = list.filter(function (p) { return p.id !== id; });
+                if (next.length === list.length) return false;
+                if (!write(KEY.participants, next)) {
+                    throw new Error('LocalStore: participant remove failed');
+                }
+                notifyParticipants();
+                return true;
+            },
             clear: function () {
                 write(KEY.participants, []);
                 notifyParticipants();
