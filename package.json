@@ -5,6 +5,7 @@
   "description": "KUAS 工学部オープンキャンパス 受付管理システム（ローカル専用）",
   "scripts": {
     "start": "node serve.js",
-    "start:lan": "node serve.js 5173 all"
+    "start:lan": "node serve.js 5173 all",
+    "test": "node tests/name-match.test.js"
   }
 }
