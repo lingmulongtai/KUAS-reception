@@ -4,8 +4,12 @@
 
 ## コンセプト
 - 京都先端科学大学 工学部オープンキャンパスの受付と配席業務をブラウザだけで完結するシングルページアプリ
-- 名簿インポートから受付、プログラム割り当て、進行管理、エクスポートまでをローカル優先で実行
-- ネットワークに接続できる場合は Firebase（Auth / Firestore / Data Connect β）と連携可能
+- 名簿インポートから受付、プログラム割り当て、進行管理、エクスポートまでを **完全ローカル** で実行
+- 外部サービスへの通信は一切行わない。会場に回線が無くても動く
+
+> **オンライン版について**
+> Firebase（Auth / Firestore / Cloud Functions）を使う構成は `backup/firebase-main`
+> ブランチに残してある。本ブランチはそこからクラウド依存を取り除いたローカル専用版。
 
 ## 基本機能
 - 予約者・当日参加者の受付と検索（氏名、学校、学年、同伴者情報）
@@ -13,27 +17,35 @@
 - 自動割り当て、待機リスト管理、色分けストラップ案内表示
 - 管理画面でのプログラム編集、名簿プレビュー、ステータス可視化
 - Excel（`reception_status.xlsx`）および PDF へのエクスポート
-- 日本語/英語 UI 切り替え、ライト/ダークテーマ切り替え、IndexedDB・localStorage による自動保存
+- 多言語 UI 切り替え（日本語 / English / 한국어 / 中文 / español / हिन्दी / नेपाली / العربية / Indonesia）
+- ライト / ダーク / Liquid Glass テーマ、IndexedDB・localStorage による自動保存
 
 ## システム要件
-- ブラウザ: 最新の Microsoft Edge または Google Chrome（Windows で検証済み）
-- OS: Windows 10/11 推奨。macOS でも動作
-- ネットワーク: オンラインを推奨（フォント・アイコン・主要ライブラリを CDN から取得）
-- オプション: Firebase を利用する場合は該当サービスの有効化が必要
+- ブラウザ: 最新の Microsoft Edge、Google Chrome、Safari
+- OS: Windows 10/11、macOS、iPadOS
+- Node.js 18 以降（同梱のローカルサーバーを使う場合のみ）
+- ネットワーク: **不要**。フォント・アイコン・ライブラリはすべてリポジトリに同梱
 
 ## セットアップ
-### ローカルで試す
-1. 本リポジトリを任意の場所に配置
-2. そのまま `index.html` をブラウザで開くか、任意のローカルサーバーを起動
-   - PowerShell: `py -m http.server 8080`
-   - Node.js: `npx serve -l 8080`
-3. 初回起動時は名簿未読込みの通知が表示されるので、管理画面から名簿を読み込む
 
-### Firebase 連携（任意）
-1. Firebase プロジェクトを作成し、Authentication（Email/Password）と Cloud Firestore を有効化
-2. ルートに `firebase-config.js` を作成し、`window.firebaseConfig = { ... }` を定義
-3. `index.html` をホスティングまたはローカルサーバー経由で開き、管理画面からメール/パスワードでサインイン
-4. `firestore.rules` を参考に権限を調整。Data Connect β を使う場合は `dataconnect/` 配下の設定を更新
+```bash
+npm start
+```
+
+`http://127.0.0.1:5173` を開く。iPad など同じ LAN の端末からも使う場合は:
+
+```bash
+npm run start:lan
+```
+
+表示された LAN アドレスに各端末からアクセスする。
+
+> `index.html` を直接ダブルクリックしても動かない。多言語リソースを
+> `fetch` で読み込むため、`file://` ではブラウザにブロックされる。
+> `npm start` か任意のローカルサーバー（`py -m http.server 8080` など）を経由すること。
+
+管理画面へは画面右上のアイコンから入る。パスワードの既定値は `admin`
+（`script.js` の `ADMIN_PASSWORD` 定数）。
 
 ## 当日の運用フロー
 1. **事前準備**: PC・ブラウザの更新、名簿ファイルの最新版を用意、ポップアップ許可
@@ -53,32 +65,50 @@
 | 工学部説明会 参加者名簿 | No, 時間, 姓, 名, フリガナ, (任意) 同伴者 | `name`, `furigana`, `time`, `companions` |
 
 ### ローカル保存
-- IndexedDB: フォーム入力、受付ステータス、名簿データ、プログラム設定を保存
-- localStorage: テーマ、言語設定など軽量データを保存
-- 管理画面の「受付データをリセット」で両方のストアを削除可能
+すべて `local-store.js`（`window.LocalStore`）経由で localStorage に保存する。
+`kuas.reception.v1.*` を名前空間として使う。
+
+| キー | 内容 |
+| --- | --- |
+| `kuas.reception.v1.programs` | プログラム定義 |
+| `kuas.reception.v1.reservations` | 予約者名簿 |
+| `kuas.reception.v1.briefings` | 説明会参加者名簿 |
+| `kuas.reception.v1.participants` | 受付済みの来場者 |
+
+- 同一ブラウザの複数タブ間は `storage` イベントでリアルタイムに同期する
+- IndexedDB は入力途中のフォーム内容の退避に使用
+- 管理画面の「受付データをリセット」で全ストアを削除できる
+
+> **注意:** データはブラウザのプロファイルに紐づく。別の PC・別ブラウザとは共有されない。
+> 複数台で受付を分担する場合は、各端末のデータを Excel 出力してから手動で統合する。
 
 ## ディレクトリ構成（主要）
 - `index.html` / `script.js` / `style.css`: メインアプリと UI ロジック
+- `local-store.js`: localStorage ベースのデータ層
+- `serve.js`: 依存なしのローカル配信サーバー
 - `language-loader.js` と `locales/*.json`: 多言語リソースの遅延読み込み
-- `public/`: 画像や Firebase Hosting 用サンプル
+- `assets/fonts/`: 同梱フォント（Inter / Noto Sans JP / Zen Maru Gothic）
+- `vendor/`: 同梱ライブラリ（Phosphor Icons / SortableJS / SheetJS）
+- `public/`: 画像
 - `register_of_names/`: サンプル名簿（xlsx）
-- `firebase-init.js`, `firebase-config.js`: Firebase 設定（任意）
-- `dataconnect/`, `dataconnect-generated/`: Firebase Data Connect β 関連テンプレート
+- `docs/design-proposal.html`: UI・機能のデザイン提案書
 
 ## トラブルシュート
 - **予約が見つからない**: 名簿インポートを再確認し、氏名のスペースや表記揺れをチェック
 - **プログラムが定員超過**: 待機リストへ回し、後で「待機者を一括割り当て」を実行
 - **表示崩れやリセット**: 管理画面のリセットを実行 → ページ再読み込み
-- **アイコンが表示されない**: ネットワーク接続と CDN 読み込みを確認
-- **Firebase 書き込みが失敗**: 認証状態と Firestore ルールを確認
+- **画面が真っ白 / 文言が出ない**: `file://` で開いていないか確認。`npm start` 経由で開く
+- **データが消えた**: ブラウザのシークレットモードや履歴削除でも消える。本番前に必ず Excel 出力で控えを取る
 
 ## 開発メモ
 - プログラム定義や各種ステータス管理は `script.js` 内に実装
-- UI テキストは `locales/ja.json` と `locales/en.json` で管理。新言語を追加する場合は同じキー構成で JSON を用意
-- ブラウザ履歴に依存しないナビゲーションのため、セクション表示は `showSection()` を経由
+- `confirmedAttendees` / `waitingList` / `programEnrollment` は `allParticipants` からの導出値。
+  直接書き換えず `syncDerivedLists()` を経由する
+- UI テキストは `locales/*.json` で管理。新言語を追加する場合は同じキー構成で JSON を用意し、
+  未定義キーは自動的に英語へフォールバックする
+- ブラウザ履歴に依存しないナビゲーションのため、セクション表示は `navigateTo()` を経由
 - Excel 読み込みは SheetJS、ドラッグ&ドロップは SortableJS、アイコンは Phosphor Icons を利用
 
 ---
 
 © KUAS Reception App Team. All rights reserved.
-
