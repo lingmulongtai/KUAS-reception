@@ -137,5 +137,7 @@
     "offlineToastMessage": "ネットワークに接続できません",
     "errorNetworkUnavailable": "ネットワークに接続できません。接続を確認して再度お試しください。",
     "errorDatabaseWriteFailed": "データベースに保存できませんでした。スタッフにお問い合わせください。",
-    "notificationDatabaseSaved": "データを保存しました。"
+    "notificationDatabaseSaved": "データを保存しました。",
+    "noWaitingParticipants": "待機中の来場者はいません。",
+    "waitingAssigned": "{count}名を繰り上げました"
 }

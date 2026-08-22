@@ -2694,6 +2694,46 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
         }, true);
     });
 
+    // 待機者を空きのあるプログラムへ繰り上げる
+    function assignWaitingListParticipants() {
+        if (waitingList.length === 0) {
+            showCustomAlert('noWaitingParticipants');
+            return;
+        }
+
+        // 受付順（古い順）に処理する
+        const queue = waitingList.slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        let assignedCount = 0;
+
+        queue.forEach(user => {
+            const program = assignProgram(user);
+            if (!program) return;   // 希望プログラムがすべて満席なら待機のまま
+
+            // 待機レコードを割り当て済みレコードで置き換える
+            window.LocalStore.participants.remove(user.id);
+            window.LocalStore.participants.add({
+                name: user.name,
+                furigana: user.furigana || '',
+                school: user.school || '',
+                grade: user.grade || '',
+                companions: user.companions || 0,
+                choices: user.choices || [],
+                assignedProgramId: program.id,
+                status: 'assigned'
+            });
+            assignedCount++;
+        });
+
+        if (assignedCount === 0) {
+            showCustomAlert('errorProgramFull');
+            return;
+        }
+
+        updateAdminViewData();
+        const tmpl = getTranslation('waitingAssigned') || '{count}名を繰り上げました';
+        showSaveIndicator(tmpl.replace('{count}', assignedCount));
+    }
+
 document.getElementById('btn-assign-waiting').addEventListener('click', assignWaitingListParticipants);
 
     // 受付状況: 表/カード切替
