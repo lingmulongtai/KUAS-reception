@@ -2525,3 +2525,12 @@ body.dark-mode .program-no { background: rgba(141, 191, 33, .18); color: var(--a
     box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
 }
 body.dark-mode .full-overlay { background: none; }
+
+/* プログラム編集：画像パス欄の補足 */
+.editor-item-hint {
+    margin: -6px 0 10px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary-color);
+    text-align: left;
+}

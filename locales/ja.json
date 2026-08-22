@@ -147,5 +147,7 @@
     "candidatesNone": "該当する予約が見つかりません。表記を変えて試すか、「予約なし」で受付してください。",
     "alreadyReceived": "受付済み",
     "remainingSeats": "残り{count}",
-    "seatsFull": "満席"
+    "seatsFull": "満席",
+    "imageLabel": "画像",
+    "imageHint": "画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。"
 }

@@ -74,6 +74,7 @@
                             description: p.description || '',
                             title_en: p.title_en || '',
                             description_en: p.description_en || '',
+                            image: p.image || '',
                             capacity: p.capacity || 0,
                             order: typeof p.order === 'number' ? p.order : i
                         };
@@ -88,6 +89,7 @@
                         description: p.description,
                         title_en: p.title_en || '',
                         description_en: p.description_en || '',
+                        image: p.image || '',
                         capacity: p.capacity || 0,
                         order: index
                     };

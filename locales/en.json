@@ -147,5 +147,7 @@
     "candidatesNone": "No matching reservation. Try a different spelling, or check in as a walk-in.",
     "alreadyReceived": "Checked in",
     "remainingSeats": "{count} left",
-    "seatsFull": "Full"
+    "seatsFull": "Full",
+    "imageLabel": "Image",
+    "imageHint": "Put the file in public/programs/ and enter its path here. Leave blank to show a placeholder."
 }

@@ -987,6 +987,11 @@ let adminEditorDirty = false;
                     <textarea id="desc-en-${escapeHTML(p.id)}" autocomplete="off" spellcheck="false">${escapeHTML(p.description_en || '')}</textarea>
                 </div>
                 <div class="editor-item-row">
+                    <label for="image-${escapeHTML(p.id)}">${escapeHTML(getTranslation('imageLabel') || '画像')}</label>
+                    <input type="text" id="image-${escapeHTML(p.id)}" value="${escapeHTML(p.image || '')}" placeholder="public/programs/p1.jpg" autocomplete="off" spellcheck="false">
+                </div>
+                <p class="editor-item-hint">${escapeHTML(getTranslation('imageHint') || '画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。')}</p>
+                <div class="editor-item-row">
                     <label for="capacity-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].capacityLabel)}</label>
                     <input type="number" id="capacity-${escapeHTML(p.id)}" value="${escapeHTML(p.capacity)}" style="width: 80px; flex-grow: 0;">
                     <div style="margin-left: auto;">
@@ -1046,12 +1051,14 @@ let adminEditorDirty = false;
             const newTitleEn = itemElement.querySelector(`#title-en-${id}`).value;
             const newDescEn = itemElement.querySelector(`#desc-en-${id}`).value;
             const newCapacity = parseInt(itemElement.querySelector(`#capacity-${id}`).value, 10);
+            const newImage = (itemElement.querySelector(`#image-${id}`)?.value || '').trim();
             newPrograms.push({
                 id: id,
                 title: newTitle,
                 description: newDesc,
                 title_en: newTitleEn,
                 description_en: newDescEn,
+                image: newImage,
                 capacity: newCapacity || 10
             });
         });
