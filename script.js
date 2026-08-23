@@ -546,6 +546,9 @@ let currentTheme = 'light';
 let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
 
+    // 午前の工学部説明会の開始時刻。名簿に個別の時間が無い人はこれを案内する。
+    const BRIEFING_START_TIME = '11:00';
+
     // 右横書きの言語。増えたらここに足す。
     const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
@@ -2699,63 +2702,51 @@ function columnLetter(index) {
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
 
-    document.getElementById('btn-no-capstone').addEventListener('click', () => {
-        const nameEl = document.getElementById('walk-in-name');
-        const furiganaEl = document.getElementById('walk-in-furigana');
-        const schoolEl = document.getElementById('walk-in-school');
-        const gradeEl = document.getElementById('walk-in-grade');
-        
-        if (!validateAndHighlight([nameEl, furiganaEl, gradeEl])) {
+    // 午前の説明会だけに参加する場合。
+    // プログラム選択画面まで進んでもらってから選ばせる。体験と説明会が
+    // 両立できることを知らないまま「参加しない」を選ぶのを防ぐため。
+    document.getElementById('btn-briefing-only').addEventListener('click', () => {
+        if (!currentUser || !currentUser.name) {
+            showCustomAlert('errorUnexpected');
             return;
-        }
-        
-        const name = nameEl.value.trim().replace(/　/g, ' ');
-        const furigana = furiganaEl.value.trim().replace(/　/g, ' ');
-        
-        // 既に登録済みかチェック
-        const isAlreadyConfirmed = confirmedAttendees.some(attendee => attendee.name === name);
-        const isAlreadyWaiting = waitingList.some(attendee => attendee.name === name);
-        
-        if (isAlreadyConfirmed || isAlreadyWaiting) {
-            showCustomAlert('errorAlreadyRegistered');
-            nameEl.focus();
-            return;
-        }
-        
-        // キャップストーン体験に参加しない場合の処理
-        currentUser = { 
-            name: name,
-            furigana,
-            school: schoolEl.value, 
-            grade: gradeEl.value, 
-            choices: [],
-            noCapstone: true 
-        };
-        
-        // 説明会時間を検索して表示
-        const briefingAttendee = briefingSessionAttendees.find(a => a.name === name);
-        const briefingTimeEl = document.getElementById('no-capstone-briefing-time');
-        if (briefingAttendee && briefingAttendee.time) {
-            const timeMessage = translations[currentLanguage].noCapstoneBriefingTime
-                .replace('{name}', name)
-                .replace('{time}', briefingAttendee.time);
-            briefingTimeEl.textContent = timeMessage;
-        } else {
-            // 時間が見つからない場合は元のメッセージを表示
-            briefingTimeEl.textContent = translations[currentLanguage].noCapstoneInfo;
         }
 
-        // 役割カラー（青）メッセージ表示
+        currentUser.choices = [];
+        currentUser.noCapstone = true;
+
+        const nameEl = document.getElementById('no-capstone-student-name');
+        if (nameEl) {
+            const tmpl = getTranslation('successNameSuffix') || '{name} 様';
+            nameEl.textContent = tmpl.replace('{name}', currentUser.name);
+        }
+
+        // 説明会の開始時刻。名簿に個別の時間があればそれを優先する。
+        const briefingAttendee = briefingSessionAttendees.find(a => a.name === currentUser.name);
+        const briefingTimeEl = document.getElementById('no-capstone-briefing-time');
+        if (briefingTimeEl) {
+            if (briefingAttendee && briefingAttendee.time) {
+                const tmpl = getTranslation('noCapstoneBriefingTime') || '{name} 様の説明会は {time} からです。';
+                briefingTimeEl.textContent = tmpl
+                    .replace('{name}', currentUser.name)
+                    .replace('{time}', briefingAttendee.time);
+            } else {
+                const tmpl = getTranslation('briefingOnlyInfo') || '工学部説明会は {time} 開始です。開始時刻までに会場へお越しください。';
+                briefingTimeEl.textContent = tmpl.replace('{time}', BRIEFING_START_TIME);
+            }
+        }
+
+        // 役割カラー（青）
         const roleMsg = document.getElementById('role-color-no-capstone');
         if (roleMsg) {
             roleMsg.innerHTML = (currentLanguage === 'ja')
                 ? 'あなたは<span class="text-blue">「青色」</span>です。スムーズなご案内のためスタッフが手首に色のストラップをつけさせていただきます。'
                 : 'Your color is <span class="text-blue">blue</span>. For smooth guidance, staff will place a colored strap on your wrist.';
         }
-        
+
         navigateTo('no-capstone-section');
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
+
     document.getElementById('btn-no-capstone-complete').addEventListener('click', async () => {
         try {
             if (currentUser) {

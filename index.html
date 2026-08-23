@@ -129,13 +129,25 @@
                             </div>
                         </div>
                         <button id="btn-to-program-selection" class="btn btn-primary" data-lang-key="toProgramSelection">プログラム選択へ</button>
-                        <button id="btn-no-capstone" class="btn btn-secondary" data-lang-key="noCapstoneExperience">キャップストーン体験に参加しない</button>
                     </div>
                 </div>
                 <div id="program-selection-section" class="section section-hidden">
                     <h2 data-lang-key="selectProgramTitle">希望プログラムを選択してください</h2>
                     <p data-lang-key="selectProgramDesc">第1〜第3希望まで選択できます。</p>
+
+                    <!-- 体験と説明会は両立できることを、選ぶ前に伝えておく -->
+                    <div class="notice">
+                        <p class="notice-title" data-lang-key="capstoneNoticeTitle">キャップストーン体験について</p>
+                        <p data-lang-key="capstoneNoticeBody">体験のあとに工学部説明会があります。体験を選んでも、説明会には両方ご参加いただけます。<br>午前中しかいられない方や、このあとご用事のある方は、説明会のみのご参加をおすすめします。</p>
+                    </div>
+
                     <div id="program-grid" class="program-grid"></div>
+
+                    <!-- 体験を受けずに午前の説明会だけに参加する場合 -->
+                    <div class="briefing-only">
+                        <p class="briefing-only-lead" data-lang-key="briefingOnlyLead">午前の説明会だけに参加される場合は、こちらを選んでください。</p>
+                        <button id="btn-briefing-only" class="btn btn-secondary" data-lang-key="briefingOnlyButton">午前の説明会のみに参加する</button>
+                    </div>
                     <div class="input-group hidden" style="margin-top: 10px;">
                         <label for="companion-count-input" data-lang-key="companionsCountLabel">同伴者人数</label>
                         <select id="companion-count-input" style="max-width: 160px;">
@@ -151,11 +163,11 @@
                 </div>
                 <div id="no-capstone-section" class="section section-hidden">
                     <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
-                    <h2 data-lang-key="noCapstoneTitle">受付完了</h2>
-                    <p data-lang-key="noCapstoneDesc">キャップストーン体験に参加しない場合の受付が完了しました。</p>
+                    <h2 data-lang-key="briefingOnlyTitle">午前の説明会の受付が完了しました</h2>
+                    <p id="no-capstone-student-name" class="success-name"></p>
                     <p id="role-color-no-capstone" class="role-message" data-lang-key="roleBlue"></p>
                     <div class="no-capstone-info">
-                        <p id="no-capstone-briefing-time" data-lang-key="noCapstoneInfo">工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。</p>
+                        <p id="no-capstone-briefing-time" data-lang-key="briefingOnlyInfo">工学部説明会は 11:00 開始です。開始時刻までに会場へお越しください。</p>
                     </div>
                     <button id="btn-no-capstone-complete" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="backToHome">最初の画面に戻る</button>
                 </div>

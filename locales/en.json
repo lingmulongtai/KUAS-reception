@@ -160,5 +160,12 @@
     "modeRepeatDesc": "Assigns those who have attended most often first. Requires a visit-count column in the roster.",
     "otherLanguages": "Other languages",
     "adminEntry": "Admin",
-    "errorFieldSelect": "Please select {field}."
+    "errorFieldSelect": "Please select {field}.",
+    "capstoneNoticeTitle": "About the capstone experience",
+    "capstoneNoticeBody": "The faculty briefing runs after the capstone experience. Choosing a capstone program still lets you attend the briefing. If you can only stay for the morning, or have somewhere to be afterwards, the briefing alone may suit you better.",
+    "briefingOnlyLead": "Attending only the morning briefing? Choose this instead.",
+    "briefingOnlyButton": "Attend the morning briefing only",
+    "briefingOnlyTitle": "Checked in for the morning briefing",
+    "briefingOnlyInfo": "The faculty briefing starts at {time}. Please arrive at the venue before then.",
+    "successNameSuffix": "{name}"
 }
