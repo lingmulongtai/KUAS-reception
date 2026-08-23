@@ -147,7 +147,7 @@
     "remainingSeats": "残り{count}",
     "seatsFull": "満席",
     "imageLabel": "画像",
-    "imageHint": "画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。",
+    "imageHint": "画像を選ぶと、横800pxに縮小して保存します。端末の中だけに保存されるので、外部には送信されません。",
     "assignmentModeTitle": "割り当て方法",
     "assignmentModeNote": "プログラムをどの順番で埋めるかを決めます。先着順以外は、受付時にいったん待機にして、全員の受付が済んでから「受付状況」タブの「待機者を一括割り当て」で確定します。",
     "modeFirstCome": "先着順",
@@ -222,5 +222,10 @@
     "resumeErrorEmpty": "受付番号を入力してください。",
     "resumeErrorNotFound": "その受付番号は見つかりません。番号をご確認ください。",
     "resumeErrorDone": "この受付番号は既にプログラムが決まっています（{program}）。",
-    "resumeLoaded": "{name} 様の受付を読み込みました"
+    "resumeLoaded": "{name} 様の受付を読み込みました",
+    "imageNone": "未設定",
+    "imageChoose": "画像を選ぶ",
+    "imageClear": "削除",
+    "imageAdded": "画像を読み込みました。「変更を保存」で確定します",
+    "imageLoadFailed": "画像を読み込めませんでした。別のファイルでお試しください。"
 }

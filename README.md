@@ -98,7 +98,6 @@ npm run start:lan
 - `assets/fonts/`: 同梱フォント（Inter / Noto Sans JP / Zen Maru Gothic）
 - `vendor/`: 同梱ライブラリ（Phosphor Icons / SortableJS / SheetJS）
 - `public/`: 画像
-- `public/programs/`: プログラムカードのサムネイル画像（置き場所は同ディレクトリの README 参照）
 - `register_of_names/`: サンプル名簿（xlsx）
 - `docs/design-proposal.html`: UI・機能のデザイン提案書
 

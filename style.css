@@ -2610,3 +2610,34 @@ body.dark-mode .score-weights { background: rgba(141, 191, 33, .08); }
     font-variant-numeric: tabular-nums;
 }
 .resume-row .btn { flex: none; }
+
+/* === プログラム画像の選択 ======================================== */
+.editor-image-row { align-items: flex-start; }
+.image-picker {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}
+.image-preview {
+    width: 128px;
+    aspect-ratio: 16 / 9;
+    flex: none;
+    border: 2px solid var(--light-gray);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--content-bg);
+}
+.image-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-preview-empty {
+    font-size: 12px;
+    color: var(--text-secondary-color);
+}
+.image-picker-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.image-picker-actions label.btn {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}

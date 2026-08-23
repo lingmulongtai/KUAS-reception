@@ -1044,11 +1044,23 @@ let adminEditorDirty = false;
                     <label for="desc-en-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].descriptionEnLabel)}</label>
                     <textarea id="desc-en-${escapeHTML(p.id)}" autocomplete="off" spellcheck="false">${escapeHTML(p.description_en || '')}</textarea>
                 </div>
-                <div class="editor-item-row">
-                    <label for="image-${escapeHTML(p.id)}">${escapeHTML(getTranslation('imageLabel') || '画像')}</label>
-                    <input type="text" id="image-${escapeHTML(p.id)}" value="${escapeHTML(p.image || '')}" placeholder="public/programs/p1.jpg" autocomplete="off" spellcheck="false">
+                <div class="editor-item-row editor-image-row">
+                    <label>${escapeHTML(getTranslation('imageLabel') || '画像')}</label>
+                    <div class="image-picker">
+                        <div class="image-preview" id="preview-${escapeHTML(p.id)}">${
+                            p.image
+                                ? `<img src="${escapeHTML(p.image)}" alt="">`
+                                : `<span class="image-preview-empty">${escapeHTML(getTranslation('imageNone') || '未設定')}</span>`
+                        }</div>
+                        <div class="image-picker-actions">
+                            <label class="btn btn-secondary btn-sm" for="imagefile-${escapeHTML(p.id)}">${escapeHTML(getTranslation('imageChoose') || '画像を選ぶ')}</label>
+                            <input type="file" id="imagefile-${escapeHTML(p.id)}" class="program-image-input" data-program-id="${escapeHTML(p.id)}" accept="image/*" hidden>
+                            <button type="button" class="btn btn-secondary btn-sm btn-clear-image" data-program-id="${escapeHTML(p.id)}"${p.image ? '' : ' disabled'}>${escapeHTML(getTranslation('imageClear') || '削除')}</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="image-${escapeHTML(p.id)}" value="${escapeHTML(p.image || '')}">
                 </div>
-                <p class="editor-item-hint">${escapeHTML(getTranslation('imageHint') || '画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。')}</p>
+                <p class="editor-item-hint">${escapeHTML(getTranslation('imageHint') || '画像を選ぶと、横800pxに縮小して保存します。端末の中だけに保存されるので、外部には送信されません。')}</p>
                 <div class="editor-item-row">
                     <label for="capacity-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].capacityLabel)}</label>
                     <input type="number" id="capacity-${escapeHTML(p.id)}" value="${escapeHTML(p.capacity)}" style="width: 80px; flex-grow: 0;">
@@ -1060,6 +1072,74 @@ let adminEditorDirty = false;
             editorList.appendChild(item);
         });
         
+        // --- プログラム画像の選択 ---
+        //
+        // localStorage は数MBで頭打ちになるので、原寸のまま持たない。
+        // 横 800px の JPEG に落とせば 1 枚あたり 100KB 前後に収まり、
+        // 名簿や受付データを圧迫しない。
+        const IMAGE_MAX_WIDTH = 800;
+        const IMAGE_QUALITY = 0.75;
+
+        /** 画像ファイルを縮小して data URI にする。 */
+        function shrinkImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('read failed'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('decode failed'));
+                    img.onload = () => {
+                        const scale = Math.min(1, IMAGE_MAX_WIDTH / img.width);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.round(img.width * scale);
+                        canvas.height = Math.round(img.height * scale);
+                        const ctx = canvas.getContext('2d');
+                        // 透過画像でも白背景に落とす（JPEG は透過を持てないため）
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
+                    };
+                    img.src = String(reader.result);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function setProgramImage(programId, dataUri) {
+            const hidden = document.getElementById('image-' + programId);
+            const preview = document.getElementById('preview-' + programId);
+            const clearBtn = editorList.querySelector(`.btn-clear-image[data-program-id="${programId}"]`);
+            if (hidden) hidden.value = dataUri || '';
+            if (preview) {
+                preview.innerHTML = dataUri
+                    ? `<img src="${escapeHTML(dataUri)}" alt="">`
+                    : `<span class="image-preview-empty">${escapeHTML(getTranslation('imageNone') || '未設定')}</span>`;
+            }
+            if (clearBtn) clearBtn.disabled = !dataUri;
+            adminEditorDirty = true;
+        }
+
+        editorList.querySelectorAll('.program-image-input').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                try {
+                    const dataUri = await shrinkImage(file);
+                    setProgramImage(input.dataset.programId, dataUri);
+                    showSaveIndicator(getTranslation('imageAdded') || '画像を読み込みました。「変更を保存」で確定します');
+                } catch (err) {
+                    console.error('image load failed', err);
+                    showCustomAlert('imageLoadFailed');
+                }
+                e.target.value = '';
+            });
+        });
+
+        editorList.querySelectorAll('.btn-clear-image').forEach(btn => {
+            btn.addEventListener('click', () => setProgramImage(btn.dataset.programId, ''));
+        });
+
         document.querySelectorAll('.btn-delete-program').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const itemToDelete = e.target.closest('.program-editor-item');

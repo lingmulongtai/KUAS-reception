@@ -147,7 +147,7 @@
     "remainingSeats": "{count} left",
     "seatsFull": "Full",
     "imageLabel": "Image",
-    "imageHint": "Put the file in public/programs/ and enter its path here. Leave blank to show a placeholder.",
+    "imageHint": "The image is scaled down to 800px wide and stored on this device only. Nothing is uploaded.",
     "assignmentModeTitle": "Assignment method",
     "assignmentModeNote": "Decides the order in which programs are filled. Every mode except first-come holds attendees on a waiting list at check-in; run \"Assign waiting list\" on the Status tab once everyone has arrived.",
     "modeFirstCome": "First come, first served",
@@ -222,5 +222,10 @@
     "resumeErrorEmpty": "Please enter your reception number.",
     "resumeErrorNotFound": "That reception number was not found. Please check it.",
     "resumeErrorDone": "That reception number already has a program ({program}).",
-    "resumeLoaded": "Loaded the check-in for {name}"
+    "resumeLoaded": "Loaded the check-in for {name}",
+    "imageNone": "None",
+    "imageChoose": "Choose image",
+    "imageClear": "Remove",
+    "imageAdded": "Image loaded. Press \"Save changes\" to confirm.",
+    "imageLoadFailed": "Could not read that image. Please try another file."
 }
