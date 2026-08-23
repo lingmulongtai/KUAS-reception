@@ -197,5 +197,21 @@
     "orderHeader": "#",
     "scorePartReserved": "booking",
     "scorePartGrade": "year",
-    "scorePartRepeat": "repeat"
+    "scorePartRepeat": "repeat",
+    "backupTitle": "Backup",
+    "backupNote": "A snapshot is kept on this device every time someone checks in. If the browser data itself is cleared there is no way back, so pick a backup file once on the morning of the event.",
+    "backupChooseFile": "Choose a backup file",
+    "backupNow": "Back up now",
+    "backupRestoreFile": "Restore from file",
+    "backupHistory": "Snapshots on this device",
+    "backupEmpty": "No snapshots yet.",
+    "backupRestore": "Restore this point",
+    "backupSnapshotSummary": "{p} checked in / {r} on roster",
+    "backupStatusReady": "Backup file is set. Saved automatically every {n} check-ins.",
+    "backupStatusNoTarget": "No backup file set. The only copy is on this device.",
+    "backupStatusUnsupported": "This browser cannot write backups automatically. Press \"Back up now\" regularly.",
+    "backupSaved": "Backup written",
+    "backupReminder": "Check-ins are piling up with no backup file set. Download a copy now?",
+    "backupRestoreConfirm": "This restores the state at that point and overwrites the current reception data. Continue?",
+    "backupImportFailed": "Could not read that backup file. Please check the file."
 }

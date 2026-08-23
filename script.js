@@ -2466,8 +2466,11 @@ function columnLetter(index) {
     }
 
     setupTopBarButtons();
-    // 受付データの購読を開始
-    setTimeout(subscribeToParticipants, 0);
+    // どちらもこのハンドラ末尾の宣言に依存するので、実行を一巡させてから呼ぶ
+    setTimeout(() => {
+        setupBackup();
+        subscribeToParticipants();
+    }, 0);
 
     // 管理者ログインの初期化を一元化
     function setupAdminAuth() {
@@ -3399,11 +3402,129 @@ if (statusViewToggle) {
 
     // トップバーのボタンは setupTopBarButtons で初期化済み
 
+    // --- バックアップ ---
+    //
+    // localStorage はブラウザの履歴削除で消える。当日 1 台で回す以上、
+    // そこが飛ぶと復旧手段が無くなるため、受付が入るたびに世代を残す。
+
+    let backupInitialised = false;
+
+    function renderBackupStatus() {
+        const statusEl = document.getElementById('backup-status');
+        if (!statusEl || !window.Backup) return;
+
+        if (window.Backup.hasFileTarget()) {
+            statusEl.textContent = (getTranslation('backupStatusReady') || '書き出し先が設定されています。{n}件ごとに自動で保存します。')
+                .replace('{n}', window.Backup.FILE_BACKUP_INTERVAL);
+            statusEl.classList.remove('is-warning');
+        } else if (window.Backup.supportsFileSystem) {
+            statusEl.textContent = getTranslation('backupStatusNoTarget')
+                || '書き出し先が未設定です。この端末の中にしか控えがありません。';
+            statusEl.classList.add('is-warning');
+        } else {
+            statusEl.textContent = getTranslation('backupStatusUnsupported')
+                || 'このブラウザは自動書き出しに対応していません。定期的に「今すぐ書き出す」を押してください。';
+            statusEl.classList.add('is-warning');
+        }
+    }
+
+    function renderBackupHistory() {
+        const listEl = document.getElementById('backup-history');
+        if (!listEl || !window.Backup) return;
+        const snapshots = window.Backup.list();
+
+        if (snapshots.length === 0) {
+            listEl.innerHTML = `<p class="backup-empty">${escapeHTML(getTranslation('backupEmpty') || 'まだ世代がありません。')}</p>`;
+            return;
+        }
+
+        listEl.innerHTML = snapshots.map(snap => {
+            const when = new Date(snap.savedAt);
+            const pad = (n) => String(n).padStart(2, '0');
+            const stamp = `${when.getFullYear()}/${pad(when.getMonth() + 1)}/${pad(when.getDate())} ${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}`;
+            const summary = (getTranslation('backupSnapshotSummary') || '受付 {p}件 ／ 名簿 {r}件')
+                .replace('{p}', snap.participants).replace('{r}', snap.reservations);
+            return `
+                <div class="backup-row">
+                    <span class="backup-when">${escapeHTML(stamp)}</span>
+                    <span class="backup-count">${escapeHTML(summary)}</span>
+                    <button class="btn btn-secondary btn-sm btn-restore-snapshot" data-index="${snap.index}">${escapeHTML(getTranslation('backupRestore') || 'この時点に戻す')}</button>
+                </div>`;
+        }).join('');
+
+        listEl.querySelectorAll('.btn-restore-snapshot').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.index, 10);
+                showCustomAlert('backupRestoreConfirm', () => {
+                    if (window.Backup.restore(index)) {
+                        location.reload();
+                    } else {
+                        showCustomAlert('errorUnexpected');
+                    }
+                }, true);
+            });
+        });
+    }
+
+    function setupBackup() {
+        if (!window.Backup || backupInitialised) return;
+        backupInitialised = true;
+
+        // 書き出し先が未設定のまま件数が溜まったら、ダウンロードを促す
+        window.Backup.setManualBackupHandler((interval) => {
+            showCustomAlert('backupReminder', () => window.Backup.download(), true);
+        });
+
+        safeOn(document.getElementById('btn-backup-target'), 'click', async () => {
+            await window.Backup.chooseBackupFile();
+            renderBackupStatus();
+            showSaveIndicator(getTranslation('backupSaved') || 'バックアップを書き出しました');
+        });
+
+        safeOn(document.getElementById('btn-backup-now'), 'click', async () => {
+            if (window.Backup.hasFileTarget()) {
+                await window.Backup.onReceptionChange();
+            } else {
+                window.Backup.download();
+            }
+            renderBackupHistory();
+            showSaveIndicator(getTranslation('backupSaved') || 'バックアップを書き出しました');
+        });
+
+        safeOn(document.getElementById('backup-import-input'), 'change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    window.Backup.importFromText(String(reader.result));
+                    location.reload();
+                } catch (err) {
+                    console.error(err);
+                    showCustomAlert('backupImportFailed');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        renderBackupStatus();
+        renderBackupHistory();
+    }
+
     // 受付データの購読（LocalStore。同一ブラウザの別タブとも同期する）
     function subscribeToParticipants() {
+        let firstCall = true;
         window.LocalStore.onParticipantsChange((participantsData) => {
             allParticipants = participantsData;
             syncDerivedLists();
+
+            // 初回は購読開始の通知なので、バックアップは取らない
+            if (!firstCall && window.Backup) {
+                window.Backup.onReceptionChange().catch(console.error);
+                renderBackupHistory();
+            }
+            firstCall = false;
 
             // データが更新されたら、表示も更新する
             const adminViewEl = document.getElementById('admin-view');

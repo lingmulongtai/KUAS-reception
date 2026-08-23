@@ -357,6 +357,21 @@
                         <p id="score-example" class="score-example"></p>
                     </div>
 
+                    <!-- バックアップ -->
+                    <div class="backup-box">
+                        <p class="backup-title" data-lang-key="backupTitle">バックアップ</p>
+                        <p class="backup-note" data-lang-key="backupNote">受付が入るたびに、この端末の中に世代を残しています。ブラウザのデータごと消えると復旧できないため、当日の朝に一度、書き出し先のファイルを決めておいてください。</p>
+                        <p id="backup-status" class="backup-status"></p>
+                        <div class="backup-actions">
+                            <button id="btn-backup-target" class="btn btn-primary btn-sm" data-lang-key="backupChooseFile">書き出し先を決める</button>
+                            <button id="btn-backup-now" class="btn btn-secondary btn-sm" data-lang-key="backupNow">今すぐ書き出す</button>
+                            <label for="backup-import-input" class="btn btn-secondary btn-sm" data-lang-key="backupRestoreFile">ファイルから復元</label>
+                            <input type="file" id="backup-import-input" accept=".json" hidden>
+                        </div>
+                        <p class="backup-subtitle" data-lang-key="backupHistory">この端末に残っている世代</p>
+                        <div id="backup-history" class="backup-history"></div>
+                    </div>
+
                     <div style="margin-top: 30px; text-align: left;">
                          <button id="btn-reset-data" class="btn btn-danger" data-lang-key="resetData">受付データをリセット</button>
                     </div>
@@ -432,6 +447,7 @@
     <script src="language-loader.js" defer></script>
     <script src="local-store.js" defer></script>
     <script src="name-match.js" defer></script>
+    <script src="backup.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>

@@ -2475,3 +2475,80 @@ body.dark-mode .score-weights { background: rgba(141, 191, 33, .08); }
     color: var(--text-secondary-color);
     white-space: nowrap;
 }
+
+/* === バックアップ ================================================
+   localStorage はブラウザの履歴削除で消える。控えがあるかどうかを
+   設定画面で常に見えるようにしておく。
+   ================================================================= */
+.backup-box {
+    text-align: left;
+    margin-top: 28px;
+    padding: 18px;
+    border: 2px solid var(--light-gray);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+}
+.backup-title { margin: 0 0 5px; font-size: 16px; font-weight: 700; }
+.backup-note {
+    margin: 0 0 12px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text-secondary-color);
+}
+.backup-status {
+    margin: 0 0 14px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(15, 140, 82, .1);
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 700;
+}
+.backup-status.is-warning {
+    background: var(--warning-bg);
+    color: var(--warning-color);
+}
+
+.backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.backup-actions .btn { flex: 0 0 auto; }
+/* label を button と同じ見た目にする（file input を隠しているため） */
+.backup-actions label.btn {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.backup-subtitle {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.backup-history {
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-sm);
+}
+.backup-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--light-gray);
+}
+.backup-row:last-child { border-bottom: none; }
+.backup-when { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.backup-count { color: var(--text-secondary-color); font-variant-numeric: tabular-nums; }
+.backup-row .btn { margin-left: auto; flex: none; }
+.backup-empty {
+    margin: 0;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--text-secondary-color);
+}

@@ -197,5 +197,21 @@
     "orderHeader": "順",
     "scorePartReserved": "予約",
     "scorePartGrade": "学年",
-    "scorePartRepeat": "リピート"
+    "scorePartRepeat": "リピート",
+    "backupTitle": "バックアップ",
+    "backupNote": "受付が入るたびに、この端末の中に世代を残しています。ブラウザのデータごと消えると復旧できないため、当日の朝に一度、書き出し先のファイルを決めておいてください。",
+    "backupChooseFile": "書き出し先を決める",
+    "backupNow": "今すぐ書き出す",
+    "backupRestoreFile": "ファイルから復元",
+    "backupHistory": "この端末に残っている世代",
+    "backupEmpty": "まだ世代がありません。",
+    "backupRestore": "この時点に戻す",
+    "backupSnapshotSummary": "受付 {p}件 ／ 名簿 {r}件",
+    "backupStatusReady": "書き出し先が設定されています。{n}件ごとに自動で保存します。",
+    "backupStatusNoTarget": "書き出し先が未設定です。この端末の中にしか控えがありません。",
+    "backupStatusUnsupported": "このブラウザは自動書き出しに対応していません。定期的に「今すぐ書き出す」を押してください。",
+    "backupSaved": "バックアップを書き出しました",
+    "backupReminder": "書き出し先が未設定のまま受付が進んでいます。控えのファイルをダウンロードしますか？",
+    "backupRestoreConfirm": "この時点の状態に戻します。いまの受付データは上書きされます。よろしいですか？",
+    "backupImportFailed": "バックアップファイルを読み込めませんでした。ファイルを確認してください。"
 }
