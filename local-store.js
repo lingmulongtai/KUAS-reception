@@ -15,7 +15,8 @@
         programs: NS + '.programs',
         reservations: NS + '.reservations',
         briefings: NS + '.briefings',
-        participants: NS + '.participants'
+        participants: NS + '.participants',
+        counter: NS + '.receptionCounter'
     };
 
     const participantListeners = [];
@@ -99,12 +100,18 @@
         },
 
         rosters: {
-            /** { reservations, briefings } を返す。未保存の側は null。 */
+            /**
+             * { reservations, briefings } を返す。一度も保存していない側だけ null。
+             *
+             * 空配列は「保存した結果、0件だった」という意味なので null にしない。
+             * ここを潰すと、名簿を空にしてもスクリプト内のデモ用予約者が復活し、
+             * 実在しない人が定員を消費してしまう。
+             */
             load: function () {
                 const reservations = read(KEY.reservations, null);
                 const briefings = read(KEY.briefings, null);
                 return {
-                    reservations: Array.isArray(reservations) && reservations.length > 0
+                    reservations: Array.isArray(reservations)
                         ? reservations.map(function (r) {
                             return {
                                 id: r.id || newId('reservation'),
@@ -117,7 +124,7 @@
                             };
                         })
                         : null,
-                    briefings: Array.isArray(briefings) && briefings.length > 0
+                    briefings: Array.isArray(briefings)
                         ? briefings.map(function (b) {
                             return {
                                 id: b.id || newId('briefing'),
@@ -166,10 +173,20 @@
                     return (b.createdAt || 0) - (a.createdAt || 0);
                 });
             },
+            /** 次の受付番号。1 から通し。当日リセットで 1 に戻る。 */
+            nextNumber: function () {
+                const current = read(KEY.counter, 0);
+                const next = (typeof current === 'number' ? current : 0) + 1;
+                write(KEY.counter, next);
+                return next;
+            },
+
             add: function (doc) {
                 const list = read(KEY.participants, []);
                 const record = Object.assign({}, doc, {
                     id: newId('participant'),
+                    // 呼び出し側が番号を指定していればそれを使う（グループで揃えるため）
+                    receptionNumber: doc.receptionNumber || LocalStore.participants.nextNumber(),
                     createdAt: Date.now()
                 });
                 list.push(record);
@@ -206,12 +223,34 @@
             };
         },
 
+        /** 受付番号で 1 件引く。 */
+        findByNumber: function (number) {
+            const n = parseInt(number, 10);
+            if (!n) return null;
+            return LocalStore.participants.list().find(function (p) {
+                return p.receptionNumber === n;
+            }) || null;
+        },
+
         /** 全データを消す（管理画面のリセット用）。 */
         clearAll: function () {
             Object.keys(KEY).forEach(function (k) {
                 try { localStorage.removeItem(KEY[k]); } catch (_) {}
             });
             notifyParticipants();
+        },
+
+        /** 受付レコードを差し替える（受付番号を保ったまま内容を更新する用）。 */
+        updateParticipant: function (id, changes) {
+            const list = read(KEY.participants, []);
+            const index = list.findIndex(function (p) { return p.id === id; });
+            if (index < 0) return null;
+            list[index] = Object.assign({}, list[index], changes);
+            if (!write(KEY.participants, list)) {
+                throw new Error('LocalStore: participant update failed');
+            }
+            notifyParticipants();
+            return list[index];
         }
     };
 

@@ -31,7 +31,6 @@
                 <div id="theme-menu" class="theme-menu">
                     <a href="#" data-theme="light" data-lang-key="themeLight">Light Mode</a>
                     <a href="#" data-theme="dark" data-lang-key="themeDark">Dark Mode</a>
-                    <a href="#" data-theme="liquid" data-lang-key="themeLiquid">Liquid Glass Mode</a>
                 </div>
                 <button id="lang-switch-btn" class="header-btn" title="Switch Language"><i class="ph ph-translate"></i></button>
                 <div id="lang-menu" class="lang-menu">
@@ -64,6 +63,16 @@
                     </div>
                     <!-- 言語切替。ヘッダーのアイコンだけでは来場者が自力で見つけられないため、
                          最初の画面にも出しておく。 -->
+                    <!-- すでに受付を済ませていて、プログラムだけ後から決める人向け -->
+                    <div class="resume-box">
+                        <label for="resume-number" data-lang-key="resumeLabel">受付番号をお持ちの方</label>
+                        <div class="resume-row">
+                            <input type="text" id="resume-number" inputmode="numeric" autocomplete="off" placeholder="例：42">
+                            <button id="btn-resume" type="button" class="btn btn-secondary btn-sm" data-lang-key="resumeButton">続きから</button>
+                        </div>
+                        <p id="resume-error" class="field-error"></p>
+                    </div>
+
                     <div class="lang-quick">
                         <button id="btn-lang-quick" type="button" class="lang-quick-btn"><i class="ph ph-translate"></i><span id="lang-quick-label">English</span></button>
                         <button id="btn-lang-more" type="button" class="lang-quick-more" data-lang-key="otherLanguages">その他の言語</button>
@@ -92,6 +101,19 @@
                 <div id="walk-in-section" class="section section-hidden">
                     <h1 data-lang-key="walkInNameInputTitle">予約なし - お名前入力</h1>
                     <div class="input-group">
+                        <!-- 友達同士でまとめて受付する場合。全員が同じプログラムに入る。 -->
+                        <div class="party-size">
+                            <label for="walk-in-party-size" data-lang-key="partySizeLabel">一緒に受付する人数</label>
+                            <select id="walk-in-party-size">
+                                <option value="1" data-lang-key="partySize1">1名（自分だけ）</option>
+                                <option value="2">2名</option>
+                                <option value="3">3名</option>
+                                <option value="4">4名</option>
+                                <option value="5">5名</option>
+                            </select>
+                            <p class="field-note" data-lang-key="partySizeNote">2名以上を選ぶと、全員が同じプログラムに入れる枠だけを選べるようになります。</p>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-col">
                                 <label for="walk-in-name" data-lang-key="name">お名前</label><span class="required-mark" data-lang-key="requiredMark">必須</span>
@@ -129,14 +151,30 @@
                                 </select>
                             </div>
                         </div>
+                        <!-- 2人目以降。人数に応じて JS が中身を組み立てる。 -->
+                        <div id="party-members"></div>
+
                         <button id="btn-to-program-selection" class="btn btn-primary" data-lang-key="toProgramSelection">プログラム選択へ</button>
-                        <button id="btn-no-capstone" class="btn btn-secondary" data-lang-key="noCapstoneExperience">キャップストーン体験に参加しない</button>
                     </div>
                 </div>
                 <div id="program-selection-section" class="section section-hidden">
                     <h2 data-lang-key="selectProgramTitle">希望プログラムを選択してください</h2>
                     <p data-lang-key="selectProgramDesc">第1〜第3希望まで選択できます。</p>
+                    <p id="party-banner" class="party-banner hidden"></p>
+
+                    <!-- 体験と説明会は両立できることを、選ぶ前に伝えておく -->
+                    <div class="notice">
+                        <p class="notice-title" data-lang-key="capstoneNoticeTitle">キャップストーン体験について</p>
+                        <p data-lang-key="capstoneNoticeBody">体験のあとに工学部説明会があります。体験を選んでも、説明会には両方ご参加いただけます。<br>午前中しかいられない方や、このあとご用事のある方は、説明会のみのご参加をおすすめします。</p>
+                    </div>
+
                     <div id="program-grid" class="program-grid"></div>
+
+                    <!-- 体験を受けずに午前の説明会だけに参加する場合 -->
+                    <div class="briefing-only">
+                        <p class="briefing-only-lead" data-lang-key="briefingOnlyLead">午前の説明会だけに参加される場合は、こちらを選んでください。</p>
+                        <button id="btn-briefing-only" class="btn btn-secondary" data-lang-key="briefingOnlyButton">午前の説明会のみに参加する</button>
+                    </div>
                     <div class="input-group hidden" style="margin-top: 10px;">
                         <label for="companion-count-input" data-lang-key="companionsCountLabel">同伴者人数</label>
                         <select id="companion-count-input" style="max-width: 160px;">
@@ -152,11 +190,12 @@
                 </div>
                 <div id="no-capstone-section" class="section section-hidden">
                     <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
-                    <h2 data-lang-key="noCapstoneTitle">受付完了</h2>
-                    <p data-lang-key="noCapstoneDesc">キャップストーン体験に参加しない場合の受付が完了しました。</p>
+                    <h2 data-lang-key="briefingOnlyTitle">午前の説明会の受付が完了しました</h2>
+                    <p id="no-capstone-reception-number" class="reception-number"></p>
+                    <p id="no-capstone-student-name" class="success-name"></p>
                     <p id="role-color-no-capstone" class="role-message" data-lang-key="roleBlue"></p>
                     <div class="no-capstone-info">
-                        <p id="no-capstone-briefing-time" data-lang-key="noCapstoneInfo">工学部説明会のみに参加される場合は、別途説明会の受付をお願いします。</p>
+                        <p id="no-capstone-briefing-time" data-lang-key="briefingOnlyInfo">工学部説明会は 11:00 開始です。開始時刻までに会場へお越しください。</p>
                     </div>
                     <button id="btn-no-capstone-complete" class="btn btn-primary" style="margin-top: 30px;" data-lang-key="backToHome">最初の画面に戻る</button>
                 </div>
@@ -164,6 +203,7 @@
                 <div id="success-section" class="section section-hidden">
                     <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
                     <h2 data-lang-key="successTitle">受付が完了しました！</h2>
+                    <p id="success-reception-number" class="reception-number"></p>
                     <p id="success-student-name" style="font-size: 18px; font-weight: bold;"></p>
                     <p id="role-color-success" class="role-message hidden" data-lang-key="roleRed"></p>
                     <p id="success-message-desc" data-lang-key="successDesc">あなたは以下のプログラムに確定しました。</p>
@@ -181,7 +221,6 @@
             <div id="admin-panel" class="section">
                 <h2 data-lang-key="adminPanel">管理パネル</h2>
                 <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
-                    <span id="admin-user-email" style="font-size:14px; color:var(--text-secondary-color);"></span>
                     <button id="btn-admin-logout" class="btn btn-secondary btn-sm" data-lang-key="logout">ログアウト</button>
                 </div>
                 <div class="admin-tabs">
@@ -271,6 +310,14 @@
                         <p class="mode-group-note" data-lang-key="assignmentModeNote">プログラムをどの順番で埋めるかを決めます。先着順以外は、受付時にいったん待機にして、全員の受付が済んでから「受付状況」タブの「待機者を一括割り当て」で確定します。</p>
 
                         <label class="mode-option">
+                            <input type="radio" name="assignment-mode" value="score">
+                            <span class="mode-body">
+                                <span class="mode-name" data-lang-key="modeScore">総合ポイント（推奨）</span>
+                                <span class="mode-desc" data-lang-key="modeScoreDesc">予約・学年・参加回数をポイント化し、合計の高い方から割り当てます。3つの優先を1つにまとめた方式です。</span>
+                            </span>
+                        </label>
+
+                        <label class="mode-option">
                             <input type="radio" name="assignment-mode" value="firstCome">
                             <span class="mode-body">
                                 <span class="mode-name" data-lang-key="modeFirstCome">先着順</span>
@@ -303,6 +350,40 @@
                         </label>
                     </fieldset>
 
+                    <!-- 総合ポイントの配分。選択中のときだけ開く。 -->
+                    <div id="score-weights" class="score-weights hidden">
+                        <p class="score-weights-title" data-lang-key="scoreWeightsTitle">ポイント配分</p>
+                        <p class="score-weights-note" data-lang-key="scoreWeightsNote">3つの合計で順位を決めます。予約の点は、学年と参加回数を足しても届かない値にしてあります（予約した方が予約なしの方に抜かれないようにするため）。</p>
+                        <div class="weight-grid">
+                            <label><span data-lang-key="weightReserved">事前予約あり</span><input type="number" id="weight-reserved" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGrade3">高校3年生</span><input type="number" id="weight-grade3" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGrade2">高校2年生</span><input type="number" id="weight-grade2" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGrade1">高校1年生</span><input type="number" id="weight-grade1" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGradeOther">その他の学年</span><input type="number" id="weight-gradeOther" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightVisitPoint">参加1回につき</span><input type="number" id="weight-visitPoint" min="0" max="100" step="1"></label>
+                            <label><span data-lang-key="weightVisitCap">参加回数の上限</span><input type="number" id="weight-visitCap" min="0" max="200" step="5"></label>
+                        </div>
+                        <div class="weight-actions">
+                            <button id="btn-reset-weights" class="btn btn-secondary btn-sm" data-lang-key="resetWeights">既定値に戻す</button>
+                        </div>
+                        <p id="score-example" class="score-example"></p>
+                    </div>
+
+                    <!-- バックアップ -->
+                    <div class="backup-box">
+                        <p class="backup-title" data-lang-key="backupTitle">バックアップ</p>
+                        <p class="backup-note" data-lang-key="backupNote">受付が入るたびに、この端末の中に世代を残しています。ブラウザのデータごと消えると復旧できないため、当日の朝に一度、書き出し先のファイルを決めておいてください。</p>
+                        <p id="backup-status" class="backup-status"></p>
+                        <div class="backup-actions">
+                            <button id="btn-backup-target" class="btn btn-primary btn-sm" data-lang-key="backupChooseFile">書き出し先を決める</button>
+                            <button id="btn-backup-now" class="btn btn-secondary btn-sm" data-lang-key="backupNow">今すぐ書き出す</button>
+                            <label for="backup-import-input" class="btn btn-secondary btn-sm" data-lang-key="backupRestoreFile">ファイルから復元</label>
+                            <input type="file" id="backup-import-input" accept=".json" hidden>
+                        </div>
+                        <p class="backup-subtitle" data-lang-key="backupHistory">この端末に残っている世代</p>
+                        <div id="backup-history" class="backup-history"></div>
+                    </div>
+
                     <div style="margin-top: 30px; text-align: left;">
                          <button id="btn-reset-data" class="btn btn-danger" data-lang-key="resetData">受付データをリセット</button>
                     </div>
@@ -318,8 +399,6 @@
         <div class="modal-content-inner">
             <h2 data-lang-key="adminLogin">管理者ログイン</h2>
             <div class="input-group">
-                <label for="admin-email" data-lang-key="email">メールアドレス</label>
-                <input type="email" id="admin-email" autocomplete="off">
                 <label for="admin-password" data-lang-key="password">パスワード</label>
                 <input type="password" id="admin-password" autocomplete="off">
                 <p id="password-error"></p>
@@ -380,6 +459,7 @@
     <script src="language-loader.js" defer></script>
     <script src="local-store.js" defer></script>
     <script src="name-match.js" defer></script>
+    <script src="backup.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>

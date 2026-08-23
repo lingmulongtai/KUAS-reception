@@ -102,7 +102,6 @@ namespaced under `kuas.reception.v1.*`.
 - `assets/fonts/`: bundled fonts (Inter / Noto Sans JP / Zen Maru Gothic)
 - `vendor/`: bundled libraries (Phosphor Icons / SortableJS / SheetJS)
 - `public/`: static images
-- `public/programs/`: program card thumbnails (see the README in that directory)
 - `register_of_names/`: sample roster spreadsheets
 - `docs/design-proposal.html`: UI and feature design proposal
 

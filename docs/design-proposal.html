@@ -334,6 +334,88 @@ body {
 .changelog li { font-size: 13.5px; color: var(--ink-muted); line-height: 1.75; margin-bottom: 4px; }
 .changelog li b { color: var(--ink); font-weight: 700; }
 
+/* --- 技術メモ --- */
+.tech {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 24px 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+.tech h3 {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+.tech .verdict {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mark);
+    margin: 0 0 14px;
+}
+.tech p { font-size: 14px; line-height: 1.85; color: var(--ink-muted); margin: 0 0 14px; max-width: 74ch; }
+.tech p:last-child { margin-bottom: 0; }
+.tech strong { color: var(--ink); font-weight: 700; }
+.tech code {
+    font-family: var(--font-mono); font-size: 12.5px;
+    background: var(--surface-sunk); border-radius: 3px; padding: 1px 5px; color: var(--ink);
+}
+.tech ul { margin: 0 0 14px; padding-left: 20px; }
+.tech li { font-size: 14px; line-height: 1.8; color: var(--ink-muted); margin-bottom: 6px; }
+
+.tech-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 16px; }
+.tech-table th {
+    text-align: left; font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 500;
+    padding: 0 14px 8px 0; border-bottom: 1px solid var(--rule); white-space: nowrap;
+}
+.tech-table td { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--rule); color: var(--ink-muted); vertical-align: top; }
+.tech-table td:first-child { color: var(--ink); font-weight: 700; white-space: nowrap; }
+.tech-table .yes { color: var(--brand); font-weight: 700; }
+.tech-table .no  { color: var(--mark); font-weight: 700; }
+
+/* 構成図 */
+.diagram {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 20px;
+    margin: 0 0 16px;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--ink-muted);
+}
+
+/* 点数表 */
+.points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.point-card {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--brand);
+    border-radius: 3px;
+    padding: 12px 14px;
+}
+.point-card .k { font-size: 13px; font-weight: 700; color: var(--ink); }
+.point-card .v {
+    font-family: var(--font-mono);
+    font-size: 20px; font-weight: 700; color: var(--brand);
+    font-variant-numeric: tabular-nums;
+}
+.point-card .d { font-size: 12px; color: var(--ink-muted); line-height: 1.6; margin-top: 3px; }
+
 /* ============================================================
    モックアップ内部 — アプリ実物の見た目を再現する
    ドキュメントのテーマとは独立させ、常にアプリのライトテーマを描く
@@ -765,22 +847,24 @@ body {
 </style>
 
 <header class="masthead">
-    <p class="eyebrow">Design review — v2 · 第1回レビュー反映済み</p>
+    <p class="eyebrow">Design review — v3 · 第2回レビュー反映済み</p>
     <h1>オープンキャンパス受付アプリ<br>デザインボード</h1>
     <p class="lede">
         ローカル専用版に戻した現行アプリの全画面を、Figma のキャンバスのように並べたものです。
         各フレームには番号付きの注釈を付けています。この番号を指して「3-2 のここを変えたい」と
         言ってもらえれば、そのまま直せます。<br>
-        <b>第1回レビュー（配色・タイポグラフィ・コンポーネント・画面1〜2）の指示は反映済みです。</b>
+        <b>第1回・第2回レビューの指示は反映済みです。</b>
         反映した指摘には <span class="done-tag">反映</span>、判断待ちのものには
-        <span class="open-tag">未決</span> を付けています。
+        <span class="open-tag">未決</span> を付けています。<br>
+        技術的な検討（Next.js の是非、LAN 同期の構成とセキュリティ）は
+        <a href="#tech" style="color:var(--mark)">07 技術メモ</a> にまとめました。
     </p>
     <div class="meta-strip">
         <span><b>対象</b> KUAS-reception / local-only</span>
         <span><b>構成</b> Vanilla JS + localStorage</span>
         <span><b>画面数</b> 受付 7 ／ 管理 6</span>
         <span><b>照合</b> かな・ローマ字・メール対応</span>
-        <span><b>更新</b> 2026-08-23 (v2)</span>
+        <span><b>更新</b> 2026-08-24 (v3)</span>
     </div>
 </header>
 
@@ -801,12 +885,31 @@ body {
         <div class="rail-group">05 これから</div>
         <a href="#roadmap">機能候補</a>
         <a href="#questions">決めたいこと</a>
+        <div class="rail-group">07 技術メモ</div>
+        <a href="#tech">Next.js は要るか</a>
+        <a href="#tech">データの保持性</a>
+        <a href="#tech">LAN 同期</a>
     </nav>
 
     <main>
 
         <div class="changelog">
-            <h3>第1回レビューで反映した内容</h3>
+            <h3>第2回レビューで反映した内容</h3>
+            <p class="sub">feature/round2-flow-and-scoring</p>
+            <ul>
+                <li><b>友達同士のまとめ受付。</b> 1〜5名を同時に受付し、全員ぶんの空きがあるプログラムだけを選べるようにした。「入れたつもりで入れていない」が起きないので、確認作業そのものが要らない</li>
+                <li><b>割り当てを「総合ポイント」に統合。</b> 予約60点＋学年(高3で30点)＋参加回数(1回5点・上限20点)の合計順。配分は管理画面で変更でき、変えた瞬間に待機者リストの並びと各人の内訳が追随する</li>
+                <li><b>「説明会のみ」をプログラム選択画面へ移動。</b> 体験のあとに説明会もあることを説明してから選ばせる。完了画面も「午前の説明会の受付が完了しました」に</li>
+                <li><b>受付番号の発行。</b> 完了画面に大きく表示。番号を入れると希望選択から再開できる</li>
+                <li><b>自動バックアップ。</b> 受付ごとに端末内へ20世代、10件ごとにファイルへ自動書き出し</li>
+                <li><b>名簿から直接受付。</b> 行の「この方を受付」で確認画面まで直行</li>
+                <li><b>プログラム画像をブラウザから登録。</b> 横800pxに縮小して保存（1枚100KB前後）</li>
+                <li><b>Liquid Glass を削除。</b> ライト／ダークの2種類に</li>
+                <li><b>管理者ログインをパスワードのみに。</b> メールアドレス欄を削除</li>
+                <li><b>不具合修正。</b> 空の名簿を保存してもデモ用の予約者が復活し、実在しない人が定員を消費していた</li>
+            </ul>
+
+            <h3 style="margin-top:22px">第1回レビューで反映した内容</h3>
             <p class="sub">18 commits · feature/ui-refresh-and-matching</p>
             <ul>
                 <li><b>予約者の照合を作り直した。</b> 姓だけ・名だけ・ひらがな・カタカナ・ローマ字・メールアドレス・濁点の打ち漏れ、どれでも引ける。入力しながら候補が出て、同姓は候補から選ぶ。テスト 44 ケースで担保している</li>
@@ -1642,8 +1745,8 @@ body {
                 <h2>テーマ</h2>
             </div>
             <p class="chapter-note">
-                ライト／ダーク／Liquid Glass の 3 つ。右上の月アイコンから切り替えます。
-                会場の照明が読めないので、当日どれを既定にするかは決めておきたいところです。
+                ライトとダークの 2 つ。右上の月アイコンから切り替えます。既定はライトで、
+                会場が見づらいときだけダークへ、という運用に決まりました。
             </p>
 
             <div class="frames">
@@ -1689,27 +1792,23 @@ body {
                 </div>
 
                 <div class="frame">
-                    <div class="frame-label"><span class="nm">Liquid Glass</span><span class="dim">実験的</span></div>
+                    <div class="frame-label"><span class="nm">Liquid Glass</span><span class="dim">削除済み</span></div>
                     <div class="frame-body">
-                        <div class="ui" style="background:linear-gradient(150deg,#3f7fb8,#1d3f66)">
-                            <div class="ui-bar" style="background:rgba(255,255,255,.18);backdrop-filter:blur(14px)">
-                                <span class="ui-logo" style="color:#fff;border-color:rgba(255,255,255,.7)">KUAS</span>
-                                <span class="ui-icons"><span style="background:rgba(255,255,255,.2);color:#fff">?</span><span style="background:rgba(255,255,255,.2);color:#fff">☾</span><span style="background:rgba(255,255,255,.2);color:#fff">文</span><span style="background:rgba(255,255,255,.2);color:#fff">⚙</span></span>
-                            </div>
-                            <div class="ui-card" style="text-align:center;background:rgba(255,255,255,.16);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.4);color:#fff">
-                                <p class="ui-h1" style="color:#fff">工学部ミニキャップストーン体験 受付</p>
-                                <div class="ui-stack" style="margin-top:16px">
-                                    <button class="ui-btn lg" style="background:rgba(255,255,255,.3);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.5)">✓ &nbsp;予約あり</button>
-                                    <button class="ui-btn lg" style="background:rgba(255,255,255,.16);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.4)">＋ &nbsp;予約なし</button>
-                                </div>
-                            </div>
+                        <div style="padding:28px 24px;background:var(--surface-sunk);text-align:center">
+                            <p style="font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--mark);margin:0 0 10px">REMOVED</p>
+                            <p style="font-size:13.5px;line-height:1.8;color:var(--ink-muted);margin:0;text-align:left">
+                                すりガラス風の見た目だけではガラス感は出ず、モーションまで作り込んで
+                                はじめて成立するもの。そこまでやる価値がある機能ではないと判断し、
+                                CSS 448 行ごと削除しました。保存済みのテーマが Liquid Glass でも、
+                                起動時にライトへ落ちます。
+                            </p>
                         </div>
                     </div>
                     <ul class="notes">
-                        <li><span class="pin">1</span><span><b>KUAS の緑が消える。</b> 見た目は目を引きますが、大学のブランドカラーが画面から無くなります。来場者向けに使うかは要判断。</span></li>
-                        <li><span class="pin">2</span><span>backdrop-filter が重く、古い iPad では描画が落ちます。</span></li>
+                        <li class="done"><span class="pin">1</span><span><span class="done-tag">反映</span>ライト／ダークの2種類に絞った。既定はライト</span></li>
                     </ul>
                 </div>
+
             </div>
         </section>
 
@@ -1813,9 +1912,8 @@ body {
                 <div class="q">
                     <span class="qn">Q1</span>
                     <div>
-                        <h4><span class="open-tag">未決</span>希望は何個まで取るか</h4>
-                        <p>今は第1〜第3を全部埋めないと確定できません。入力の手数と、割り当ての柔軟さのトレードオフです。</p>
-                        <ul class="opts"><li>3つ必須（現行）</li><li>第1のみ必須、2・3は任意</li><li>第1のみ</li></ul>
+                        <h4><span class="done-tag">決定</span>希望は何個まで取るか</h4>
+                        <p>3つ必須のまま。終盤で残り枠が1つしかないような場面では冗長ですが、現状はこれで運用します。</p>
                     </div>
                 </div>
                 <div class="q">
@@ -1835,27 +1933,228 @@ body {
                 <div class="q">
                     <span class="qn">Q4</span>
                     <div>
-                        <h4><span class="open-tag">未決</span>受付端末は何台か</h4>
-                        <p>ローカル専用なので端末間でデータが共有されません。2 台以上なら同期の仕組みが要ります。</p>
-                        <ul class="opts"><li>1台完結</li><li>2〜3台・LAN同期</li><li>複数台・手動統合</li></ul>
+                        <h4><span class="done-tag">決定</span>受付端末は何台か</h4>
+                        <p>まず1台で完成させ、そのあと LAN 同期を試す。構成とセキュリティは <a href="#tech" style="color:var(--mark)">07 技術メモ</a> に。</p>
                     </div>
                 </div>
                 <div class="q">
                     <span class="qn">Q5</span>
                     <div>
-                        <h4><span class="open-tag">未決</span>既定のテーマ</h4>
-                        <p>会場の照明条件次第です。当日の朝に切り替える運用でも構いません。</p>
-                        <ul class="opts"><li>Light（現行）</li><li>Dark</li><li>Liquid Glass</li></ul>
+                        <h4><span class="done-tag">決定</span>既定のテーマ</h4>
+                        <p>ライトを既定にする。見づらいときだけダークへ。Liquid Glass は削除しました。</p>
                     </div>
                 </div>
                 <div class="q">
                     <span class="qn">Q6</span>
                     <div>
-                        <h4><span class="open-tag">未決</span>来場者に端末を触らせるか</h4>
-                        <p>触らせるならキオスクモードと大きめのタップ領域、スタッフ入力なら情報密度を上げた方が速くなります。設計の前提が変わります。</p>
-                        <ul class="opts"><li>来場者が自分で操作</li><li>スタッフが代理入力</li><li>予約者はスタッフ・当日は本人</li></ul>
+                        <h4><span class="done-tag">決定</span>来場者に端末を触らせるか</h4>
+                        <p>基本はスタッフが操作。ただしこのアプリ自体が来場者に見せるものでもあるため、<strong>来場者が触れる品質で作る</strong>方針。タップ領域とフォーカス表示はその前提で組んでいます。</p>
                     </div>
                 </div>
+                <div class="q">
+                    <span class="qn">Q7</span>
+                    <div>
+                        <h4><span class="open-tag">未決</span>LAN 同期の通信を暗号化するか</h4>
+                        <p>HTTPS にするには証明書が要り、自己署名だと各端末で警告を消す作業が発生します。閉じた LAN で扱うのが当日限りの氏名と学年であることを踏まえ、ネットワークを分ける方が費用対効果は高いと考えていますが、方針の確認をお願いします。</p>
+                        <ul class="opts"><li>ネットワーク分離のみ（推奨）</li><li>自己署名証明書で HTTPS</li><li>両方</li></ul>
+                    </div>
+                </div>
+                <div class="q">
+                    <span class="qn">Q8</span>
+                    <div>
+                        <h4><span class="open-tag">未決</span>プログラムの開始時刻・教室を来場者に見せるか</h4>
+                        <p>データとして持てるようにする方針は決まりました。受付の時点で見せるか、あとで口頭・掲示で案内するかは別の判断です。</p>
+                        <ul class="opts"><li>完了画面に出す</li><li>持つが表示しない</li><li>選択画面にも出す</li></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             07 — 技術メモ
+             ============================================================ -->
+        <section class="chapter" id="tech">
+            <div class="chapter-head">
+                <span class="idx">07</span>
+                <h2>技術メモ</h2>
+            </div>
+            <p class="chapter-note">
+                いただいた技術的な問いへの回答です。判断が要るものは、選択肢と
+                トレードオフを並べてあります。
+            </p>
+
+            <!-- Next.js -->
+            <div class="tech">
+                <h3>Next.js のようなフルスタック構成にすれば、データの保持性は上がるか</h3>
+                <p class="verdict">結論：上がりません。別の手段が要ります</p>
+
+                <p>
+                    Next.js は React でページを組み立てるためのフレームワークで、<strong>それ自体はデータをどこにも保存しません</strong>。
+                    保存先は結局のところ「別に用意したデータベース」か「サーバーのファイル」になります。
+                    サーバーを置かずにブラウザだけで動かす構成なら、保存先の選択肢は今と同じ
+                    localStorage / IndexedDB / ファイル の3つしかなく、Next.js を挟んでも増えません。
+                </p>
+                <p>
+                    むしろ、いま <code>npm start</code> だけで起動できるものが、ビルド手順と Node の常駐を
+                    必要とするようになります。当日の朝に動かなくなったとき、原因の切り分けが難しくなる方向です。
+                    <strong>保持性の問題は、フレームワークではなく保存先を変えることで解きます。</strong>
+                </p>
+
+                <p><strong>保存先の選択肢と、それぞれの弱点：</strong></p>
+                <div style="overflow-x:auto">
+                <table class="tech-table">
+                    <thead>
+                        <tr><th>保存先</th><th>容量の目安</th><th>消える条件</th><th>採否</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>localStorage</td>
+                            <td>5〜10MB</td>
+                            <td>履歴削除・シークレット窓・サイトデータ消去</td>
+                            <td class="yes">現行。手軽さは随一</td>
+                        </tr>
+                        <tr>
+                            <td>IndexedDB</td>
+                            <td>数百MB〜GB</td>
+                            <td>localStorage と<strong>同じ条件で同時に消える</strong></td>
+                            <td>容量は解決するが、消える問題は解決しない</td>
+                        </tr>
+                        <tr>
+                            <td>File System Access API</td>
+                            <td>ディスク次第</td>
+                            <td>ユーザーがファイルを消したときだけ</td>
+                            <td class="yes">導入済み。これが実質の解</td>
+                        </tr>
+                        <tr>
+                            <td>サーバー＋DB</td>
+                            <td>事実上無制限</td>
+                            <td>サーバーが壊れたとき</td>
+                            <td>LAN 同期をやるなら同時に手に入る</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+
+                <p>
+                    要点は、<strong>IndexedDB に移しても「消える」問題は解決しない</strong>ことです。
+                    ブラウザのサイトデータ消去は、localStorage も IndexedDB もまとめて消します。
+                    容量が足りなくなったときに移す価値はありますが、保持性を上げる手段としては効きません。
+                </p>
+                <p>
+                    そこで今回は <strong>File System Access API による実ファイルへの自動書き出し</strong>を入れました。
+                    書き出し先を一度決めておけば、以降は 10 件ごとに同じファイルへ上書きされます。
+                    ブラウザのデータごと消えても、そのファイルから丸ごと戻せます。
+                    Chrome / Edge が対応しており、当日の想定環境（Windows のブラウザ）を満たします。
+                </p>
+            </div>
+
+            <!-- LAN 同期 -->
+            <div class="tech">
+                <h3>LAN 内で 1 台を親にして複数台で分担する</h3>
+                <p class="verdict">実現可能。ただし今の 1 台構成を完成させてからで十分です</p>
+
+                <p>
+                    同梱している <code>serve.js</code> は、いまは静的ファイルを配るだけの
+                    Node サーバーです。ここに受付データの保管と配信を足せば、そのまま親機になります。
+                    新しいソフトも、クラウドも、インターネット接続も要りません。
+                </p>
+
+                <div class="diagram">┌─ 親機（受付本部の Windows PC）──────────────────────┐
+│                                                        │
+│   serve.js                                             │
+│     ├─ 静的ファイルの配信      （今もやっている）      │
+│     ├─ 受付データの保管        （JSON ファイル1本）    │
+│     └─ 変更の配信              （Server-Sent Events）  │
+│                                                        │
+│   data/reception.json  ← 全端末の唯一の正本            │
+└────────────────────────┬───────────────────────────────┘
+                         │  Wi-Fi（LAN 内のみ）
+        ┌────────────────┼────────────────┐
+        │                │                │
+   受付端末 A       受付端末 B       表示用モニタ
+   （iPad）         （ノートPC）     （受付状況を映す）</div>
+
+                <p><strong>作りの要点：</strong></p>
+                <ul>
+                    <li><strong>正本は親機の 1 ファイルだけ。</strong> 各端末は自分の localStorage を持たず、親機に読み書きする。二重管理をしないので、統合作業が要らない</li>
+                    <li><strong>変更の配信は Server-Sent Events。</strong> WebSocket より単純で、ブラウザ標準だけで書ける。ある端末で受付が入ると、他の端末の画面が数百ミリ秒で追随する</li>
+                    <li><strong>親機が落ちても受付は止めない。</strong> 各端末は直近の状態を手元に持っておき、通信が切れたら自分の中に貯める。復帰したらまとめて送る（今の LocalStore がそのまま退避先として使える）</li>
+                    <li><strong>定員の取り合いは親機で解決する。</strong> 残り1枠に2台から同時に申し込みが来たとき、先に届いた方だけを通す。この判定を端末側でやると必ずずれるので、親機に一本化する</li>
+                </ul>
+
+                <p><strong>セキュリティ：</strong></p>
+                <ul>
+                    <li><strong>大学の共用 Wi-Fi には置かない。</strong> 親機で専用のアクセスポイントを立てるか、モバイルルーターを1台用意する。来場者の端末と同じネットワークに受付データを流さないのが一番効く対策です</li>
+                    <li><strong>接続に合言葉を要求する。</strong> 端末が親機に繋ぐとき、当日決めた文字列を送らせる。同じ Wi-Fi に入られても、それだけでは読めない状態にする</li>
+                    <li><strong>親機は LAN 内にのみ待ち受ける。</strong> ルーターのポート開放をしない。インターネット側からは存在しないのと同じになる</li>
+                    <li><strong>暗号化は現実的には見送り。</strong> HTTPS にするには証明書が要り、自己署名だと各端末で警告を消す作業が発生します。閉じた LAN で、扱うのが当日限りの氏名と学年であることを踏まえると、ネットワークを分けることの方が費用対効果が高いと判断しています。<span style="color:var(--mark)">ここは方針として確認をお願いしたい点です</span></li>
+                    <li><strong>データは当日中に消す。</strong> 終了後、親機の JSON と各端末のブラウザデータを消す手順を運用に入れる。残さないのが最も確実な保護です</li>
+                </ul>
+
+                <p>
+                    <strong>進め方の提案：</strong> まず 1 台での運用を完成させ、実際のオープンキャンパスで
+                    一度回してください。そこで出た「本当に困ったこと」を見てから 2 台目を足す方が、
+                    使われない同期機能を作り込むより確実です。いまの作りは、あとから親機を足せる形に
+                    してあります（データの読み書きが <code>local-store.js</code> の 1 箇所に集まっているので、
+                    そこを差し替えるだけで済みます）。
+                </p>
+            </div>
+
+            <!-- ポイント制 -->
+            <div class="tech">
+                <h3>総合ポイントの仕組み</h3>
+                <p class="verdict">予約・学年・参加回数を足し合わせ、高い順に割り当てます</p>
+
+                <div class="points">
+                    <div class="point-card">
+                        <div class="k">事前予約あり</div>
+                        <div class="v">60</div>
+                        <div class="d">予約なしは0点</div>
+                    </div>
+                    <div class="point-card">
+                        <div class="k">学年</div>
+                        <div class="v">30 / 20 / 10 / 0</div>
+                        <div class="d">高3 / 高2 / 高1 / その他</div>
+                    </div>
+                    <div class="point-card">
+                        <div class="k">参加回数</div>
+                        <div class="v">5 × 回数</div>
+                        <div class="d">上限20点（4回以上は頭打ち）</div>
+                    </div>
+                </div>
+
+                <p>
+                    <strong>予約の 60 点には意味があります。</strong> 学年の最大30点と参加回数の最大20点を足しても
+                    50点にしかならないので、<strong>予約した人が予約なしの人に抜かれることは起きません</strong>。
+                    「先に予約してくれた人を裏切らない」を、数字の関係として保証しています。
+                    この関係を崩したい場合（予約なしの高3を優先したいなど）は、管理画面で予約の点を
+                    50点未満に下げれば、そのとおりに動きます。
+                </p>
+
+                <div style="overflow-x:auto">
+                <table class="tech-table">
+                    <thead><tr><th>来場者</th><th>内訳</th><th>合計</th><th>順位</th></tr></thead>
+                    <tbody>
+                        <tr><td>予約あり・高1・初参加</td><td>予約60 + 学年10</td><td>70</td><td class="yes">1番</td></tr>
+                        <tr><td>予約あり・その他・初参加</td><td>予約60</td><td>60</td><td>2番</td></tr>
+                        <tr><td>予約なし・高3・4回目</td><td>学年30 + リピート20</td><td>50</td><td>3番</td></tr>
+                        <tr><td>予約なし・高3・初参加</td><td>学年30</td><td>30</td><td>4番</td></tr>
+                        <tr><td>予約なし・その他・初参加</td><td>—</td><td>0</td><td>5番</td></tr>
+                    </tbody>
+                </table>
+                </div>
+
+                <p>
+                    同点になった場合は<strong>受付順</strong>で決まります。早く来た人が先です。
+                    管理画面の待機者リストには、この計算結果が「70／予約60 + 学年10」の形で並びます。
+                    <strong>割り当てを実行する前に、誰がどの順で入るかが読めます。</strong>
+                    配分をいじると、その場で並びが変わります。
+                </p>
+                <p>
+                    参加回数は名簿の「参加回数」列から読みます。列が無ければ全員 0 点として扱われ、
+                    予約と学年だけで決まります。列を用意するまでは、実質「予約者優先＋学年優先」として動きます。
+                </p>
             </div>
         </section>
 
@@ -1866,5 +2165,5 @@ body {
     KUAS-reception / local-only branch<br>
     Vanilla JS + localStorage · 外部通信なし · 同梱フォント & ライブラリで完全オフライン動作<br>
     このボードは <code>docs/design-proposal.html</code> にあります。フレーム番号を指して修正を依頼してください。<br>
-    v2 · 第1回レビュー（配色・タイポグラフィ・コンポーネント・画面1〜2）反映済み。画面3以降は未レビューです。
+    v3 · 第1回・第2回レビュー反映済み。技術メモ（Next.js / LAN同期 / ポイント制）は 07 にあります。
 </footer>
