@@ -298,6 +298,14 @@
                         <p class="mode-group-note" data-lang-key="assignmentModeNote">プログラムをどの順番で埋めるかを決めます。先着順以外は、受付時にいったん待機にして、全員の受付が済んでから「受付状況」タブの「待機者を一括割り当て」で確定します。</p>
 
                         <label class="mode-option">
+                            <input type="radio" name="assignment-mode" value="score">
+                            <span class="mode-body">
+                                <span class="mode-name" data-lang-key="modeScore">総合ポイント（推奨）</span>
+                                <span class="mode-desc" data-lang-key="modeScoreDesc">予約・学年・参加回数をポイント化し、合計の高い方から割り当てます。3つの優先を1つにまとめた方式です。</span>
+                            </span>
+                        </label>
+
+                        <label class="mode-option">
                             <input type="radio" name="assignment-mode" value="firstCome">
                             <span class="mode-body">
                                 <span class="mode-name" data-lang-key="modeFirstCome">先着順</span>
@@ -329,6 +337,25 @@
                             </span>
                         </label>
                     </fieldset>
+
+                    <!-- 総合ポイントの配分。選択中のときだけ開く。 -->
+                    <div id="score-weights" class="score-weights hidden">
+                        <p class="score-weights-title" data-lang-key="scoreWeightsTitle">ポイント配分</p>
+                        <p class="score-weights-note" data-lang-key="scoreWeightsNote">3つの合計で順位を決めます。予約の点は、学年と参加回数を足しても届かない値にしてあります（予約した方が予約なしの方に抜かれないようにするため）。</p>
+                        <div class="weight-grid">
+                            <label><span data-lang-key="weightReserved">事前予約あり</span><input type="number" id="weight-reserved" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGrade3">高校3年生</span><input type="number" id="weight-grade3" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGrade2">高校2年生</span><input type="number" id="weight-grade2" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGrade1">高校1年生</span><input type="number" id="weight-grade1" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightGradeOther">その他の学年</span><input type="number" id="weight-gradeOther" min="0" max="200" step="5"></label>
+                            <label><span data-lang-key="weightVisitPoint">参加1回につき</span><input type="number" id="weight-visitPoint" min="0" max="100" step="1"></label>
+                            <label><span data-lang-key="weightVisitCap">参加回数の上限</span><input type="number" id="weight-visitCap" min="0" max="200" step="5"></label>
+                        </div>
+                        <div class="weight-actions">
+                            <button id="btn-reset-weights" class="btn btn-secondary btn-sm" data-lang-key="resetWeights">既定値に戻す</button>
+                        </div>
+                        <p id="score-example" class="score-example"></p>
+                    </div>
 
                     <div style="margin-top: 30px; text-align: left;">
                          <button id="btn-reset-data" class="btn btn-danger" data-lang-key="resetData">受付データをリセット</button>

@@ -2397,3 +2397,81 @@ body.dark-mode .notice { background: rgba(141, 191, 33, .1); }
 /* 完了画面のプログラムカードは .program-body を持たないので、
    グリッド用に padding を 0 にした .program-card のままだと内容が縁に触れる */
 #success-program-card { padding: 18px 20px; }
+
+/* === 総合ポイントの配分 ==========================================
+   当日の運用を決める数字なので、いじった結果がその場で分かるように
+   具体例と待機者リストの並びを連動させる。
+   ================================================================= */
+.score-weights {
+    text-align: left;
+    margin: -6px 0 22px;
+    padding: 16px 18px;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-md);
+    background: rgba(15, 140, 82, .05);
+}
+body.dark-mode .score-weights { background: rgba(141, 191, 33, .08); }
+.score-weights.hidden { display: none; }
+.score-weights-title {
+    margin: 0 0 5px;
+    font-size: 15px;
+    font-weight: 700;
+}
+.score-weights-note {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text-secondary-color);
+}
+
+.weight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px 16px;
+}
+.weight-grid label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.weight-grid input {
+    width: 84px;
+    flex: none;
+    padding: 7px 10px;
+    border: 2px solid var(--light-gray);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font: inherit;
+    font-size: 15px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.weight-actions { margin-top: 14px; }
+
+.score-example {
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--light-gray);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary-color);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 待機者リストの得点表示 */
+.score-total {
+    font-size: 15px;
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+}
+.score-breakdown {
+    display: block;
+    font-size: 11px;
+    color: var(--text-secondary-color);
+    white-space: nowrap;
+}

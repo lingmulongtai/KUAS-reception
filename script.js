@@ -519,15 +519,37 @@ let currentTheme = 'light';
      * firstCome 以外は受付時にいったん待機にし、全員の受付後に
      * assignWaitingListParticipants() でまとめて確定する。
      */
-    const ASSIGNMENT_MODES = ['firstCome', 'reserved', 'grade', 'repeat'];
+    const ASSIGNMENT_MODES = ['firstCome', 'reserved', 'grade', 'repeat', 'score'];
 
-    let settings = {
-        assignmentMode: 'grade'
+    /**
+     * 「総合ポイント」モードのポイント配分。
+     *
+     * 予約の 60 点は、学年（最大 30）と参加回数（最大 20）を足しても
+     * 届かない値にしてある。事前に予約してくれた人が、予約なしの人に
+     * 抜かれないようにするため。この関係を崩したい場合はここを変える。
+     */
+    const DEFAULT_SCORE_WEIGHTS = {
+        reserved: 60,      // 事前予約あり
+        grade3: 30,        // 高校3年生
+        grade2: 20,        // 高校2年生
+        grade1: 10,        // 高校1年生
+        gradeOther: 0,     // その他
+        visitPoint: 5,     // 過去の参加 1 回につき
+        visitCap: 20       // 参加回数ぶんの上限（= 4回以上は頭打ち）
     };
 
-    /** 旧設定（真偽値2つ）を新しい assignmentMode に読み替える。 */
+    let settings = {
+        assignmentMode: 'score',
+        scoreWeights: Object.assign({}, DEFAULT_SCORE_WEIGHTS)
+    };
+
+    /** 保存済み設定を読み込む。旧形式（真偽値2つ）も受け付ける。 */
     function migrateSettings(loaded) {
         if (!loaded) return;
+
+        // 欠けている項目は既定値で埋める。設定を足しても壊れないようにするため。
+        settings.scoreWeights = Object.assign({}, DEFAULT_SCORE_WEIGHTS, loaded.scoreWeights || {});
+
         if (ASSIGNMENT_MODES.includes(loaded.assignmentMode)) {
             settings.assignmentMode = loaded.assignmentMode;
             return;
@@ -589,6 +611,8 @@ let adminEditorDirty = false;
             if (translation) el.placeholder = translation;
         });
         updateQuickLangLabel();
+        // 言語が変わったら、動的に組み立てている文言も作り直す
+        if (typeof renderScoreExample === 'function') renderScoreExample();
         const currentVisibleSection = document.querySelector('#reception-sections-wrapper .section:not(.section-hidden)');
         if (currentVisibleSection && currentVisibleSection.id === 'program-selection-section') {
             renderProgramGrid();
@@ -1941,27 +1965,49 @@ let adminEditorDirty = false;
                 </div>
             `;
         } else {
+            // 実際に割り当てられる順に並べる。押す前に結果が読めるようにするため。
+            const ordered = waitingList.slice().sort(waitingComparator());
+            const isScoreMode = settings.assignmentMode === 'score';
+            const scoreHeader = isScoreMode
+                ? `<th>${escapeHTML(getTranslation('scoreHeader') || 'ポイント')}</th>`
+                : '';
+
             waitingTable.innerHTML = `
                 <table style="width:100%; border-collapse:collapse;">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th>${escapeHTML(getTranslation('orderHeader') || '順')}</th>
                             <th>${escapeHTML(getTranslation('nameHeader') || '')}</th>
+                            ${scoreHeader}
                             <th>${escapeHTML(getTranslation('choice1') || '')}</th>
                             <th>${escapeHTML(getTranslation('choice2') || '')}</th>
                             <th>${escapeHTML(getTranslation('choice3') || '')}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${waitingList.map((user, idx) => `
+                        ${ordered.map((user, idx) => {
+                            let scoreCell = '';
+                            if (isScoreMode) {
+                                const sc = participantScore(user);
+                                const parts = [];
+                                if (sc.reserved) parts.push(`${escapeHTML(getTranslation('scorePartReserved') || '予約')} ${sc.reserved}`);
+                                if (sc.grade) parts.push(`${escapeHTML(getTranslation('scorePartGrade') || '学年')} ${sc.grade}`);
+                                if (sc.repeat) parts.push(`${escapeHTML(getTranslation('scorePartRepeat') || 'リピート')} ${sc.repeat}`);
+                                scoreCell = `<td><strong class="score-total">${sc.total}</strong>`
+                                    + (parts.length ? `<span class="score-breakdown">${parts.join(' + ')}</span>` : '')
+                                    + `</td>`;
+                            }
+                            const label = (user.companions | 0) > 0 ? `${user.name}（同伴者:${user.companions}）` : user.name;
+                            return `
                             <tr>
                                 <td>${idx+1}</td>
-                                <td>${escapeHTML((user.companions|0)>0 ? `${user.name}（同伴者:${user.companions}）` : user.name)}</td>
+                                <td>${escapeHTML(label)}</td>
+                                ${scoreCell}
                                 <td>${escapeHTML(getProgramTitle(user.choices[0]))}</td>
                                 <td>${escapeHTML(getProgramTitle(user.choices[1]))}</td>
                                 <td>${escapeHTML(getProgramTitle(user.choices[2]))}</td>
-                            </tr>
-                        `).join('')}
+                            </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
@@ -3066,17 +3112,80 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
 	document.getElementById('briefing-session-file-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'briefing'));
 	document.getElementById('btn-export-excel').addEventListener('click', openExportPicker);
     
-    // 割り当て方法の選択
+    // --- 割り当て方法の選択 ---
+    const WEIGHT_KEYS = ['reserved', 'grade3', 'grade2', 'grade1', 'gradeOther', 'visitPoint', 'visitCap'];
+
+    /** ポイント配分の入力欄に現在値を流し込む。 */
+    function fillWeightInputs() {
+        WEIGHT_KEYS.forEach(key => {
+            const input = document.getElementById('weight-' + key);
+            if (input) input.value = settings.scoreWeights[key];
+        });
+        renderScoreExample();
+    }
+
+    /** 配分を変えたときに何が起きるか、具体例で見せる。 */
+    function renderScoreExample() {
+        const el = document.getElementById('score-example');
+        if (!el) return;
+        const w = settings.scoreWeights;
+        const reservedFreshman = (w.reserved || 0) + (w.grade1 || 0);
+        const walkInSenior = (w.grade3 || 0) + Math.min(w.visitCap || 0, 4 * (w.visitPoint || 0));
+        const tmpl = getTranslation('scoreExample')
+            || '例：予約あり・高1・初参加 = {a}点 ／ 予約なし・高3・4回目 = {b}点 → {winner}が先';
+        const winner = reservedFreshman >= walkInSenior
+            ? (getTranslation('scoreExampleReserved') || '予約あり・高1')
+            : (getTranslation('scoreExampleWalkIn') || '予約なし・高3');
+        el.textContent = tmpl
+            .replace('{a}', reservedFreshman)
+            .replace('{b}', walkInSenior)
+            .replace('{winner}', winner);
+    }
+
+    /** 総合ポイントを選んでいるときだけ配分の編集欄を出す。 */
+    function updateScoreWeightsVisibility() {
+        const box = document.getElementById('score-weights');
+        if (!box) return;
+        box.classList.toggle('hidden', settings.assignmentMode !== 'score');
+    }
+
     document.querySelectorAll('input[name="assignment-mode"]').forEach(radio => {
         radio.checked = (radio.value === settings.assignmentMode);
         radio.addEventListener('change', (e) => {
             if (!e.target.checked) return;
             settings.assignmentMode = e.target.value;
             saveStateToLocalStorage();
+            updateScoreWeightsVisibility();
             renderProgramGrid();
+            renderStatusTable();
             showSaveIndicator(getTranslation('settingsSaved') || '設定を保存しました');
         });
     });
+
+    WEIGHT_KEYS.forEach(key => {
+        const input = document.getElementById('weight-' + key);
+        if (!input) return;
+        input.addEventListener('change', () => {
+            const value = Math.max(0, parseInt(input.value, 10) || 0);
+            settings.scoreWeights[key] = value;
+            input.value = value;
+            saveStateToLocalStorage();
+            renderScoreExample();
+            renderStatusTable();
+            showSaveIndicator(getTranslation('settingsSaved') || '設定を保存しました');
+        });
+    });
+
+    safeOn(document.getElementById('btn-reset-weights'), 'click', () => {
+        settings.scoreWeights = Object.assign({}, DEFAULT_SCORE_WEIGHTS);
+        fillWeightInputs();
+        saveStateToLocalStorage();
+        renderStatusTable();
+        showSaveIndicator(getTranslation('settingsSaved') || '設定を保存しました');
+    });
+
+    fillWeightInputs();
+    updateScoreWeightsVisibility();
     
     document.getElementById('btn-reset-data').addEventListener('click', () => {
         showCustomAlert('resetConfirm', () => {
@@ -3112,6 +3221,35 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
     }
 
     /**
+     * 総合ポイント。内訳も返すので、管理画面でそのまま表示できる。
+     *
+     *   予約あり        … reserved 点
+     *   学年            … 高3 / 高2 / 高1 / その他 でそれぞれ点
+     *   過去の参加回数  … 1回につき visitPoint 点（visitCap で頭打ち）
+     *
+     * 3つを足した合計の高い順に割り当てる。同点なら受付順。
+     */
+    function participantScore(participant) {
+        const w = settings.scoreWeights || DEFAULT_SCORE_WEIGHTS;
+
+        const reserved = isReservedParticipant(participant) ? (w.reserved || 0) : 0;
+
+        const gradeKey = { '高校3年生': 'grade3', '高校2年生': 'grade2', '高校1年生': 'grade1' }[participant.grade];
+        const grade = gradeKey ? (w[gradeKey] || 0) : (w.gradeOther || 0);
+
+        const visits = visitCount(participant);
+        const repeat = Math.min(w.visitCap || 0, visits * (w.visitPoint || 0));
+
+        return {
+            total: reserved + grade + repeat,
+            reserved: reserved,
+            grade: grade,
+            repeat: repeat,
+            visits: visits
+        };
+    }
+
+    /**
      * 一括割り当ての並び順。
      * どのモードでも、決め手が同じ人どうしは受付順（先に来た人が先）になる。
      */
@@ -3129,6 +3267,8 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
                 return (a, b) => (gradeRank(a.grade) - gradeRank(b.grade)) || byArrival(a, b);
             case 'repeat':
                 return (a, b) => (visitCount(b) - visitCount(a)) || byArrival(a, b);
+            case 'score':
+                return (a, b) => (participantScore(b).total - participantScore(a).total) || byArrival(a, b);
             default:
                 return byArrival;
         }
