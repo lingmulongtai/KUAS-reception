@@ -568,6 +568,9 @@ let currentTheme = 'light';
 let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
 
+    // 直近に発行した受付番号。完了画面の表示に使う。
+    let lastReceptionNumber = null;
+
     // 午前の工学部説明会の開始時刻。名簿に個別の時間が無い人はこれを案内する。
     const BRIEFING_START_TIME = '11:00';
 
@@ -863,7 +866,19 @@ let adminEditorDirty = false;
     }
     function showSuccessScreen(name, program, isWaiting = false) {
         const studentNameEl = document.getElementById('success-student-name');
+        const numberEl = document.getElementById('success-reception-number');
         const programCardEl = document.getElementById('success-program-card');
+
+        if (numberEl) {
+            if (lastReceptionNumber) {
+                const tmpl = getTranslation('receptionNumberLabel') || '受付番号 {n}';
+                numberEl.textContent = tmpl.replace('{n}', lastReceptionNumber);
+                numberEl.classList.remove('hidden');
+            } else {
+                numberEl.textContent = '';
+                numberEl.classList.add('hidden');
+            }
+        }
         const successDesc = document.getElementById('success-message-desc');
         const roleMsgEl = document.getElementById('role-color-success');
         
@@ -2849,6 +2864,69 @@ function columnLetter(index) {
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
 
+    // --- 受付番号から続きを再開する ---
+    //
+    // 受付だけ済ませてプログラムを決めていない人が、番号を持って戻って
+    // きたときの導線。氏名の入力をやり直さずに希望選択から始められる。
+    safeOn(document.getElementById('btn-resume'), 'click', () => {
+        const input = document.getElementById('resume-number');
+        const errorEl = document.getElementById('resume-error');
+        const showError = (message) => {
+            if (!errorEl) return;
+            errorEl.textContent = message;
+            errorEl.classList.add('visible');
+        };
+        if (errorEl) errorEl.classList.remove('visible');
+
+        const number = parseInt((input.value || '').trim(), 10);
+        if (!number) {
+            showError(getTranslation('resumeErrorEmpty') || '受付番号を入力してください。');
+            input.focus();
+            return;
+        }
+
+        const record = window.LocalStore.findByNumber(number);
+        if (!record) {
+            showError(getTranslation('resumeErrorNotFound') || 'その受付番号は見つかりません。番号をご確認ください。');
+            input.focus();
+            return;
+        }
+        if (record.assignedProgramId) {
+            showError((getTranslation('resumeErrorDone') || 'この受付番号は既にプログラムが決まっています（{program}）。')
+                .replace('{program}', programTitleById(record.assignedProgramId)));
+            return;
+        }
+
+        // 受付済みのレコードを引き継いで希望選択からやり直す
+        currentUser = {
+            name: record.name,
+            furigana: record.furigana || '',
+            school: record.school || '',
+            grade: record.grade || '',
+            email: record.email || '',
+            visits: record.visits || 0,
+            companions: record.companions || 0,
+            choices: [],
+            resumeFromId: record.id,
+            resumeNumber: record.receptionNumber
+        };
+        currentChoices = { 1: null, 2: null, 3: null };
+        input.value = '';
+        renderProgramGrid();
+        updateProgramSelectionUI();
+        updatePartyBanner();
+        navigateTo('program-selection-section');
+        setProgramCompanionsVisibility(false);
+        document.querySelector('.content-wrapper').classList.add('has-back-btn');
+        showSaveIndicator((getTranslation('resumeLoaded') || '{name} 様の受付を読み込みました').replace('{name}', record.name));
+    });
+
+    /** プログラムIDから表示用のタイトルを引く。 */
+    function programTitleById(id) {
+        const program = programs.find(p => p.id === id);
+        return program ? getTranslatedValue(program.title, program.title_en) : '';
+    }
+
     // --- 友達同士のまとめ受付 ---
     //
     // 全員を同じプログラムに入れるのが目的。人数分の空きがあるプログラム
@@ -2926,6 +3004,12 @@ function columnLetter(index) {
         currentUser.choices = [];
         currentUser.noCapstone = true;
 
+        const numberEl = document.getElementById('no-capstone-reception-number');
+        if (numberEl) {
+            // この画面では番号はまだ発行されていない。完了ボタンで確定する。
+            numberEl.textContent = '';
+        }
+
         const nameEl = document.getElementById('no-capstone-student-name');
         if (nameEl) {
             const tmpl = getTranslation('successNameSuffix') || '{name} 様';
@@ -2962,7 +3046,7 @@ function columnLetter(index) {
     document.getElementById('btn-no-capstone-complete').addEventListener('click', async () => {
         try {
             if (currentUser) {
-                window.LocalStore.participants.add({
+                const record = window.LocalStore.participants.add({
                     name: currentUser.name,
                     furigana: currentUser.furigana || '',
                     school: currentUser.school || '',
@@ -2972,6 +3056,12 @@ function columnLetter(index) {
                     assignedProgramId: null,
                     status: 'briefing_only'
                 });
+                lastReceptionNumber = record.receptionNumber;
+                const numberEl = document.getElementById('no-capstone-reception-number');
+                if (numberEl) {
+                    const tmpl = getTranslation('receptionNumberLabel') || '受付番号 {n}';
+                    numberEl.textContent = tmpl.replace('{n}', record.receptionNumber);
+                }
             }
         } catch (e) {
             console.error(e);
@@ -3357,6 +3447,26 @@ if (statusViewToggle) {
             writeRostersToStore();
         };
 
+        // 受付番号から再開した場合は、新しく足さず既存のレコードを更新する。
+        // 同じ人が二重に受付されるのを防ぐため。
+        if (currentUser.resumeFromId) {
+            try {
+                window.LocalStore.updateParticipant(currentUser.resumeFromId, {
+                    choices: currentUser.choices || [],
+                    assignedProgramId: assignedProgram ? assignedProgram.id : null,
+                    status: assignedProgram ? 'assigned' : (shouldHold ? 'waiting' : 'registered')
+                });
+                lastReceptionNumber = currentUser.resumeNumber;
+                showSuccessScreen(currentUser.name, assignedProgram, shouldHold);
+                showSaveIndicator(getTranslation('notificationDatabaseSaved') || 'データを保存しました');
+            } catch (e) {
+                console.error('LocalStore update error', e);
+                showCustomAlert('errorDatabaseWriteFailed');
+                navigateTo('reservation-confirmation-section');
+            }
+            return;
+        }
+
         // グループ受付なら全員ぶん、そうでなければ本人 1 件を書き込む。
         const members = (Array.isArray(currentUser.groupMembers) && currentUser.groupMembers.length > 0)
             ? currentUser.groupMembers
@@ -3364,6 +3474,8 @@ if (statusViewToggle) {
         const groupId = members.length > 1 ? window.LocalStore.newId('group') : null;
         const assignedProgramId = assignedProgram ? assignedProgram.id : null;
         const written = [];
+        // グループは同じ番号で呼び出す。1組で1枚の整理券という扱いにする。
+        const receptionNumber = window.LocalStore.participants.nextNumber();
 
         try {
             members.forEach(member => {
@@ -3380,11 +3492,13 @@ if (statusViewToggle) {
                     companions: member.companions || 0,
                     choices: currentUser.choices || [],
                     assignedProgramId: assignedProgramId,
+                    receptionNumber: receptionNumber,
                     // 同じグループは同じプログラムから外れないよう、id で結びつけておく
                     groupId: groupId,
                     status: assignedProgramId ? 'assigned' : (shouldHold ? 'waiting' : 'registered')
                 }));
             });
+            lastReceptionNumber = receptionNumber;
             finalizeLocal(assignedProgram, shouldHold);
         } catch (e) {
             console.error('LocalStore write error', e);

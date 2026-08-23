@@ -15,7 +15,8 @@
         programs: NS + '.programs',
         reservations: NS + '.reservations',
         briefings: NS + '.briefings',
-        participants: NS + '.participants'
+        participants: NS + '.participants',
+        counter: NS + '.receptionCounter'
     };
 
     const participantListeners = [];
@@ -172,10 +173,20 @@
                     return (b.createdAt || 0) - (a.createdAt || 0);
                 });
             },
+            /** 次の受付番号。1 から通し。当日リセットで 1 に戻る。 */
+            nextNumber: function () {
+                const current = read(KEY.counter, 0);
+                const next = (typeof current === 'number' ? current : 0) + 1;
+                write(KEY.counter, next);
+                return next;
+            },
+
             add: function (doc) {
                 const list = read(KEY.participants, []);
                 const record = Object.assign({}, doc, {
                     id: newId('participant'),
+                    // 呼び出し側が番号を指定していればそれを使う（グループで揃えるため）
+                    receptionNumber: doc.receptionNumber || LocalStore.participants.nextNumber(),
                     createdAt: Date.now()
                 });
                 list.push(record);
@@ -212,12 +223,34 @@
             };
         },
 
+        /** 受付番号で 1 件引く。 */
+        findByNumber: function (number) {
+            const n = parseInt(number, 10);
+            if (!n) return null;
+            return LocalStore.participants.list().find(function (p) {
+                return p.receptionNumber === n;
+            }) || null;
+        },
+
         /** 全データを消す（管理画面のリセット用）。 */
         clearAll: function () {
             Object.keys(KEY).forEach(function (k) {
                 try { localStorage.removeItem(KEY[k]); } catch (_) {}
             });
             notifyParticipants();
+        },
+
+        /** 受付レコードを差し替える（受付番号を保ったまま内容を更新する用）。 */
+        updateParticipant: function (id, changes) {
+            const list = read(KEY.participants, []);
+            const index = list.findIndex(function (p) { return p.id === id; });
+            if (index < 0) return null;
+            list[index] = Object.assign({}, list[index], changes);
+            if (!write(KEY.participants, list)) {
+                throw new Error('LocalStore: participant update failed');
+            }
+            notifyParticipants();
+            return list[index];
         }
     };
 

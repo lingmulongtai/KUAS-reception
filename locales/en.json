@@ -215,5 +215,12 @@
     "backupRestoreConfirm": "This restores the state at that point and overwrites the current reception data. Continue?",
     "backupImportFailed": "Could not read that backup file. Please check the file.",
     "rosterCheckIn": "Check in",
-    "rosterActionHeader": "Action"
+    "rosterActionHeader": "Action",
+    "receptionNumberLabel": "Reception No. {n}",
+    "resumeLabel": "Already have a reception number?",
+    "resumeButton": "Continue",
+    "resumeErrorEmpty": "Please enter your reception number.",
+    "resumeErrorNotFound": "That reception number was not found. Please check it.",
+    "resumeErrorDone": "That reception number already has a program ({program}).",
+    "resumeLoaded": "Loaded the check-in for {name}"
 }

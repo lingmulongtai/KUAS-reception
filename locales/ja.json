@@ -215,5 +215,12 @@
     "backupRestoreConfirm": "この時点の状態に戻します。いまの受付データは上書きされます。よろしいですか？",
     "backupImportFailed": "バックアップファイルを読み込めませんでした。ファイルを確認してください。",
     "rosterCheckIn": "この方を受付",
-    "rosterActionHeader": "受付"
+    "rosterActionHeader": "受付",
+    "receptionNumberLabel": "受付番号 {n}",
+    "resumeLabel": "受付番号をお持ちの方",
+    "resumeButton": "続きから",
+    "resumeErrorEmpty": "受付番号を入力してください。",
+    "resumeErrorNotFound": "その受付番号は見つかりません。番号をご確認ください。",
+    "resumeErrorDone": "この受付番号は既にプログラムが決まっています（{program}）。",
+    "resumeLoaded": "{name} 様の受付を読み込みました"
 }

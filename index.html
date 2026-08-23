@@ -63,6 +63,16 @@
                     </div>
                     <!-- 言語切替。ヘッダーのアイコンだけでは来場者が自力で見つけられないため、
                          最初の画面にも出しておく。 -->
+                    <!-- すでに受付を済ませていて、プログラムだけ後から決める人向け -->
+                    <div class="resume-box">
+                        <label for="resume-number" data-lang-key="resumeLabel">受付番号をお持ちの方</label>
+                        <div class="resume-row">
+                            <input type="text" id="resume-number" inputmode="numeric" autocomplete="off" placeholder="例：42">
+                            <button id="btn-resume" type="button" class="btn btn-secondary btn-sm" data-lang-key="resumeButton">続きから</button>
+                        </div>
+                        <p id="resume-error" class="field-error"></p>
+                    </div>
+
                     <div class="lang-quick">
                         <button id="btn-lang-quick" type="button" class="lang-quick-btn"><i class="ph ph-translate"></i><span id="lang-quick-label">English</span></button>
                         <button id="btn-lang-more" type="button" class="lang-quick-more" data-lang-key="otherLanguages">その他の言語</button>
@@ -181,6 +191,7 @@
                 <div id="no-capstone-section" class="section section-hidden">
                     <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
                     <h2 data-lang-key="briefingOnlyTitle">午前の説明会の受付が完了しました</h2>
+                    <p id="no-capstone-reception-number" class="reception-number"></p>
                     <p id="no-capstone-student-name" class="success-name"></p>
                     <p id="role-color-no-capstone" class="role-message" data-lang-key="roleBlue"></p>
                     <div class="no-capstone-info">
@@ -192,6 +203,7 @@
                 <div id="success-section" class="section section-hidden">
                     <div class="success-icon-wrapper"><i class="ph-fill ph-check-circle"></i></div>
                     <h2 data-lang-key="successTitle">受付が完了しました！</h2>
+                    <p id="success-reception-number" class="reception-number"></p>
                     <p id="success-student-name" style="font-size: 18px; font-weight: bold;"></p>
                     <p id="role-color-success" class="role-message hidden" data-lang-key="roleRed"></p>
                     <p id="success-message-desc" data-lang-key="successDesc">あなたは以下のプログラムに確定しました。</p>
