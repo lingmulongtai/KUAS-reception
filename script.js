@@ -1418,7 +1418,9 @@ let adminEditorDirty = false;
         elements.forEach(el => {
             if (!el) return;
             if (!el.value) {
-                const tmpl = getTranslation('errorFieldRequired') || '{field}を入力してください。';
+                const key = (el.tagName === 'SELECT') ? 'errorFieldSelect' : 'errorFieldRequired';
+                const fallback = (el.tagName === 'SELECT') ? '{field}を選択してください。' : '{field}を入力してください。';
+                const tmpl = getTranslation(key) || fallback;
                 showFieldError(el, tmpl.replace('{field}', fieldLabelText(el)));
                 missing.push(el);
                 allValid = false;
@@ -2877,11 +2879,6 @@ function columnLetter(index) {
         }, 100);
     });
     
-    // エラーハイライト解除リスナー
-    ['student-name', 'walk-in-name', 'walk-in-furigana', 'walk-in-school', 'walk-in-grade', 'walk-in-companions'].forEach(id => {
-        document.getElementById(id).addEventListener('input', (e) => e.target.classList.remove('input-error'));
-    });
-
     // 管理者フローは setupAdminAuth で初期化済み
 // 未保存変更がある場合に離脱確認してからタブ切り替え
     const adminTabsContainer = document.querySelector('.admin-tabs');

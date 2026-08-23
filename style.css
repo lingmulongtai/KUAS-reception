@@ -2326,11 +2326,8 @@ body.home-locked #reception-view .content-wrapper {
     cursor: pointer;
     transition: border-color .15s ease, transform .1s ease;
 }
-.candidate-item:hover,
-.candidate-item:focus-visible {
-    border-color: var(--primary-color);
-    outline: none;
-}
+.candidate-item:hover { border-color: var(--primary-color); }
+.candidate-item:focus-visible { border-color: var(--primary-color); }
 .candidate-item:active { transform: scale(.995); }
 
 .candidate-name {
@@ -2713,3 +2710,120 @@ body.dark-mode .mode-option:has(input:checked) { background: rgba(141, 191, 33, 
     .header-btn-labelled span { display: none; }
     .header-btn-labelled { width: 40px; padding: 0; }
 }
+
+/* ==================================================================
+   デザイン整理レイヤー
+   ------------------------------------------------------------------
+   デジタル庁デザインシステムの考え方を、KUAS の緑を保ったまま
+   取り込むための層。既存の見た目を作り直すのではなく、
+   「読みやすさ」と「操作の分かりやすさ」に効く部分だけを揃える。
+
+   1. フォーカスがどこにあるか常に見える
+   2. 角丸・余白を一定の刻みに揃える
+   3. 面はグラデーションではなく単色。境界は線で示す
+   4. 補助テキストのコントラストを上げる
+   ================================================================== */
+
+:root {
+    /* 角丸の刻み。用途で使い分け、中間の値を増やさない */
+    --radius-sm: 8px;    /* 入力欄・小さなボタン */
+    --radius-md: 12px;   /* ボタン・カード */
+    --radius-lg: 16px;   /* 大きなカード */
+    --radius-pill: 999px;
+
+    /* フォーカスリング。緑と競合しない暖色で、明暗どちらの背景でも見える */
+    --focus-ring: #FFB020;
+    --focus-ring-contrast: #1A2E22;
+}
+body.dark-mode {
+    --focus-ring: #FFC44D;
+    --focus-ring-contrast: #05100A;
+}
+
+/* --- 1. フォーカス表示 -------------------------------------------
+   キーボードで操作している人が、今どこにいるか見失わないようにする。
+   二重リングにしているのは、明るい面と暗い面のどちらでも輪郭が
+   立つようにするため。 */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--focus-ring-contrast);
+    border-radius: var(--radius-sm);
+}
+
+/* 入力欄はフォーカス時に outline を消していたので戻す。
+   :where() は詳細度 0 なので、既存の詳細度の高いルールに勝てるよう
+   ここは実セレクタで書く。 */
+.input-group input:focus-visible,
+.input-group textarea:focus-visible,
+.input-group select:focus-visible,
+body:not(.dark-mode) .editor-item-row input:focus-visible,
+body:not(.dark-mode) .editor-item-row textarea:focus-visible,
+.editor-item-row input:focus-visible,
+.editor-item-row textarea:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+}
+
+/* 大きなボタンは浮かせる演出でフォーカスを表していたが、
+   マウス操作でも同じ見た目になるため区別がつかなかった */
+.btn-large:focus { outline: none; }
+.btn-large:focus-visible {
+    outline: 4px solid var(--focus-ring);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 7px var(--focus-ring-contrast);
+}
+
+/* --- 2. 面は単色にする -------------------------------------------
+   グラデーションと強い影は、写真の背景の上だと輪郭がぼやける。
+   単色 + 明確な境界のほうが、屋外光の下でも形が読める。 */
+.btn {
+    border-radius: var(--radius-md);
+    text-shadow: none;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.btn-primary {
+    background: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(15, 60, 38, .22);
+}
+.btn-secondary {
+    background: var(--secondary-color);
+    box-shadow: 0 2px 6px rgba(15, 60, 38, .18);
+}
+.btn-danger {
+    background: var(--danger-color);
+    box-shadow: 0 2px 6px rgba(110, 20, 30, .22);
+}
+.btn:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(15, 60, 38, .28);
+}
+.btn-primary:hover   { background: #0C7345; }
+.btn-secondary:hover { background: #3B8F67; }
+.btn-danger:hover    { background: #C02334; }
+.btn:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(15, 60, 38, .3); }
+
+.btn-large { border-radius: var(--radius-lg); }
+.btn-large:focus:not(:focus-visible) { box-shadow: none; }
+.btn-large:hover,
+.btn-large:focus { transform: none; }
+.btn-large:hover { box-shadow: 0 6px 18px rgba(15, 60, 38, .3); }
+/* 表面を横切る光沢アニメーションは、押せる場所を示す役には立たない */
+.btn-large::before { display: none; }
+
+/* --- 3. 角丸と境界を揃える --------------------------------------- */
+.input-group input,
+.input-group textarea,
+.input-group select { border-radius: var(--radius-sm); }
+
+.program-card    { border-radius: var(--radius-lg); }
+.candidate-item  { border-radius: var(--radius-md); }
+.mode-option     { border-radius: var(--radius-md); }
+.full-overlay    { border-radius: var(--radius-lg); }
+
+/* --- 4. 補助テキストのコントラスト -------------------------------
+   #5A7A5A は白地で 4.8:1。AA は満たすが 12〜14px で使っており、
+   屋外光の下では読みづらい。5.9:1 まで上げる。 */
+:root      { --text-secondary-color: #4A6A52; }
+body.dark-mode { --text-secondary-color: #C3DACF; }

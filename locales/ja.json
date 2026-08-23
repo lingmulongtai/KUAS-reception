@@ -161,5 +161,6 @@
     "modeRepeat": "リピーター優先",
     "modeRepeatDesc": "オープンキャンパスへの参加回数が多い方から割り当てます。名簿に参加回数の列が必要です。",
     "otherLanguages": "その他の言語",
-    "adminEntry": "管理画面"
+    "adminEntry": "管理画面",
+    "errorFieldSelect": "{field}を選択してください。"
 }

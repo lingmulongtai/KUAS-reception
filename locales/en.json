@@ -161,5 +161,6 @@
     "modeRepeat": "Repeat visitors first",
     "modeRepeatDesc": "Assigns those who have attended most often first. Requires a visit-count column in the roster.",
     "otherLanguages": "Other languages",
-    "adminEntry": "Admin"
+    "adminEntry": "Admin",
+    "errorFieldSelect": "Please select {field}."
 }
