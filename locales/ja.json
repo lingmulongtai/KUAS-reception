@@ -213,5 +213,7 @@
     "backupSaved": "バックアップを書き出しました",
     "backupReminder": "書き出し先が未設定のまま受付が進んでいます。控えのファイルをダウンロードしますか？",
     "backupRestoreConfirm": "この時点の状態に戻します。いまの受付データは上書きされます。よろしいですか？",
-    "backupImportFailed": "バックアップファイルを読み込めませんでした。ファイルを確認してください。"
+    "backupImportFailed": "バックアップファイルを読み込めませんでした。ファイルを確認してください。",
+    "rosterCheckIn": "この方を受付",
+    "rosterActionHeader": "受付"
 }

@@ -213,5 +213,7 @@
     "backupSaved": "Backup written",
     "backupReminder": "Check-ins are piling up with no backup file set. Download a copy now?",
     "backupRestoreConfirm": "This restores the state at that point and overwrites the current reception data. Continue?",
-    "backupImportFailed": "Could not read that backup file. Please check the file."
+    "backupImportFailed": "Could not read that backup file. Please check the file.",
+    "rosterCheckIn": "Check in",
+    "rosterActionHeader": "Action"
 }

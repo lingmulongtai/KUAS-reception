@@ -2061,9 +2061,16 @@ function renderRosterPreview() {
             const comp = (r.companions|0);
             tds += `<td>${comp > 0 ? comp : ''}</td>`;
         }
+        // 名簿から直接受付する。名前を見つけてから受付画面で打ち直す手間を無くす。
+        const done = (status !== 'red');
+        tds += done
+            ? `<td class="roster-action"><span class="roster-done">${escapeHTML(getTranslation('alreadyReceived') || '受付済み')}</span></td>`
+            : `<td class="roster-action"><button type="button" class="btn btn-primary btn-sm btn-roster-checkin" data-checkin-name="${escapeHTML(r.name || '')}">${escapeHTML(getTranslation('rosterCheckIn') || 'この方を受付')}</button></td>`;
         return `<tr>${tds}</tr>`;
     }).join('');
-    const resHeaderWithComp = resHeader + (resHasComp ? `<th>同伴者</th>` : '');
+    const resHeaderWithComp = resHeader
+        + (resHasComp ? `<th>同伴者</th>` : '')
+        + `<th>${escapeHTML(getTranslation('rosterActionHeader') || '受付')}</th>`;
     rr.innerHTML = `<thead><tr>${resHeaderWithComp}</tr></thead><tbody>${resBody}</tbody>`;
     const resCountEl = document.getElementById('roster-reservations-count');
     if (resCountEl) resCountEl.textContent = `(${resFiltered.length})`;
@@ -3583,6 +3590,25 @@ if (statusViewToggle) {
         renderRosterPreview();
         renderStatusTable();
     }
+
+    // 名簿プレビューの「この方を受付」。表は再描画のたびに作り直されるので、
+    // 個々のボタンではなく親要素で受ける。
+    safeOn(document.getElementById('roster-reservations-table'), 'click', (e) => {
+        const button = e.target.closest('.btn-roster-checkin');
+        if (!button) return;
+        const name = button.dataset.checkinName;
+        const reservation = reservations.find(r => r.name === name);
+        if (!reservation) {
+            showCustomAlert('errorNotFound');
+            return;
+        }
+        if (isAlreadyReceived(name)) {
+            showCustomAlert('errorAlreadyRegistered');
+            return;
+        }
+        showReceptionView();
+        beginReceptionFor(reservation);
+    });
 
     /**
      * 名簿が入れ替わったときの後始末。

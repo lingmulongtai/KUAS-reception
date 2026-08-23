@@ -2552,3 +2552,11 @@ body.dark-mode .score-weights { background: rgba(141, 191, 33, .08); }
     font-size: 13px;
     color: var(--text-secondary-color);
 }
+
+/* 名簿プレビューから直接受付する列 */
+.roster-action { white-space: nowrap; text-align: right; }
+.roster-done {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary-color);
+}
