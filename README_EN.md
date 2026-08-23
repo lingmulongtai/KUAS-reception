@@ -55,9 +55,11 @@ Enter the admin panel from the icon in the top right. The default password is
 1. **Preparation**: Update OS/browser, gather the latest roster files, allow pop-ups
 2. **Import Rosters**: Admin → File Load; import the reservation roster and briefing roster (xlsx) and complete column mapping
 3. **Reception**
-   - Reserved: match by name → confirm details → finalize with companions count
-   - Walk-in: input name/school/grade/companions → choose preferences → confirm
-4. **Auto Assignment**: Configure "Prioritize Reserved" and "Prioritize Grade (Walk-ins)" in Settings; run batch assignment for waiting attendees
+   - Reserved: type part of the name → pick from candidates → confirm → finalize with companions count
+   - Walk-in: input name/furigana/school/grade/companions → choose preferences → confirm
+4. **Assignment**: Pick the method in Settings (first-come / reservation holders / school year /
+   repeat visitors). Every method except first-come holds attendees until you run
+   "Assign waiting list" on the Status tab.
 5. **Status Monitoring**: Use the Status tab (cards/table) to review program enrollment and waiting list
 6. **Export**: Generate Excel/PDF outputs and archive final results
 
@@ -65,8 +67,11 @@ Enter the admin panel from the icon in the top right. The default password is
 ### Excel Rosters
 | File | Required Columns (example) | Parsed Fields |
 | --- | --- | --- |
-| Capstone Reservation Roster | No, FamilyName, GivenName, Furigana, 1st–3rd, (opt) Companions | `name`, `furigana`, `choices[]`, `companions` |
-| Briefing Session Roster | No, Time, FamilyName, GivenName, Furigana, (opt) Companions | `name`, `furigana`, `time`, `companions` |
+| Capstone Reservation Roster | No, FamilyName, GivenName, Furigana, 1st–3rd, (opt) Email / Visits / Companions | `name`, `furigana`, `email`, `visits`, `choices[]`, `companions` |
+| Briefing Session Roster | No, Time, FamilyName, GivenName, Furigana, (opt) Email / Companions | `name`, `furigana`, `email`, `time`, `companions` |
+
+Columns are detected from the header row; the mapping dialog only opens when detection fails.
+Email is an extra handle for matching; the visit count drives repeat-visitor ordering.
 
 ### Local Persistence
 Everything is written to localStorage through `local-store.js` (`window.LocalStore`),
