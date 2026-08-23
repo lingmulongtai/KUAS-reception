@@ -75,48 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.body.appendChild(indicator);
         
-        let cleanupHandlers = null;
-        if (document.body.classList.contains('liquid-mode')) {
-            const offset = 20;
-            indicator.style.position = 'absolute';
-            indicator.style.bottom = '';
-            indicator.style.right = '';
-            indicator.style.top = '';
-            indicator.style.left = '';
-
-            const computeScrollX = () => window.pageXOffset ?? document.documentElement.scrollLeft ?? document.body.scrollLeft ?? 0;
-            const computeScrollY = () => window.pageYOffset ?? document.documentElement.scrollTop ?? document.body.scrollTop ?? 0;
-
-            const updateIndicatorPosition = () => {
-                const scrollY = computeScrollY();
-                const scrollX = computeScrollX();
-                const availableHeight = window.innerHeight - indicator.offsetHeight - offset;
-                const availableWidth = window.innerWidth - indicator.offsetWidth - offset;
-                const top = Math.max(scrollY + offset, scrollY + Math.max(availableHeight, offset));
-                const left = Math.max(scrollX + offset, scrollX + Math.max(availableWidth, offset));
-                indicator.style.top = `${top}px`;
-                indicator.style.left = `${left}px`;
-            };
-
-            updateIndicatorPosition();
-            requestAnimationFrame(updateIndicatorPosition);
-            const onScroll = () => updateIndicatorPosition();
-            const onResize = () => updateIndicatorPosition();
-            window.addEventListener('scroll', onScroll, { passive: true });
-            window.addEventListener('resize', onResize);
-            cleanupHandlers = () => {
-                window.removeEventListener('scroll', onScroll);
-                window.removeEventListener('resize', onResize);
-                indicator.style.top = '';
-                indicator.style.left = '';
-                indicator.style.bottom = '20px';
-                indicator.style.right = '20px';
-                indicator.style.position = 'fixed';
-            };
-            indicator._cleanup = cleanupHandlers;
-        } else {
-            indicator._cleanup = null;
-        }
+        indicator._cleanup = null;
 
         // アイコンを少し大きく
         const iconEl = indicator.querySelector('i');
@@ -2179,15 +2138,12 @@ function columnLetter(index) {
         if (!theme) return;
         currentTheme = theme;
 
-        document.body.classList.remove('dark-mode', 'liquid-mode');
-        if (theme === 'dark') document.body.classList.add('dark-mode');
-        if (theme === 'liquid') document.body.classList.add('liquid-mode');
+        document.body.classList.toggle('dark-mode', theme === 'dark');
 
         if (themeSwitchBtn) {
-            let icon = '<i class="ph ph-moon"></i>';
-            if (theme === 'dark') icon = '<i class="ph ph-sun"></i>';
-            if (theme === 'liquid') icon = '<i class="ph ph-drop"></i>';
-            themeSwitchBtn.innerHTML = icon;
+            themeSwitchBtn.innerHTML = theme === 'dark'
+                ? '<i class="ph ph-sun"></i>'
+                : '<i class="ph ph-moon"></i>';
             themeSwitchBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
         }
 
@@ -2202,14 +2158,9 @@ function columnLetter(index) {
 
         const announce = options.announce ?? true;
         if (announce) {
-            let key = 'lightActivated';
-            if (theme === 'dark') key = 'darkActivated';
-            if (theme === 'liquid') key = 'liquidActivated';
-            const translation = getTranslation(key);
-            const fallback = theme === 'liquid'
-                ? 'Liquid Glass mode activated.'
-                : (theme === 'dark' ? 'Dark mode activated.' : 'Light mode activated.');
-            showSaveIndicator(translation || fallback);
+            const key = theme === 'dark' ? 'darkActivated' : 'lightActivated';
+            const fallback = theme === 'dark' ? 'Dark mode activated.' : 'Light mode activated.';
+            showSaveIndicator(getTranslation(key) || fallback);
         }
     }
 
@@ -2224,7 +2175,9 @@ function columnLetter(index) {
     const savedLang = localStorage.getItem('receptionLang') || 'ja';
     updateLanguage(savedLang);
 
-    const savedTheme = localStorage.getItem('receptionTheme') || 'light';
+    // liquid は廃止したので、保存済みの値が残っていてもライトに落とす
+    const storedTheme = localStorage.getItem('receptionTheme');
+    const savedTheme = (storedTheme === 'dark') ? 'dark' : 'light';
     setTheme(savedTheme, { announce: false });
 
     // トップバーのボタン群を初期化

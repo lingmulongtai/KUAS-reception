@@ -128,8 +128,6 @@
     "mappingCancel": "Cancel",
     "themeLight": "Light Mode",
     "themeDark": "Dark Mode",
-    "themeLiquid": "Liquid Glass Mode",
-    "liquidActivated": "Liquid Glass mode activated.",
     "lightActivated": "Light mode activated.",
     "darkActivated": "Dark mode activated.",
     "offlineRequiredTitle": "Network Connection Required",
