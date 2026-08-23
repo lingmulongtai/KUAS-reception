@@ -99,12 +99,18 @@
         },
 
         rosters: {
-            /** { reservations, briefings } を返す。未保存の側は null。 */
+            /**
+             * { reservations, briefings } を返す。一度も保存していない側だけ null。
+             *
+             * 空配列は「保存した結果、0件だった」という意味なので null にしない。
+             * ここを潰すと、名簿を空にしてもスクリプト内のデモ用予約者が復活し、
+             * 実在しない人が定員を消費してしまう。
+             */
             load: function () {
                 const reservations = read(KEY.reservations, null);
                 const briefings = read(KEY.briefings, null);
                 return {
-                    reservations: Array.isArray(reservations) && reservations.length > 0
+                    reservations: Array.isArray(reservations)
                         ? reservations.map(function (r) {
                             return {
                                 id: r.id || newId('reservation'),
@@ -117,7 +123,7 @@
                             };
                         })
                         : null,
-                    briefings: Array.isArray(briefings) && briefings.length > 0
+                    briefings: Array.isArray(briefings)
                         ? briefings.map(function (b) {
                             return {
                                 id: b.id || newId('briefing'),

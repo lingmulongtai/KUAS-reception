@@ -167,5 +167,15 @@
     "briefingOnlyButton": "Attend the morning briefing only",
     "briefingOnlyTitle": "Checked in for the morning briefing",
     "briefingOnlyInfo": "The faculty briefing starts at {time}. Please arrive at the venue before then.",
-    "successNameSuffix": "{name}"
+    "successNameSuffix": "{name}",
+    "partySizeLabel": "How many are checking in together?",
+    "partySize1": "1 (just me)",
+    "partySizeNote": "Choose 2 or more and only programs with room for everyone will be selectable.",
+    "partyMemberHeading": "Person {n}",
+    "partyBanner": "Checking in {count} together: {names}. Everyone joins the same program.",
+    "seatsShort": "{count} left (not enough for {party})",
+    "seatsShortBadge": "Not enough room",
+    "errorPartyTooLarge": "This program does not have room for everyone in your group. Please choose another.",
+    "errorDuplicateInParty": "That name is already used in this group.",
+    "successGroupNames": "{names} ({count} people)"
 }

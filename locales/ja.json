@@ -167,5 +167,15 @@
     "briefingOnlyButton": "午前の説明会のみに参加する",
     "briefingOnlyTitle": "午前の説明会の受付が完了しました",
     "briefingOnlyInfo": "工学部説明会は {time} 開始です。開始時刻までに会場へお越しください。",
-    "successNameSuffix": "{name} 様"
+    "successNameSuffix": "{name} 様",
+    "partySizeLabel": "一緒に受付する人数",
+    "partySize1": "1名（自分だけ）",
+    "partySizeNote": "2名以上を選ぶと、全員が同じプログラムに入れる枠だけを選べるようになります。",
+    "partyMemberHeading": "{n}人目",
+    "partyBanner": "{count}名で参加：{names}。全員が同じプログラムに入ります。",
+    "seatsShort": "残り{count}名（{party}名では入れません）",
+    "seatsShortBadge": "人数が入りません",
+    "errorPartyTooLarge": "このプログラムは、いま受付しようとしている人数ぶんの空きがありません。別のプログラムを選んでください。",
+    "errorDuplicateInParty": "同じお名前がグループ内で重複しています。",
+    "successGroupNames": "{names} 様（{count}名）"
 }

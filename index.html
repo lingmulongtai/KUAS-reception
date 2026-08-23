@@ -91,6 +91,19 @@
                 <div id="walk-in-section" class="section section-hidden">
                     <h1 data-lang-key="walkInNameInputTitle">予約なし - お名前入力</h1>
                     <div class="input-group">
+                        <!-- 友達同士でまとめて受付する場合。全員が同じプログラムに入る。 -->
+                        <div class="party-size">
+                            <label for="walk-in-party-size" data-lang-key="partySizeLabel">一緒に受付する人数</label>
+                            <select id="walk-in-party-size">
+                                <option value="1" data-lang-key="partySize1">1名（自分だけ）</option>
+                                <option value="2">2名</option>
+                                <option value="3">3名</option>
+                                <option value="4">4名</option>
+                                <option value="5">5名</option>
+                            </select>
+                            <p class="field-note" data-lang-key="partySizeNote">2名以上を選ぶと、全員が同じプログラムに入れる枠だけを選べるようになります。</p>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-col">
                                 <label for="walk-in-name" data-lang-key="name">お名前</label><span class="required-mark" data-lang-key="requiredMark">必須</span>
@@ -128,12 +141,16 @@
                                 </select>
                             </div>
                         </div>
+                        <!-- 2人目以降。人数に応じて JS が中身を組み立てる。 -->
+                        <div id="party-members"></div>
+
                         <button id="btn-to-program-selection" class="btn btn-primary" data-lang-key="toProgramSelection">プログラム選択へ</button>
                     </div>
                 </div>
                 <div id="program-selection-section" class="section section-hidden">
                     <h2 data-lang-key="selectProgramTitle">希望プログラムを選択してください</h2>
                     <p data-lang-key="selectProgramDesc">第1〜第3希望まで選択できます。</p>
+                    <p id="party-banner" class="party-banner hidden"></p>
 
                     <!-- 体験と説明会は両立できることを、選ぶ前に伝えておく -->
                     <div class="notice">

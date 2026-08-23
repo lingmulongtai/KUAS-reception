@@ -819,10 +819,19 @@ let adminEditorDirty = false;
             if (held && currentEnrollment[held] > 0) currentEnrollment[held]--;
         }
 
+        // グループでの受付なら、全員ぶんの空きがあるプログラムだけを選ぶ
+        const party = Array.isArray(user.groupMembers) && user.groupMembers.length > 0
+            ? user.groupMembers.length
+            : 1;
+
         for (const choiceId of user.choices) {
-            if (choiceId && (currentEnrollment[choiceId] || 0) < programs.find(p => p.id === choiceId).capacity) {
+            if (!choiceId) continue;
+            const program = programs.find(p => p.id === choiceId);
+            if (!program) continue;
+            const remaining = (program.capacity || 0) - (currentEnrollment[choiceId] || 0);
+            if (remaining >= party) {
                 // 割り当て成功
-                return programs.find(p => p.id === choiceId);
+                return program;
             }
         }
         // 割り当て失敗
@@ -834,7 +843,18 @@ let adminEditorDirty = false;
         const successDesc = document.getElementById('success-message-desc');
         const roleMsgEl = document.getElementById('role-color-success');
         
-        studentNameEl.textContent = `${name} 様`;
+        // グループ受付なら全員の名前を出す。誰が入ったのか画面で確認できるようにするため。
+        const members = (currentUser && Array.isArray(currentUser.groupMembers) && currentUser.groupMembers.length > 1)
+            ? currentUser.groupMembers.map(m => m.name)
+            : null;
+        if (members) {
+            const tmpl = getTranslation('successGroupNames') || '{names} 様（{count}名）';
+            studentNameEl.textContent = tmpl
+                .replace('{names}', members.join('、'))
+                .replace('{count}', members.length);
+        } else {
+            studentNameEl.textContent = `${name} 様`;
+        }
         
         if(isWaiting) {
             successDesc.textContent = window.translations[currentLanguage]?.successWaiting || '';
@@ -1074,14 +1094,37 @@ let adminEditorDirty = false;
     // 残席がこの割合を下回ったら「残りわずか」として黄色にする
     const LOW_CAPACITY_RATIO = 0.8;
 
-    /** プログラムの埋まり具合を 'full' | 'low' | 'open' で返す。 */
-    function capacityLevel(program) {
+    /** そのプログラムの残席。 */
+    function remainingSeats(program) {
+        const capacity = program.capacity || 0;
+        if (capacity <= 0) return Infinity;
+        return Math.max(0, capacity - (programEnrollment[program.id] || 0));
+    }
+
+    /**
+     * プログラムの埋まり具合を 'full' | 'short' | 'low' | 'open' で返す。
+     *
+     * 'short' は「席は残っているが、いま受付しようとしている人数では入れない」状態。
+     * 友達同士でまとめて受付するとき、3名で入ろうとしているのに残り2名の
+     * プログラムを選ばせてしまわないための区別。
+     */
+    function capacityLevel(program, needed) {
         const capacity = program.capacity || 0;
         if (capacity <= 0) return 'open';
-        const enrolled = programEnrollment[program.id] || 0;
-        if (enrolled >= capacity) return 'full';
-        if (enrolled / capacity >= LOW_CAPACITY_RATIO) return 'low';
+        const remaining = remainingSeats(program);
+        const party = needed || currentPartySize();
+        if (remaining <= 0) return 'full';
+        if (remaining < party) return 'short';
+        if ((capacity - remaining) / capacity >= LOW_CAPACITY_RATIO) return 'low';
         return 'open';
+    }
+
+    /** いま同時に受付しようとしている人数。既定は 1 名。 */
+    function currentPartySize() {
+        if (currentUser && Array.isArray(currentUser.groupMembers) && currentUser.groupMembers.length > 0) {
+            return currentUser.groupMembers.length;
+        }
+        return 1;
     }
 
     /**
@@ -1094,12 +1137,16 @@ let adminEditorDirty = false;
         const level = capacityLevel(program);
         const ratio = capacity > 0 ? Math.min(100, Math.round((enrolled / capacity) * 100)) : 0;
 
+        const remaining = Math.max(0, capacity - enrolled);
         let label;
         if (level === 'full') {
             // バッジに載せるので、説明文ではなく短い語を使う
             label = escapeHTML(getTranslation('seatsFull') || '満席');
+        } else if (level === 'short') {
+            // 席はあるが人数分は足りない。何名なら入れるかを出す
+            const tmpl = getTranslation('seatsShort') || '残り{count}名（{party}名では入れません）';
+            label = escapeHTML(tmpl.replace('{count}', remaining).replace('{party}', currentPartySize()));
         } else {
-            const remaining = Math.max(0, capacity - enrolled);
             const tmpl = getTranslation('remainingSeats') || '残り{count}';
             label = escapeHTML(tmpl.replace('{count}', remaining));
         }
@@ -1129,17 +1176,20 @@ let adminEditorDirty = false;
         programs.forEach((p, index) => {
             const card = document.createElement('div');
             const level = capacityLevel(p);
-            const isFull = level === 'full';
+            // 満席でも、人数分足りなくても、選べないことに変わりはない
+            const unavailable = (level === 'full' || level === 'short');
             card.className = 'program-card';
             card.id = `card-${p.id}`;
             card.dataset.capacity = level;
-            if (isFull) card.classList.add('is-full');
+            if (unavailable) card.classList.add('is-full');
 
             const title = getTranslatedValue(p.title, p.title_en);
             const description = getTranslatedValue(p.description, p.description_en);
-            const fullText = getTranslation('seatsFull') || '満席';
-            const fullOverlayHTML = isFull
-                ? `<div class="full-overlay"><span>${escapeHTML(fullText)}</span></div>`
+            const badgeText = (level === 'short')
+                ? (getTranslation('seatsShortBadge') || '人数が入りません')
+                : (getTranslation('seatsFull') || '満席');
+            const fullOverlayHTML = unavailable
+                ? `<div class="full-overlay"><span>${escapeHTML(badgeText)}</span></div>`
                 : '';
 
             card.innerHTML = `
@@ -1150,9 +1200,9 @@ let adminEditorDirty = false;
                     <p>${escapeHTML(description)}</p>
                     ${renderCapacityBar(p)}
                     <div class="program-choice-btns" data-program-id="${p.id}">
-                        <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
-                        <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
-                        <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
+                        <button class="p1" ${unavailable ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
+                        <button class="p2" ${unavailable ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
+                        <button class="p3" ${unavailable ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
                     </div>
                 </div>`;
             grid.appendChild(card);
@@ -1174,10 +1224,14 @@ let adminEditorDirty = false;
                         showCustomAlert('errorInvalidProgram');
                         return;
                     }
-                    // 満員
-                    const isFull = capacityLevel(program) === 'full';
-                    if (isFull) {
+                    // 満員 / 人数分の空きが無い
+                    const level = capacityLevel(program);
+                    if (level === 'full') {
                         showCustomAlert('errorProgramFull');
+                        return;
+                    }
+                    if (level === 'short') {
+                        showCustomAlert('errorPartyTooLarge');
                         return;
                     }
                     // 重複選択（同じプログラムを複数の希望に）
@@ -1211,8 +1265,8 @@ let adminEditorDirty = false;
             b.classList.remove('active');
             const programId = b.parentElement.dataset.programId;
             const program = programs.find(p => p.id === programId);
-            const isFull = (programEnrollment[program.id] || 0) >= program.capacity;
-            if (!isFull) {
+            const level = capacityLevel(program);
+            if (level !== 'full' && level !== 'short') {
                 b.disabled = false;
             }
         });
@@ -2693,14 +2747,116 @@ function columnLetter(index) {
         }
         
         const companions = Math.max(0, parseInt(companionsEl.value || '0', 10) || 0);
-        currentUser = { name: name, furigana, school: schoolEl.value, grade: gradeEl.value, choices: [], companions };
+
+        // 2人目以降を集める。学校・学年・同伴者は代表者のぶんを引き継ぐ。
+        const partySize = Math.min(MAX_PARTY_SIZE, Math.max(1, parseInt(partySizeSelect?.value || '1', 10) || 1));
+        const groupMembers = [{ name, furigana, school: schoolEl.value, grade: gradeEl.value, companions }];
+
+        for (let i = 2; i <= partySize; i++) {
+            const memberNameEl = document.getElementById(`party-name-${i}`);
+            const memberFuriEl = document.getElementById(`party-furigana-${i}`);
+            if (!validateAndHighlight([memberNameEl, memberFuriEl])) return;
+
+            const memberName = memberNameEl.value.trim().replace(/　/g, ' ');
+            if (groupMembers.some(m => m.name === memberName)) {
+                showFieldError(memberNameEl, getTranslation('errorDuplicateInParty') || '同じお名前がグループ内で重複しています。');
+                return;
+            }
+            if (isAlreadyReceived(memberName)) {
+                showFieldError(memberNameEl, getTranslation('errorAlreadyRegistered') || 'この方は既に受付済みです。');
+                return;
+            }
+            groupMembers.push({
+                name: memberName,
+                furigana: memberFuriEl.value.trim().replace(/　/g, ' '),
+                school: schoolEl.value,
+                grade: gradeEl.value,
+                companions: 0
+            });
+        }
+
+        currentUser = {
+            name: name,
+            furigana,
+            school: schoolEl.value,
+            grade: gradeEl.value,
+            choices: [],
+            companions,
+            groupMembers: groupMembers
+        };
         currentChoices = { 1: null, 2: null, 3: null };
         renderProgramGrid();
         updateProgramSelectionUI();
+        updatePartyBanner();
         navigateTo('program-selection-section');
         setProgramCompanionsVisibility(false); // 予約なしは非表示
         document.querySelector('.content-wrapper').classList.add('has-back-btn');
     });
+
+    // --- 友達同士のまとめ受付 ---
+    //
+    // 全員を同じプログラムに入れるのが目的。人数分の空きがあるプログラム
+    // しか選べないようにして、「入れたつもりで入れていない」を防ぐ。
+    // 学校・学年・同伴者は代表者のぶんを全員に適用する（友達同士なら
+    // 同じ学校・学年であることがほとんどで、そのぶん入力を減らせる）。
+
+    const MAX_PARTY_SIZE = 5;
+    const partySizeSelect = document.getElementById('walk-in-party-size');
+    const partyMembersEl = document.getElementById('party-members');
+
+    /** 人数に合わせて 2 人目以降の入力欄を作り直す。入力済みの値は保つ。 */
+    function renderPartyMemberFields() {
+        if (!partyMembersEl) return;
+        const size = Math.min(MAX_PARTY_SIZE, Math.max(1, parseInt(partySizeSelect?.value || '1', 10) || 1));
+
+        const existing = {};
+        partyMembersEl.querySelectorAll('input').forEach(input => { existing[input.id] = input.value; });
+
+        partyMembersEl.innerHTML = '';
+        for (let i = 2; i <= size; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'party-member';
+            const nameId = `party-name-${i}`;
+            const furiId = `party-furigana-${i}`;
+            const heading = (getTranslation('partyMemberHeading') || '{n}人目').replace('{n}', i);
+            wrapper.innerHTML = `
+                <p class="party-member-heading">${escapeHTML(heading)}</p>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="${nameId}">${escapeHTML(getTranslation('name') || 'お名前')}</label><span class="required-mark">${escapeHTML(getTranslation('requiredMark') || '必須')}</span>
+                        <input type="text" id="${nameId}" placeholder="${escapeHTML(getTranslation('namePlaceholder') || '例：山田 太郎')}" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    </div>
+                    <div class="form-col">
+                        <label for="${furiId}">${escapeHTML(getTranslation('furigana') || 'フリガナ')}</label><span class="required-mark">${escapeHTML(getTranslation('requiredMark') || '必須')}</span>
+                        <input type="text" id="${furiId}" placeholder="${escapeHTML(getTranslation('furiganaPlaceholder') || '例：ヤマダ タロウ')}" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    </div>
+                </div>`;
+            partyMembersEl.appendChild(wrapper);
+            if (existing[nameId] !== undefined) document.getElementById(nameId).value = existing[nameId];
+            if (existing[furiId] !== undefined) document.getElementById(furiId).value = existing[furiId];
+        }
+    }
+
+    if (partySizeSelect) {
+        partySizeSelect.addEventListener('change', renderPartyMemberFields);
+        renderPartyMemberFields();
+    }
+
+    /** プログラム選択画面の「◯名で参加」バナーを更新する。 */
+    function updatePartyBanner() {
+        const banner = document.getElementById('party-banner');
+        if (!banner) return;
+        const size = currentPartySize();
+        if (size <= 1) {
+            banner.classList.add('hidden');
+            banner.textContent = '';
+            return;
+        }
+        const names = (currentUser.groupMembers || []).map(m => m.name).join('、');
+        const tmpl = getTranslation('partyBanner') || '{count}名で参加：{names}。全員が同じプログラムに入ります。';
+        banner.textContent = tmpl.replace('{count}', size).replace('{names}', names);
+        banner.classList.remove('hidden');
+    }
 
     // 午前の説明会だけに参加する場合。
     // プログラム選択画面まで進んでもらってから選ばせる。体験と説明会が
@@ -3051,26 +3207,42 @@ if (statusViewToggle) {
             writeRostersToStore();
         };
 
+        // グループ受付なら全員ぶん、そうでなければ本人 1 件を書き込む。
+        const members = (Array.isArray(currentUser.groupMembers) && currentUser.groupMembers.length > 0)
+            ? currentUser.groupMembers
+            : [currentUser];
+        const groupId = members.length > 1 ? window.LocalStore.newId('group') : null;
+        const assignedProgramId = assignedProgram ? assignedProgram.id : null;
+        const written = [];
+
         try {
-            const assignedProgramId = assignedProgram ? assignedProgram.id : null;
-            const reservation = reservations.find(r => r.name === currentUser.name);
-            window.LocalStore.participants.add({
-                name: currentUser.name,
-                furigana: currentUser.furigana || '',
-                school: currentUser.school || '',
-                grade: currentUser.grade || '',
-                email: currentUser.email || (reservation && reservation.email) || '',
-                // 並べ替えの材料は受付時点で固定しておく（名簿を入れ直しても結果が動かない）
-                visits: Number(currentUser.visits ?? (reservation && reservation.visits)) || 0,
-                isReserved: !!reservation,
-                companions: currentUser.companions || 0,
-                choices: currentUser.choices || [],
-                assignedProgramId: assignedProgramId,
-                status: assignedProgramId ? 'assigned' : (shouldHold ? 'waiting' : 'registered')
+            members.forEach(member => {
+                const reservation = reservations.find(r => r.name === member.name);
+                written.push(window.LocalStore.participants.add({
+                    name: member.name,
+                    furigana: member.furigana || '',
+                    school: member.school || currentUser.school || '',
+                    grade: member.grade || currentUser.grade || '',
+                    email: member.email || (reservation && reservation.email) || '',
+                    // 並べ替えの材料は受付時点で固定しておく（名簿を入れ直しても結果が動かない）
+                    visits: Number(member.visits ?? (reservation && reservation.visits)) || 0,
+                    isReserved: !!reservation,
+                    companions: member.companions || 0,
+                    choices: currentUser.choices || [],
+                    assignedProgramId: assignedProgramId,
+                    // 同じグループは同じプログラムから外れないよう、id で結びつけておく
+                    groupId: groupId,
+                    status: assignedProgramId ? 'assigned' : (shouldHold ? 'waiting' : 'registered')
+                }));
             });
             finalizeLocal(assignedProgram, shouldHold);
         } catch (e) {
             console.error('LocalStore write error', e);
+            // 途中で失敗したら、書けたぶんも巻き戻す。
+            // 「3人で来たのに2人しか入っていない」状態を残さないため。
+            written.forEach(record => {
+                try { window.LocalStore.participants.remove(record.id); } catch (_) {}
+            });
             showCustomAlert('errorDatabaseWriteFailed');
             navigateTo('reservation-confirmation-section');
         }
@@ -3143,8 +3315,9 @@ if (statusViewToggle) {
 
     function loadRostersFromStore() {
         const stored = window.LocalStore.rosters.load();
-        if (stored.reservations) reservations = stored.reservations;
-        if (stored.briefings) briefingSessionAttendees = stored.briefings;
+        // null は「一度も保存していない」の意味。空配列なら空として反映する。
+        if (stored.reservations !== null) reservations = stored.reservations;
+        if (stored.briefings !== null) briefingSessionAttendees = stored.briefings;
         indexRosters();
         renderRosterPreview();
         renderStatusTable();
