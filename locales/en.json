@@ -159,5 +159,7 @@
     "modeGrade": "By school year",
     "modeGradeDesc": "Year 3 → Year 2 → Year 1 → other. Use when exam-year students should get priority.",
     "modeRepeat": "Repeat visitors first",
-    "modeRepeatDesc": "Assigns those who have attended most often first. Requires a visit-count column in the roster."
+    "modeRepeatDesc": "Assigns those who have attended most often first. Requires a visit-count column in the roster.",
+    "otherLanguages": "Other languages",
+    "adminEntry": "Admin"
 }

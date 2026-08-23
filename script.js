@@ -590,6 +590,19 @@ let adminEditorDirty = false;
     // 右横書きの言語。増えたらここに足す。
     const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
+    /**
+     * 最初の画面の言語ボタンの見出し。
+     * 切り替え先の言語名を、その言語自身の表記で出す。日本語話者には
+     * 「English」、英語話者には「日本語」と見えるので、意味が伝わる。
+     */
+    function updateQuickLangLabel() {
+        const label = document.getElementById('lang-quick-label');
+        if (!label) return;
+        const target = currentLanguage === 'ja' ? 'en' : 'ja';
+        label.textContent = (window.translations[target] && window.translations[target].languageSelfName)
+            || (target === 'en' ? 'English' : '日本語');
+    }
+
     async function updateLanguage(lang) {
         const wrapper = document.querySelector('#reception-view .content-wrapper');
         const heightContext = prepareHeightAnimation(wrapper);
@@ -613,6 +626,7 @@ let adminEditorDirty = false;
             const translation = getTranslation(key);
             if (translation) el.placeholder = translation;
         });
+        updateQuickLangLabel();
         const currentVisibleSection = document.querySelector('#reception-sections-wrapper .section:not(.section-hidden)');
         if (currentVisibleSection && currentVisibleSection.id === 'program-selection-section') {
             renderProgramGrid();
@@ -2345,6 +2359,10 @@ function columnLetter(index) {
             if (langPressTimer) return;
             handleLangTap();
         });
+
+        // 最初の画面に置いた言語切替。ヘッダーのアイコンと同じ動きをする。
+        safeOn(document.getElementById('btn-lang-quick'), 'click', handleLangTap);
+        safeOn(document.getElementById('btn-lang-more'), 'click', triggerLangMenu);
         safeOn(langSwitchBtn, 'contextmenu', (e) => e.preventDefault());
         const startLangPress = () => {
             if (langPressTimer) clearTimeout(langPressTimer);
@@ -2365,7 +2383,9 @@ function columnLetter(index) {
             safeOn(langSwitchBtn, evt, clearLangPress, { passive: true });
         });
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
+            if (!e.target.closest('#lang-switch-btn')
+                && !e.target.closest('#btn-lang-more')
+                && !(langMenu && langMenu.contains(e.target))) {
                 hideLangMenu();
             }
             if (!e.target.closest('#theme-switch-btn') && !(themeMenu && themeMenu.contains(e.target))) {
