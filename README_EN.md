@@ -13,9 +13,12 @@
 > dependencies removed.
 
 ## Core Features
-- Reception flow for reserved and walk-in attendees (name, school, grade, companions)
-- Program selection UI for 1st–3rd choices with capacity-aware validation
-- Auto-assignment, waiting list management, and color strap guidance screens
+- **Fuzzy name matching** — family name or given name alone, kana, romaji, email address, or
+  a missed dakuten all surface candidates as you type (`name-match.js`)
+- Program selection UI for 1st–3rd choices, with a capacity bar (open / nearly full / full)
+- Four assignment methods (first-come / reservation holders / school year / repeat visitors)
+  and waiting list management
+- Color strap guidance screens
 - Admin panel for program editing, roster preview, and status visualization
 - Excel (`reception_status.xlsx`) and PDF export of final assignments
 - Multilingual UI (日本語 / English / 한국어 / 中文 / español / हिन्दी / नेपाली / العربية / Indonesia)
@@ -87,11 +90,14 @@ namespaced under `kuas.reception.v1.*`.
 ## Directory Highlights
 - `index.html` / `script.js` / `style.css`: main app shell and UI logic
 - `local-store.js`: localStorage-backed data layer
+- `name-match.js`: attendee matching engine (kana, romaji, email)
+- `tests/name-match.test.js`: matching tests, run with `npm test`
 - `serve.js`: dependency-free local static server
 - `language-loader.js` & `locales/*.json`: lazy-loaded multilingual assets
 - `assets/fonts/`: bundled fonts (Inter / Noto Sans JP / Zen Maru Gothic)
 - `vendor/`: bundled libraries (Phosphor Icons / SortableJS / SheetJS)
 - `public/`: static images
+- `public/programs/`: program card thumbnails (see the README in that directory)
 - `register_of_names/`: sample roster spreadsheets
 - `docs/design-proposal.html`: UI and feature design proposal
 
@@ -103,6 +109,12 @@ namespaced under `kuas.reception.v1.*`.
 - **Data disappeared**: Private browsing and clearing history both wipe it. Always export to Excel before the event ends
 
 ## Developer Notes
+
+```bash
+npm test
+```
+
+- When matching misses something, add the case to `tests/name-match.test.js` before fixing it
 - Program definitions and reception logic live in `script.js`
 - `confirmedAttendees` / `waitingList` / `programEnrollment` are derived from
   `allParticipants` — update them through `syncDerivedLists()`, never directly

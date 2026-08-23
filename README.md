@@ -12,9 +12,11 @@
 > ブランチに残してある。本ブランチはそこからクラウド依存を取り除いたローカル専用版。
 
 ## 基本機能
-- 予約者・当日参加者の受付と検索（氏名、学校、学年、同伴者情報）
-- 第1〜第3希望が選べるプログラム選択 UI と満員判定
-- 自動割り当て、待機リスト管理、色分けストラップ案内表示
+- **あいまい照合による受付** — 姓だけ・名だけ・ひらがな・カタカナ・ローマ字・メールアドレス・
+  濁点の打ち漏れまで拾い、入力しながら候補を出す（`name-match.js`）
+- 第1〜第3希望が選べるプログラム選択 UI、定員バー（空きあり／残りわずか／満席）と満員判定
+- 4つの割り当て方法（先着順 / 予約者優先 / 学年優先 / リピーター優先）と待機リスト管理
+- 色分けストラップ案内表示
 - 管理画面でのプログラム編集、名簿プレビュー、ステータス可視化
 - Excel（`reception_status.xlsx`）および PDF へのエクスポート
 - 多言語 UI 切り替え（日本語 / English / 한국어 / 中文 / español / हिन्दी / नेपाली / العربية / Indonesia）
@@ -85,11 +87,14 @@ npm run start:lan
 ## ディレクトリ構成（主要）
 - `index.html` / `script.js` / `style.css`: メインアプリと UI ロジック
 - `local-store.js`: localStorage ベースのデータ層
+- `name-match.js`: 来場者の照合エンジン（かな・ローマ字・メール対応）
+- `tests/name-match.test.js`: 照合のテスト。`npm test` で走る
 - `serve.js`: 依存なしのローカル配信サーバー
 - `language-loader.js` と `locales/*.json`: 多言語リソースの遅延読み込み
 - `assets/fonts/`: 同梱フォント（Inter / Noto Sans JP / Zen Maru Gothic）
 - `vendor/`: 同梱ライブラリ（Phosphor Icons / SortableJS / SheetJS）
 - `public/`: 画像
+- `public/programs/`: プログラムカードのサムネイル画像（置き場所は同ディレクトリの README 参照）
 - `register_of_names/`: サンプル名簿（xlsx）
 - `docs/design-proposal.html`: UI・機能のデザイン提案書
 
@@ -101,6 +106,12 @@ npm run start:lan
 - **データが消えた**: ブラウザのシークレットモードや履歴削除でも消える。本番前に必ず Excel 出力で控えを取る
 
 ## 開発メモ
+
+```bash
+npm test
+```
+
+- 照合の取りこぼしを見つけたら、まず `tests/name-match.test.js` にケースを足してから直す
 - プログラム定義や各種ステータス管理は `script.js` 内に実装
 - `confirmedAttendees` / `waitingList` / `programEnrollment` は `allParticipants` からの導出値。
   直接書き換えず `syncDerivedLists()` を経由する
