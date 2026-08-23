@@ -278,6 +278,62 @@ body {
 }
 .notes b { color: var(--ink); font-weight: 700; }
 
+/* 反映済みの指摘。取り消さず、何をどう直したかを残す */
+.notes li.done .pin { background: var(--brand); color: var(--on-brand); }
+.notes li.done { color: var(--ink-faint); }
+.notes li.done b { color: var(--ink-muted); }
+.done-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 1px 6px;
+    margin-right: 6px;
+    border-radius: 2px;
+    background: var(--brand);
+    color: var(--on-brand);
+    vertical-align: 1px;
+}
+.open-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 1px 6px;
+    margin-right: 6px;
+    border-radius: 2px;
+    background: var(--mark-soft);
+    color: var(--mark);
+    vertical-align: 1px;
+}
+
+/* 変更サマリー */
+.changelog {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--brand);
+    border-radius: 3px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 40px;
+}
+.changelog h3 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    margin: 0 0 4px;
+}
+.changelog .sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+}
+.changelog ul { margin: 0; padding-left: 18px; }
+.changelog li { font-size: 13.5px; color: var(--ink-muted); line-height: 1.75; margin-bottom: 4px; }
+.changelog li b { color: var(--ink); font-weight: 700; }
+
 /* ============================================================
    モックアップ内部 — アプリ実物の見た目を再現する
    ドキュメントのテーマとは独立させ、常にアプリのライトテーマを描く
@@ -525,6 +581,60 @@ body {
     font-size: 12px; color: var(--t2);
 }
 
+.ui-thumb {
+    aspect-ratio: 16 / 9;
+    display: grid;
+    place-items: center;
+    background:
+        repeating-linear-gradient(135deg, rgba(15,140,82,.07) 0 14px, rgba(15,140,82,.13) 14px 28px),
+        #fff;
+    border-radius: 8px 8px 0 0;
+    margin: -12px -12px 10px;
+}
+.ui-thumb span {
+    font-size: 34px; font-weight: 700; line-height: 1;
+    color: var(--p); opacity: .45;
+}
+.ui-prog.full .ui-thumb { filter: grayscale(1); opacity: .5; }
+.ui-prog.full { border-color: var(--dg); opacity: 1; }
+.ui-full-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--dg); color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 999px;
+}
+.ui-prog { position: relative; overflow: hidden; }
+
+.ui-cap-bar.warn i { background: #C77700; }
+.ui-cap-bar.full i { background: var(--dg); }
+.ui-cap-n.warn { color: #C77700; }
+.ui-cap-n.full { background: var(--dg); color: #fff; padding: 1px 9px; border-radius: 999px; }
+
+/* 候補リスト */
+.ui-cand {
+    border: 1.5px solid var(--bd); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 7px;
+    background: #fff;
+}
+.ui-cand-name { font-size: 14px; font-weight: 700; }
+.ui-cand-meta { font-size: 11px; color: var(--t2); margin-top: 2px; }
+.ui-cand-ch   { font-size: 10.5px; color: var(--t2); margin-top: 5px; }
+.ui-cand.done { opacity: .55; }
+.ui-cand-badge {
+    display: inline-block; margin-left: 7px;
+    background: var(--dg); color: #fff;
+    font-size: 9.5px; font-weight: 700;
+    padding: 1px 7px; border-radius: 999px; vertical-align: 1px;
+}
+.ui-status { font-size: 12px; font-weight: 700; color: var(--t2); margin: 9px 0 7px; }
+
+/* フォーカスリング */
+.ui-focused {
+    outline: 3px solid #FFB020;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px #1A2E22;
+}
+
 .ui-modal {
     background: rgba(20, 45, 34, .55);
     padding: 34px 20px;
@@ -655,18 +765,22 @@ body {
 </style>
 
 <header class="masthead">
-    <p class="eyebrow">Design review — v1</p>
+    <p class="eyebrow">Design review — v2 · 第1回レビュー反映済み</p>
     <h1>オープンキャンパス受付アプリ<br>デザインボード</h1>
     <p class="lede">
         ローカル専用版に戻した現行アプリの全画面を、Figma のキャンバスのように並べたものです。
         各フレームには番号付きの注釈を付けています。この番号を指して「3-2 のここを変えたい」と
-        言ってもらえれば、そのまま直せます。
+        言ってもらえれば、そのまま直せます。<br>
+        <b>第1回レビュー（配色・タイポグラフィ・コンポーネント・画面1〜2）の指示は反映済みです。</b>
+        反映した指摘には <span class="done-tag">反映</span>、判断待ちのものには
+        <span class="open-tag">未決</span> を付けています。
     </p>
     <div class="meta-strip">
         <span><b>対象</b> KUAS-reception / local-only</span>
         <span><b>構成</b> Vanilla JS + localStorage</span>
         <span><b>画面数</b> 受付 7 ／ 管理 6</span>
-        <span><b>更新</b> 2026-08-23</span>
+        <span><b>照合</b> かな・ローマ字・メール対応</span>
+        <span><b>更新</b> 2026-08-23 (v2)</span>
     </div>
 </header>
 
@@ -690,6 +804,23 @@ body {
     </nav>
 
     <main>
+
+        <div class="changelog">
+            <h3>第1回レビューで反映した内容</h3>
+            <p class="sub">18 commits · feature/ui-refresh-and-matching</p>
+            <ul>
+                <li><b>予約者の照合を作り直した。</b> 姓だけ・名だけ・ひらがな・カタカナ・ローマ字・メールアドレス・濁点の打ち漏れ、どれでも引ける。入力しながら候補が出て、同姓は候補から選ぶ。テスト 44 ケースで担保している</li>
+                <li><b>定員バーを追加。</b> 緑（空きあり）→ 黄（残りわずか）→ 赤（満席）。Excel を読み込んだ時点で、未受付の予約者の第1希望を確保済みとして定員から差し引く</li>
+                <li><b>満席の表示を強くした。</b> カードを薄くするのをやめ、赤枠と「満席」バッジで示す</li>
+                <li><b>プログラムカードに画像枠を用意。</b> 未設定のあいだは番号入りのプレースホルダを描く</li>
+                <li><b>割り当て方法を4択にした。</b> 先着順 / 予約者優先 / 学年優先 / リピーター優先</li>
+                <li><b>未入力の理由を文章で出す。</b> 「フリガナを入力してください。」を欄の直下に</li>
+                <li><b>最初の画面に言語切替を出した。</b> 管理画面ボタンにも文字を添えた</li>
+                <li><b>アラビア語を実際に右横書きにした。</b> これまでは名前とは裏腹に左横書きのままだった</li>
+                <li><b>人数の数字を等幅に。</b> 管理タブの横スクロールをやめて折り返しに</li>
+                <li><b>フォーカスリングを全操作要素に。</b> 面のグラデーションをやめ単色に。補助テキストのコントラストを 4.8:1 → 6.0:1 に</li>
+            </ul>
+        </div>
 
         <!-- ============================================================
              01 — 配色
@@ -737,16 +868,29 @@ body {
                     <div class="use">補足文、プレースホルダ</div>
                 </div>
                 <div class="swatch">
+                    <div class="chipc" style="background:#C77700"></div>
+                    <div class="nm">Warning</div>
+                    <div class="hx">#C77700</div>
+                    <div class="use">残りわずかの定員バー</div>
+                </div>
+                <div class="swatch">
                     <div class="chipc" style="background:#dc3545"></div>
                     <div class="nm">Danger</div>
                     <div class="hx">#DC3545</div>
-                    <div class="use">必須マーク、データリセット</div>
+                    <div class="use">満席、必須マーク、データリセット</div>
+                </div>
+                <div class="swatch">
+                    <div class="chipc" style="background:#FFB020"></div>
+                    <div class="nm">Focus ring</div>
+                    <div class="hx">#FFB020</div>
+                    <div class="use">キーボード操作時の位置表示</div>
                 </div>
             </div>
 
             <ul class="notes" style="margin-top:20px; max-width:66ch">
                 <li><span class="pin">1</span><span><b>役割色は別系統。</b> 受付後に案内する手首ストラップの色（赤／青）は、UI の緑とは無関係な意味を持つ色です。画面上でも「システムの色」と混ざらないよう、面ではなく淡いバッジで出しています。</span></li>
-                <li><span class="pin">2</span><span><b>定員の警告色が無い。</b> 現状は満席でもカードが薄くなるだけ。残りわずかを示す黄色を足すか、要検討。</span></li>
+                <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>定員の警告色を追加した。</b> 8割以上で黄、満席で赤。白地で読める濃さにするため、素の黄ではなく #C77700 にしている</span></li>
+                <li class="done"><span class="pin">3</span><span><span class="done-tag">反映</span><b>フォーカスリングの色を決めた。</b> 緑と競合せず、明るい面・暗い面のどちらでも輪郭が立つ暖色を選んだ</span></li>
             </ul>
         </section>
 
@@ -787,8 +931,9 @@ body {
             </div>
 
             <ul class="notes" style="margin-top:20px; max-width:66ch">
-                <li><span class="pin">1</span><span><b>数字だけ等幅にしたい。</b> 受付状況の人数が更新のたびに横幅で揺れます。<code>tabular-nums</code> を当てるだけで直ります。</span></li>
-                <li><span class="pin">2</span><span><b>アラビア語のとき右寄せが不完全。</b> <code>html[lang="ar"]</code> の RTL 対応がメニューにしか効いていません。</span></li>
+                <li class="done"><span class="pin">1</span><span><span class="done-tag">反映</span><b>数字を等幅にした。</b> 人数・定員・名簿の各表に <code>tabular-nums</code> を当て、桁が変わっても横幅が動かないようにした</span></li>
+                <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>アラビア語を実際に右横書きにした。</b> <code>html[lang="ar"]</code> の指定は名前とは裏腹に <code>direction: ltr</code> を当てており、左横書きのままだった。<code>html[dir]</code> を切り替える方式に作り直し、メールアドレスや数値だけは左横書きで残している</span></li>
+                <li class="done"><span class="pin">3</span><span><span class="done-tag">反映</span><b>補助テキストのコントラストを上げた。</b> 4.8:1 → 6.0:1。12〜14px で使っており、屋外光の下では従来の濃さでは読みづらい</span></li>
             </ul>
         </section>
 
@@ -821,7 +966,9 @@ body {
                     </div>
                     <ul class="notes">
                         <li><span class="pin">1</span><span>来場者が押すボタンは高さ 56px。手袋やスタイラスでも外さない大きさ。</span></li>
-                        <li><span class="pin">2</span><span><b>破壊的操作の扱い。</b> リセットは今も確認ダイアログが出ますが、赤ボタンを管理画面の底に置いたままで良いか。</span></li>
+                        <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>面を単色にした。</b> グラデーションと強い影は写真の背景の上だと輪郭がぼやける。ホバーで浮き上がる演出と、大ボタン表面を横切る光沢アニメーションも外した</span></li>
+                        <li class="done"><span class="pin">3</span><span><span class="done-tag">反映</span><b>フォーカスリングを付けた。</b> 全ての操作要素が対象。大ボタンは <code>:focus</code> で浮かせていてマウス操作と区別が付かなかったので、<code>:focus-visible</code> のときだけ出す形に直した</span></li>
+                        <li><span class="pin">4</span><span><span class="open-tag">未決</span><b>破壊的操作の扱い。</b> リセットは確認ダイアログが出ますが、赤ボタンを管理画面の底に置いたままで良いか。Excel 書き出しを促す確認を挟む案もあります</span></li>
                     </ul>
                 </div>
 
@@ -851,8 +998,8 @@ body {
                         </div>
                     </div>
                     <ul class="notes">
-                        <li><span class="pin">1</span><span><b>フリガナは手入力のまま。</b> 名前から自動変換するか、そもそも省くか。入力が一番詰まる箇所です。</span></li>
-                        <li><span class="pin">2</span><span>未入力のフィールドは赤枠でハイライトされますが、何が足りないかは文章で出ません。</span></li>
+                        <li class="done"><span class="pin">1</span><span><span class="done-tag">反映</span><b>フリガナは手入力のまま残す。</b> 当日読み上げるため、自動変換ではなく本人に書いてもらう方針で確定</span></li>
+                        <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>未入力の理由を文章で出すようにした。</b> 「フリガナを入力してください。」を欄の直下に。最初の未入力へフォーカスが移り、入力し直した時点で消える。select は「選択してください」と言い分ける</span></li>
                     </ul>
                 </div>
 
@@ -861,40 +1008,46 @@ body {
                     <div class="frame-body">
                         <div class="ui" style="background:none;padding:16px">
                             <div class="ui-prog picked">
-                                <div class="ui-prog-top"><span class="ui-prog-no">#1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
+                                <div class="ui-thumb"><span>1</span></div>
+                                <div class="ui-prog-top"><span class="ui-prog-no">1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
                                 <p class="ui-prog-d">紙の構造で強さをつくる。手を動かして学ぶ構造力学。</p>
-                                <div class="ui-picks">
+                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:60%"></i></div><span class="ui-cap-n">残り6</span></div>
+                                <div class="ui-picks" style="margin-top:9px">
                                     <div class="ui-pick on">第1希望</div>
                                     <div class="ui-pick">第2希望</div>
                                     <div class="ui-pick">第3希望</div>
                                 </div>
-                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:60%"></i></div><span class="ui-cap-n">9 / 15</span></div>
                             </div>
                             <div class="ui-prog">
-                                <div class="ui-prog-top"><span class="ui-prog-no">#2</span><span class="ui-prog-t">ChatGPT を操ろう！</span></div>
+                                <div class="ui-thumb"><span>2</span></div>
+                                <div class="ui-prog-top"><span class="ui-prog-no">2</span><span class="ui-prog-t">ChatGPT を操ろう！</span></div>
                                 <p class="ui-prog-d">生成AIの仕組みと、うまく指示を出すコツ。</p>
-                                <div class="ui-picks">
+                                <div class="ui-cap"><div class="ui-cap-bar warn"><i style="width:87%"></i></div><span class="ui-cap-n warn">残り2</span></div>
+                                <div class="ui-picks" style="margin-top:9px">
                                     <div class="ui-pick">第1希望</div>
                                     <div class="ui-pick">第2希望</div>
                                     <div class="ui-pick">第3希望</div>
                                 </div>
-                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:33%"></i></div><span class="ui-cap-n">5 / 15</span></div>
                             </div>
                             <div class="ui-prog full">
-                                <div class="ui-prog-top"><span class="ui-prog-no">#3</span><span class="ui-prog-t">現代の金属魔法？</span></div>
+                                <span class="ui-full-badge">満席</span>
+                                <div class="ui-thumb"><span>3</span></div>
+                                <div class="ui-prog-top"><span class="ui-prog-no">3</span><span class="ui-prog-t">現代の金属魔法？</span></div>
                                 <p class="ui-prog-d">金属を溶かして、固めて、性質を変える。</p>
-                                <div class="ui-picks">
-                                    <div class="ui-pick">満席</div>
-                                    <div class="ui-pick">満席</div>
-                                    <div class="ui-pick">満席</div>
+                                <div class="ui-cap"><div class="ui-cap-bar full"><i style="width:100%"></i></div><span class="ui-cap-n full">満席</span></div>
+                                <div class="ui-picks" style="margin-top:9px;opacity:.4">
+                                    <div class="ui-pick">第1希望</div>
+                                    <div class="ui-pick">第2希望</div>
+                                    <div class="ui-pick">第3希望</div>
                                 </div>
-                                <div class="ui-cap"><div class="ui-cap-bar"><i style="width:100%"></i></div><span class="ui-cap-n">15 / 15</span></div>
                             </div>
                         </div>
                     </div>
                     <ul class="notes">
-                        <li><span class="pin">1</span><span><b>定員バーは提案です。</b> 現行にはありません。来場者に残枠を見せるか、スタッフだけが見るかは判断が要ります。</span></li>
-                        <li><span class="pin">2</span><span>満席カードは今は薄くなるだけ。「満席」の文字を出した方が伝わります。</span></li>
+                        <li class="done"><span class="pin">1</span><span><span class="done-tag">反映</span><b>定員バーを入れた。</b> 緑 → 黄（8割以上）→ 赤（満席）。残数は「残り6」と出す</span></li>
+                        <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>予約者ぶんを定員に含める。</b> Excel を読み込んだ時点で、未受付の予約者の第1希望を確保済みとして差し引く。この画面を見るのは当日の飛び込み参加者なので、予約者のぶんを空きに見せると定員を超える</span></li>
+                        <li class="done"><span class="pin">3</span><span><span class="done-tag">反映</span><b>満席の表示を強くした。</b> カードを薄くするのをやめ、赤枠・「満席」バッジ・希望ボタン無効化で示す。内容は読めるまま残す</span></li>
+                        <li class="done"><span class="pin">4</span><span><span class="done-tag">反映</span><b>画像枠を用意した。</b> 未設定のあいだは番号入りのプレースホルダ。<code>public/programs/</code> に置いてパスを入れると写真に差し替わる</span></li>
                     </ul>
                 </div>
 
@@ -958,7 +1111,7 @@ body {
                         <div class="ui">
                             <div class="ui-bar">
                                 <span class="ui-logo">KUAS</span>
-                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span>⚙</span></span>
+                                <span class="ui-icons"><span>?</span><span>☾</span><span>文</span><span style="width:auto;padding:0 10px;border-radius:999px;font-size:10px;font-weight:700">⚙ 管理画面</span></span>
                             </div>
                             <div class="ui-card" style="text-align:center">
                                 <p class="ui-h1">工学部ミニキャップストーン体験 受付</p>
@@ -967,13 +1120,18 @@ body {
                                     <button class="ui-btn lg">✓ &nbsp;予約あり</button>
                                     <button class="ui-btn sec lg">＋ &nbsp;予約なし</button>
                                 </div>
+                                <div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 16px;margin-top:22px">
+                                    <span style="display:inline-flex;align-items:center;gap:7px;border:2px solid var(--bd);border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700">🌐 English</span>
+                                    <span style="font-size:12px;color:var(--t2);text-decoration:underline;text-underline-offset:3px">その他の言語</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <ul class="notes">
                         <li><span class="pin">1</span><span><b>ここが一番人が滞留する画面。</b> 高校生が自分で操作するので、二択以外は何も置かない方が速い。</span></li>
-                        <li><span class="pin">2</span><span>言語切替が右上のアイコンに埋もれています。外国籍の来場者が自力で見つけられるか要検証。</span></li>
-                        <li><span class="pin">3</span><span>管理画面への歯車が来場者から見える位置にあります。長押しや隠しジェスチャーに変える案あり。</span></li>
+                        <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>言語切替を画面内に出した。</b> 「English」は切り替え先の言語名をその言語自身の表記で出す（英語表示のときは「日本語」に変わる）。9言語は「その他の言語」から</span></li>
+                        <li class="done"><span class="pin">3</span><span><span class="done-tag">反映</span><b>管理画面ボタンに文字を添えた。</b> 隠すのではなく分かりやすくする方針で確定。幅が足りない画面ではアイコンだけに戻る</span></li>
+                        <li><span class="pin">4</span><span><span class="open-tag">未決</span><b>背景写真。</b> キャップストーン体験の様子（ロボットなど）に差し替えたい。使える写真をもらえれば <code>public/</code> に入れて切り替えます</span></li>
                     </ul>
                 </div>
 
@@ -989,17 +1147,31 @@ body {
                             <div class="ui-card">
                                 <div style="font-size:11.5px;color:var(--t2);margin-bottom:10px">← 戻る</div>
                                 <p class="ui-h1">予約あり - お名前入力</p>
-                                <p class="ui-sub">お名前をフルネームで入力してください</p>
-                                <p class="ui-hint" style="margin:0 0 7px">※ 姓と名の間にスペースを入力してください</p>
-                                <div class="ui-input" style="margin-bottom:16px">例：山田 太郎</div>
-                                <button class="ui-btn">予約を確認する</button>
+                                <p class="ui-sub">お名前を入力してください</p>
+                                <p class="ui-hint" style="margin:0 0 7px">姓だけ・名だけでも探せます。ひらがな、カタカナ、ローマ字、メールアドレスでも構いません。</p>
+                                <div class="ui-input ui-focused" style="margin-bottom:4px">やまだ</div>
+                                <p class="ui-status">2件見つかりました。該当する方を選んでください。</p>
+                                <div class="ui-cand done">
+                                    <div class="ui-cand-name">山田 太郎<span class="ui-cand-badge">受付済み</span></div>
+                                    <div class="ui-cand-meta">ヤマダ タロウ ・ 〇〇高等学校</div>
+                                    <div class="ui-cand-ch">第1希望: "紙"技 / 第2希望: ChatGPT / 第3希望: 金属魔法</div>
+                                </div>
+                                <div class="ui-cand">
+                                    <div class="ui-cand-name">山田 花子</div>
+                                    <div class="ui-cand-meta">ヤマダ ハナコ ・ △△高等学校 ・ hanako.y@…</div>
+                                    <div class="ui-cand-ch">第1希望: ChatGPT / 第2希望: 金属魔法 / 第3希望: "紙"技</div>
+                                </div>
+                                <button class="ui-btn" style="margin-top:10px">予約を確認する</button>
                             </div>
                         </div>
                     </div>
                     <ul class="notes">
-                        <li><span class="pin">1</span><span><b>スペースの有無で照合が落ちる。</b> 名簿側は「姓」「名」が別列、入力は 1 本。全角空白は正規化していますが、そもそも姓・名を分けて入力させる案も。</span></li>
-                        <li><span class="pin">2</span><span>見つからなかったときの導線が「エラーを出して終わり」。予約なしフローへ流す案内を出したい。</span></li>
-                        <li><span class="pin">3</span><span>将来 QR で置き換えるなら、この画面は代替手段に降格します。</span></li>
+                        <li class="done"><span class="pin">1</span><span><span class="done-tag">反映</span><b>照合を作り直した。</b> 完全一致をやめ、掠れば候補に出す方式に。スペースの有無・ひらがな・カタカナ・半角カナ・全角英数・ローマ字（shi/si、tarou/taro/tarō の揺れ含む）・メールアドレスのローカル部・濁点の打ち漏れ（ススキ→鈴木）まで拾う</span></li>
+                        <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>入力しながら候補が出る。</b> ボタンを押す必要がない。同姓はフリガナ・学校・希望プログラムを併記して見分ける。1人に絞れていれば確認画面まで直行する</span></li>
+                        <li class="done"><span class="pin">3</span><span><span class="done-tag">反映</span><b>受付済みの人も候補に出す。</b> 選べないよう無効化しバッジを付ける。「名簿にいるのに出てこない」を無くすため</span></li>
+                        <li class="done"><span class="pin">4</span><span><span class="done-tag">反映</span><b>0件のときの案内を文章にした。</b> 「表記を変えて試すか、予約なしで受付してください」</span></li>
+                        <li class="done"><span class="pin">5</span><span><span class="done-tag">反映</span><b>QR は当面見送り。</b> この画面が今後も主導線</span></li>
+                        <li><span class="pin">6</span><span><span class="open-tag">未決</span><b>学年での絞り込み。</b> 予約者名簿に学年があれば候補の絞り込みに使えますが、現状は列を取り込んでいません</span></li>
                     </ul>
                 </div>
 
@@ -1100,24 +1272,31 @@ body {
                                 <p class="ui-h2">希望プログラムを選択してください</p>
                                 <p class="ui-sub">第1〜第3希望まで選択できます。</p>
                                 <div class="ui-prog picked">
-                                    <div class="ui-prog-top"><span class="ui-prog-no">#1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
-                                    <div class="ui-picks">
+                                    <div class="ui-thumb"><span>1</span></div>
+                                    <div class="ui-prog-top"><span class="ui-prog-no">1</span><span class="ui-prog-t">"紙"技エンジニアリング！</span></div>
+                                    <div class="ui-cap"><div class="ui-cap-bar"><i style="width:60%"></i></div><span class="ui-cap-n">残り6</span></div>
+                                    <div class="ui-picks" style="margin-top:9px">
                                         <div class="ui-pick on">第1希望</div>
                                         <div class="ui-pick">第2希望</div>
                                         <div class="ui-pick">第3希望</div>
                                     </div>
                                 </div>
                                 <div class="ui-prog picked">
-                                    <div class="ui-prog-top"><span class="ui-prog-no">#2</span><span class="ui-prog-t">ChatGPT を操ろう！</span></div>
-                                    <div class="ui-picks">
+                                    <div class="ui-thumb"><span>2</span></div>
+                                    <div class="ui-prog-top"><span class="ui-prog-no">2</span><span class="ui-prog-t">ChatGPT を操ろう！</span></div>
+                                    <div class="ui-cap"><div class="ui-cap-bar warn"><i style="width:87%"></i></div><span class="ui-cap-n warn">残り2</span></div>
+                                    <div class="ui-picks" style="margin-top:9px">
                                         <div class="ui-pick">第1希望</div>
                                         <div class="ui-pick on">第2希望</div>
                                         <div class="ui-pick">第3希望</div>
                                     </div>
                                 </div>
-                                <div class="ui-prog">
-                                    <div class="ui-prog-top"><span class="ui-prog-no">#3</span><span class="ui-prog-t">現代の金属魔法？</span></div>
-                                    <div class="ui-picks">
+                                <div class="ui-prog full">
+                                    <span class="ui-full-badge">満席</span>
+                                    <div class="ui-thumb"><span>3</span></div>
+                                    <div class="ui-prog-top"><span class="ui-prog-no">3</span><span class="ui-prog-t">現代の金属魔法？</span></div>
+                                    <div class="ui-cap"><div class="ui-cap-bar full"><i style="width:100%"></i></div><span class="ui-cap-n full">満席</span></div>
+                                    <div class="ui-picks" style="margin-top:9px;opacity:.4">
                                         <div class="ui-pick">第1希望</div>
                                         <div class="ui-pick">第2希望</div>
                                         <div class="ui-pick">第3希望</div>
@@ -1418,22 +1597,36 @@ body {
                                     <div class="ui-tab">受付状況</div>
                                     <div class="ui-tab on">設定</div>
                                 </div>
-                                <div class="ui-switch">
-                                    <span class="lbl">予約者優先割り当て</span><span class="ui-toggle on"></span>
+                                <p style="font-size:14px;font-weight:700;margin:6px 0 3px">割り当て方法</p>
+                                <p class="ui-hint" style="margin:0 0 12px">プログラムをどの順番で埋めるかを決めます。先着順以外は、受付時にいったん待機にして、全員の受付が済んでから一括で確定します。</p>
+                                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+                                    <div style="display:flex;gap:10px;padding:11px 13px;border:2px solid var(--bd);border-radius:10px">
+                                        <span style="flex:none;width:16px;height:16px;border-radius:50%;border:2px solid var(--bd);margin-top:2px"></span>
+                                        <span><b style="font-size:13px">先着順</b><br><span style="font-size:11px;color:var(--t2)">受付したその場で確定。待機は発生しません。</span></span>
+                                    </div>
+                                    <div style="display:flex;gap:10px;padding:11px 13px;border:2px solid var(--bd);border-radius:10px">
+                                        <span style="flex:none;width:16px;height:16px;border-radius:50%;border:2px solid var(--bd);margin-top:2px"></span>
+                                        <span><b style="font-size:13px">予約者優先</b><br><span style="font-size:11px;color:var(--t2)">予約のある方を先に確定し、残り枠を受付順で埋めます。</span></span>
+                                    </div>
+                                    <div style="display:flex;gap:10px;padding:11px 13px;border:2px solid var(--p);border-radius:10px;background:rgba(15,140,82,.07)">
+                                        <span style="flex:none;width:16px;height:16px;border-radius:50%;border:5px solid var(--p);margin-top:2px"></span>
+                                        <span><b style="font-size:13px">学年優先</b><br><span style="font-size:11px;color:var(--t2)">高3 → 高2 → 高1 → その他 の順。受験学年の方を優先したいときに。</span></span>
+                                    </div>
+                                    <div style="display:flex;gap:10px;padding:11px 13px;border:2px solid var(--bd);border-radius:10px">
+                                        <span style="flex:none;width:16px;height:16px;border-radius:50%;border:2px solid var(--bd);margin-top:2px"></span>
+                                        <span><b style="font-size:13px">リピーター優先</b><br><span style="font-size:11px;color:var(--t2)">参加回数が多い方から。名簿に参加回数の列が必要です。</span></span>
+                                    </div>
                                 </div>
-                                <p class="ui-hint" style="margin:0 0 14px">ONのとき、予約なしの参加者は受付時に「割り当て待機」になります。全員の受付後に一括割り当てを実行してください。</p>
-                                <div class="ui-switch">
-                                    <span class="lbl">学年優先割り当て（予約なし）</span><span class="ui-toggle on"></span>
-                                </div>
-                                <p class="ui-hint" style="margin:0 0 20px">ONのとき、待機者を高3→高2→高1→その他の順で割り当てます。OFFなら先着順。</p>
                                 <button class="ui-btn dan">受付データをリセット</button>
                             </div>
                         </div>
                     </div>
                     <ul class="notes">
-                        <li><span class="pin">1</span><span><b>この 2 つのトグルが当日の運用を決める。</b> それなのに管理画面の一番奥にあります。当日の朝に必ず確認する項目なので、起動時チェックリストに出す案。</span></li>
-                        <li><span class="pin">2</span><span><b>学年優先は実装が未完。</b> トグルは保存されますが、割り当て処理は先着順のままです。</span></li>
-                        <li><span class="pin">3</span><span>リセットは全消去です。Excel 書き出しを促す確認を挟みたい。</span></li>
+                        <li class="done"><span class="pin">1</span><span><span class="done-tag">反映</span><b>トグル2つを4択に整理した。</b> どの組み合わせが何を意味するのか読み取れなかったため。既定は「学年優先」</span></li>
+                        <li class="done"><span class="pin">2</span><span><span class="done-tag">反映</span><b>学年優先を実装した。</b> あわせてリピーター優先も。並べ替えの材料（学年・参加回数・予約有無）は受付時点で受付レコードに焼き込むので、名簿を入れ直しても確定済みの結果は動かない</span></li>
+                        <li><span class="pin">3</span><span><span class="open-tag">未決</span><b>4つを今後どう統合するか。</b> 「予約者優先かつ学年優先」のような組み合わせが要るかは、運用を回してから判断する</span></li>
+                        <li><span class="pin">4</span><span><span class="open-tag">未決</span>リセットは全消去です。Excel 書き出しを促す確認を挟みたい</span></li>
+                        <li><span class="pin">5</span><span><span class="open-tag">未決</span>当日の朝に必ず確認する項目なので、起動時チェックリストに出す案</span></li>
                     </ul>
                 </div>
 
@@ -1559,7 +1752,12 @@ body {
                 <div class="card">
                     <span class="tag next">次にやる</span>
                     <h3>プログラムに時刻と教室を持たせる</h3>
-                    <p>完了画面で「10:30 / 3号館 201」まで案内できるようになります。データ構造とプログラム編集タブに 2 項目足すだけ。</p>
+                    <p>完了画面で「10:30 / 3号館 201」まで案内できるようになります。画像欄と同じ要領で 2 項目足すだけ。</p>
+                </div>
+                <div class="card">
+                    <span class="tag next">次にやる</span>
+                    <h3>プログラム写真の用意</h3>
+                    <p>枠は作ってあります。<code>public/programs/</code> に写真を置いてパスを入れれば差し替わります。あとは素材待ち。</p>
                 </div>
                 <div class="card">
                     <span class="tag next">次にやる</span>
@@ -1567,9 +1765,9 @@ body {
                     <p>名簿プレビューの行をタップして、その場で確定できるようにします。予約者の受付が一番速くなる導線です。</p>
                 </div>
                 <div class="card">
-                    <span class="tag next">次にやる</span>
-                    <h3>学年優先の割り当て</h3>
-                    <p>トグルは既にありますが、割り当て処理が先着順のままです。高3から順に入れる実装を足します。</p>
+                    <span class="tag now">実装済</span>
+                    <h3>4つの割り当て方法</h3>
+                    <p>先着順 / 予約者優先 / 学年優先 / リピーター優先。設定タブで切り替えます。既定は学年優先。</p>
                 </div>
                 <div class="card">
                     <span class="tag next">次にやる</span>
@@ -1587,9 +1785,9 @@ body {
                     <p>今は 1 台完結。LAN 内で 1 台を親にして同期する方式なら、クラウド無しでも実現できます。</p>
                 </div>
                 <div class="card">
-                    <span class="tag idea">検討中</span>
-                    <h3>QR による受付</h3>
-                    <p>事前に配った QR をかざして 0 秒受付。ただし QR の発行と配布は別途手段が要ります。</p>
+                    <span class="tag now">実装済</span>
+                    <h3>あいまい照合</h3>
+                    <p>かな・カタカナ・ローマ字・メールアドレス・濁点の打ち漏れまで拾って候補を出します。テスト44ケースで担保。</p>
                 </div>
                 <div class="card">
                     <span class="tag idea">検討中</span>
@@ -1615,7 +1813,7 @@ body {
                 <div class="q">
                     <span class="qn">Q1</span>
                     <div>
-                        <h4>希望は何個まで取るか</h4>
+                        <h4><span class="open-tag">未決</span>希望は何個まで取るか</h4>
                         <p>今は第1〜第3を全部埋めないと確定できません。入力の手数と、割り当ての柔軟さのトレードオフです。</p>
                         <ul class="opts"><li>3つ必須（現行）</li><li>第1のみ必須、2・3は任意</li><li>第1のみ</li></ul>
                     </div>
@@ -1623,23 +1821,21 @@ body {
                 <div class="q">
                     <span class="qn">Q2</span>
                     <div>
-                        <h4>予約なしの人を即時に確定させるか</h4>
-                        <p>「予約者優先」ON なら全員が待機に回り、受付完了後に一括で割り当てます。OFF なら先着で即確定。</p>
-                        <ul class="opts"><li>予約者優先 ON（現行の既定）</li><li>OFF・先着即確定</li><li>時間帯で切り替える</li></ul>
+                        <h4><span class="done-tag">決定</span>予約なしの人を即時に確定させるか</h4>
+                        <p>全員の受付が済んでから一括で割り当てる方式に決定。先着順も選択肢としては残してあります。既定は学年優先。</p>
                     </div>
                 </div>
                 <div class="q">
                     <span class="qn">Q3</span>
                     <div>
-                        <h4>残枠を来場者に見せるか</h4>
-                        <p>見せれば納得感は上がりますが、埋まっているプログラムを避ける動きが起きて偏りが出ます。</p>
-                        <ul class="opts"><li>見せない（現行）</li><li>満席のみ表示</li><li>残数まで表示</li></ul>
+                        <h4><span class="done-tag">決定</span>残枠を来場者に見せるか</h4>
+                        <p>残数まで表示する。定員バーで「残り6」まで出し、8割で黄、満席で赤に変わります。</p>
                     </div>
                 </div>
                 <div class="q">
                     <span class="qn">Q4</span>
                     <div>
-                        <h4>受付端末は何台か</h4>
+                        <h4><span class="open-tag">未決</span>受付端末は何台か</h4>
                         <p>ローカル専用なので端末間でデータが共有されません。2 台以上なら同期の仕組みが要ります。</p>
                         <ul class="opts"><li>1台完結</li><li>2〜3台・LAN同期</li><li>複数台・手動統合</li></ul>
                     </div>
@@ -1647,7 +1843,7 @@ body {
                 <div class="q">
                     <span class="qn">Q5</span>
                     <div>
-                        <h4>既定のテーマ</h4>
+                        <h4><span class="open-tag">未決</span>既定のテーマ</h4>
                         <p>会場の照明条件次第です。当日の朝に切り替える運用でも構いません。</p>
                         <ul class="opts"><li>Light（現行）</li><li>Dark</li><li>Liquid Glass</li></ul>
                     </div>
@@ -1655,7 +1851,7 @@ body {
                 <div class="q">
                     <span class="qn">Q6</span>
                     <div>
-                        <h4>来場者に端末を触らせるか</h4>
+                        <h4><span class="open-tag">未決</span>来場者に端末を触らせるか</h4>
                         <p>触らせるならキオスクモードと大きめのタップ領域、スタッフ入力なら情報密度を上げた方が速くなります。設計の前提が変わります。</p>
                         <ul class="opts"><li>来場者が自分で操作</li><li>スタッフが代理入力</li><li>予約者はスタッフ・当日は本人</li></ul>
                     </div>
@@ -1669,5 +1865,6 @@ body {
 <footer class="colophon">
     KUAS-reception / local-only branch<br>
     Vanilla JS + localStorage · 外部通信なし · 同梱フォント & ライブラリで完全オフライン動作<br>
-    このボードは <code>docs/design-proposal.html</code> にあります。フレーム番号を指して修正を依頼してください。
+    このボードは <code>docs/design-proposal.html</code> にあります。フレーム番号を指して修正を依頼してください。<br>
+    v2 · 第1回レビュー（配色・タイポグラフィ・コンポーネント・画面1〜2）反映済み。画面3以降は未レビューです。
 </footer>

@@ -13,9 +13,12 @@
 > dependencies removed.
 
 ## Core Features
-- Reception flow for reserved and walk-in attendees (name, school, grade, companions)
-- Program selection UI for 1st–3rd choices with capacity-aware validation
-- Auto-assignment, waiting list management, and color strap guidance screens
+- **Fuzzy name matching** — family name or given name alone, kana, romaji, email address, or
+  a missed dakuten all surface candidates as you type (`name-match.js`)
+- Program selection UI for 1st–3rd choices, with a capacity bar (open / nearly full / full)
+- Four assignment methods (first-come / reservation holders / school year / repeat visitors)
+  and waiting list management
+- Color strap guidance screens
 - Admin panel for program editing, roster preview, and status visualization
 - Excel (`reception_status.xlsx`) and PDF export of final assignments
 - Multilingual UI (日本語 / English / 한국어 / 中文 / español / हिन्दी / नेपाली / العربية / Indonesia)
@@ -52,9 +55,11 @@ Enter the admin panel from the icon in the top right. The default password is
 1. **Preparation**: Update OS/browser, gather the latest roster files, allow pop-ups
 2. **Import Rosters**: Admin → File Load; import the reservation roster and briefing roster (xlsx) and complete column mapping
 3. **Reception**
-   - Reserved: match by name → confirm details → finalize with companions count
-   - Walk-in: input name/school/grade/companions → choose preferences → confirm
-4. **Auto Assignment**: Configure "Prioritize Reserved" and "Prioritize Grade (Walk-ins)" in Settings; run batch assignment for waiting attendees
+   - Reserved: type part of the name → pick from candidates → confirm → finalize with companions count
+   - Walk-in: input name/furigana/school/grade/companions → choose preferences → confirm
+4. **Assignment**: Pick the method in Settings (first-come / reservation holders / school year /
+   repeat visitors). Every method except first-come holds attendees until you run
+   "Assign waiting list" on the Status tab.
 5. **Status Monitoring**: Use the Status tab (cards/table) to review program enrollment and waiting list
 6. **Export**: Generate Excel/PDF outputs and archive final results
 
@@ -62,8 +67,11 @@ Enter the admin panel from the icon in the top right. The default password is
 ### Excel Rosters
 | File | Required Columns (example) | Parsed Fields |
 | --- | --- | --- |
-| Capstone Reservation Roster | No, FamilyName, GivenName, Furigana, 1st–3rd, (opt) Companions | `name`, `furigana`, `choices[]`, `companions` |
-| Briefing Session Roster | No, Time, FamilyName, GivenName, Furigana, (opt) Companions | `name`, `furigana`, `time`, `companions` |
+| Capstone Reservation Roster | No, FamilyName, GivenName, Furigana, 1st–3rd, (opt) Email / Visits / Companions | `name`, `furigana`, `email`, `visits`, `choices[]`, `companions` |
+| Briefing Session Roster | No, Time, FamilyName, GivenName, Furigana, (opt) Email / Companions | `name`, `furigana`, `email`, `time`, `companions` |
+
+Columns are detected from the header row; the mapping dialog only opens when detection fails.
+Email is an extra handle for matching; the visit count drives repeat-visitor ordering.
 
 ### Local Persistence
 Everything is written to localStorage through `local-store.js` (`window.LocalStore`),
@@ -87,11 +95,14 @@ namespaced under `kuas.reception.v1.*`.
 ## Directory Highlights
 - `index.html` / `script.js` / `style.css`: main app shell and UI logic
 - `local-store.js`: localStorage-backed data layer
+- `name-match.js`: attendee matching engine (kana, romaji, email)
+- `tests/name-match.test.js`: matching tests, run with `npm test`
 - `serve.js`: dependency-free local static server
 - `language-loader.js` & `locales/*.json`: lazy-loaded multilingual assets
 - `assets/fonts/`: bundled fonts (Inter / Noto Sans JP / Zen Maru Gothic)
 - `vendor/`: bundled libraries (Phosphor Icons / SortableJS / SheetJS)
 - `public/`: static images
+- `public/programs/`: program card thumbnails (see the README in that directory)
 - `register_of_names/`: sample roster spreadsheets
 - `docs/design-proposal.html`: UI and feature design proposal
 
@@ -103,6 +114,12 @@ namespaced under `kuas.reception.v1.*`.
 - **Data disappeared**: Private browsing and clearing history both wipe it. Always export to Excel before the event ends
 
 ## Developer Notes
+
+```bash
+npm test
+```
+
+- When matching misses something, add the case to `tests/name-match.test.js` before fixing it
 - Program definitions and reception logic live in `script.js`
 - `confirmedAttendees` / `waitingList` / `programEnrollment` are derived from
   `allParticipants` — update them through `syncDerivedLists()`, never directly

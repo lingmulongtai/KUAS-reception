@@ -74,6 +74,7 @@
                             description: p.description || '',
                             title_en: p.title_en || '',
                             description_en: p.description_en || '',
+                            image: p.image || '',
                             capacity: p.capacity || 0,
                             order: typeof p.order === 'number' ? p.order : i
                         };
@@ -88,6 +89,7 @@
                         description: p.description,
                         title_en: p.title_en || '',
                         description_en: p.description_en || '',
+                        image: p.image || '',
                         capacity: p.capacity || 0,
                         order: index
                     };
@@ -108,6 +110,8 @@
                                 id: r.id || newId('reservation'),
                                 name: r.name || '',
                                 furigana: r.furigana || '',
+                                email: r.email || '',
+                                visits: r.visits || 0,
                                 choices: Array.isArray(r.choices) ? r.choices : [],
                                 companions: r.companions || 0
                             };
@@ -119,6 +123,7 @@
                                 id: b.id || newId('briefing'),
                                 name: b.name || '',
                                 furigana: b.furigana || '',
+                                email: b.email || '',
                                 time: b.time || '',
                                 companions: b.companions || 0
                             };
@@ -132,6 +137,8 @@
                         id: r.id || newId('reservation'),
                         name: r.name,
                         furigana: r.furigana || '',
+                        email: r.email || '',
+                        visits: r.visits || 0,
                         choices: Array.isArray(r.choices) ? r.choices : [],
                         companions: r.companions || 0
                     };
@@ -141,6 +148,7 @@
                         id: b.id || newId('briefing'),
                         name: b.name,
                         furigana: b.furigana || '',
+                        email: b.email || '',
                         time: b.time || '',
                         companions: b.companions || 0
                     };

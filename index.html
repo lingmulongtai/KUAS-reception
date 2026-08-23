@@ -45,7 +45,7 @@
                     <a href="#" data-lang="ko">한국어 (Korean)</a>
                     <a href="#" data-lang="ar">العربية (Arabic)</a>
                 </div>
-                <button id="admin-entry-btn" class="header-btn" title="管理画面へ"><i class="ph ph-gear-six"></i></button>
+                <button id="admin-entry-btn" class="header-btn header-btn-labelled" title="管理画面へ"><i class="ph ph-gear-six"></i><span data-lang-key="adminEntry">管理画面</span></button>
             </div>
         </div>
     </header>
@@ -62,14 +62,22 @@
                         <button id="btn-reserved" class="btn btn-primary btn-large"><i class="ph ph-calendar-check"></i><span data-lang-key="reserved">予約あり</span></button>
                         <button id="btn-walk-in" class="btn btn-secondary btn-large"><i class="ph ph-user-plus"></i><span data-lang-key="walkIn">予約なし</span></button>
                     </div>
+                    <!-- 言語切替。ヘッダーのアイコンだけでは来場者が自力で見つけられないため、
+                         最初の画面にも出しておく。 -->
+                    <div class="lang-quick">
+                        <button id="btn-lang-quick" type="button" class="lang-quick-btn"><i class="ph ph-translate"></i><span id="lang-quick-label">English</span></button>
+                        <button id="btn-lang-more" type="button" class="lang-quick-more" data-lang-key="otherLanguages">その他の言語</button>
+                    </div>
                 </div>
                 <!-- 他の受付セクション... -->
                 <div id="name-input-section" class="section section-hidden">
                     <h1 data-lang-key="reservedNameInputTitle">予約あり - お名前入力</h1>
                     <div class="input-group">
-                        <label for="student-name" data-lang-key="enterFullName">お名前をフルネームで入力してください</label>
-                        <p style="margin: 5px 0; font-size: 14px; color: var(--text-secondary-color);" data-lang-key="nameSpaceNote">※ 姓と名の間にスペースを入力してください</p>
-                        <input type="text" id="student-name" data-lang-key-placeholder="namePlaceholder" autocomplete="off" autocapitalize="off" spellcheck="false">
+                        <label for="student-name" data-lang-key="enterFullName">お名前を入力してください</label>
+                        <p class="field-note" data-lang-key="nameSearchNote">姓だけ・名だけでも探せます。ひらがな、カタカナ、ローマ字、メールアドレスでも構いません。</p>
+                        <input type="text" id="student-name" data-lang-key-placeholder="nameSearchPlaceholder" placeholder="例：やまだ / 山田 / yamada" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="reservation-candidates-status" aria-controls="reservation-candidates">
+                        <p id="reservation-candidates-status" class="candidate-status" role="status" aria-live="polite"></p>
+                        <div id="reservation-candidates" class="candidate-list" role="listbox" aria-label="該当する来場者"></div>
                         <button id="btn-check-reservation" class="btn btn-primary" data-lang-key="checkReservation">予約を確認する</button>
                     </div>
                 </div>
@@ -258,27 +266,42 @@
 
                 <!-- 設定タブ -->
                 <div id="tab-settings" class="admin-tab-content">
-                    <div class="toggle-switch-wrapper" style="justify-content: space-between; margin-top: 20px;">
-                        <span data-lang-key="prioritizeReserved">予約者優先割り当て</span>
-                        <label class="ios-switch">
-                            <input type="checkbox" id="prioritize-toggle-checkbox">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <p data-lang-key="prioritizeDesc" style="text-align: left; font-size: 14px; color: var(--text-secondary-color);">
-                        この設定をONにすると、予約なしの参加者は受付時に「割り当て待機」状態になります。全員の受付完了後、「受付状況」タブの「待機者を一括割り当て」ボタンを押してプログラムを確定してください。
-                    </p>
+                    <fieldset class="mode-group">
+                        <legend data-lang-key="assignmentModeTitle">割り当て方法</legend>
+                        <p class="mode-group-note" data-lang-key="assignmentModeNote">プログラムをどの順番で埋めるかを決めます。先着順以外は、受付時にいったん待機にして、全員の受付が済んでから「受付状況」タブの「待機者を一括割り当て」で確定します。</p>
 
-                    <div class="toggle-switch-wrapper" style="justify-content: space-between; margin-top: 16px;">
-                        <span data-lang-key="prioritizeGrade">学年優先割り当て（予約なし）</span>
-                        <label class="ios-switch">
-                            <input type="checkbox" id="prioritize-grade-toggle-checkbox">
-                            <span class="slider"></span>
+                        <label class="mode-option">
+                            <input type="radio" name="assignment-mode" value="firstCome">
+                            <span class="mode-body">
+                                <span class="mode-name" data-lang-key="modeFirstCome">先着順</span>
+                                <span class="mode-desc" data-lang-key="modeFirstComeDesc">受付したその場で希望プログラムを確定します。待機は発生しません。</span>
+                            </span>
                         </label>
-                    </div>
-                    <p data-lang-key="prioritizeGradeDesc" style="text-align: left; font-size: 14px; color: var(--text-secondary-color);">
-                        ONのとき、予約なしの待機者を学年（高3→高2→高1→その他）の優先順で割り当てます。OFFのときは先着順です。
-                    </p>
+
+                        <label class="mode-option">
+                            <input type="radio" name="assignment-mode" value="reserved">
+                            <span class="mode-body">
+                                <span class="mode-name" data-lang-key="modeReserved">予約者優先</span>
+                                <span class="mode-desc" data-lang-key="modeReservedDesc">事前予約のある方を先に確定し、残った枠を予約なしの方へ受付順に割り当てます。</span>
+                            </span>
+                        </label>
+
+                        <label class="mode-option">
+                            <input type="radio" name="assignment-mode" value="grade">
+                            <span class="mode-body">
+                                <span class="mode-name" data-lang-key="modeGrade">学年優先</span>
+                                <span class="mode-desc" data-lang-key="modeGradeDesc">高3 → 高2 → 高1 → その他 の順に割り当てます。受験学年の方を優先したいときに。</span>
+                            </span>
+                        </label>
+
+                        <label class="mode-option">
+                            <input type="radio" name="assignment-mode" value="repeat">
+                            <span class="mode-body">
+                                <span class="mode-name" data-lang-key="modeRepeat">リピーター優先</span>
+                                <span class="mode-desc" data-lang-key="modeRepeatDesc">オープンキャンパスへの参加回数が多い方から割り当てます。名簿に参加回数の列が必要です。</span>
+                            </span>
+                        </label>
+                    </fieldset>
 
                     <div style="margin-top: 30px; text-align: left;">
                          <button id="btn-reset-data" class="btn btn-danger" data-lang-key="resetData">受付データをリセット</button>
@@ -356,6 +379,7 @@
     <!-- JavaScriptファイルを読み込み -->
     <script src="language-loader.js" defer></script>
     <script src="local-store.js" defer></script>
+    <script src="name-match.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>

@@ -133,56 +133,52 @@ body.fonts-loading {
     font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', Arial, sans-serif;
 }
 
-html[lang="ar"] body {
+/* === 右横書き（アラビア語ほか） ===================================
+   html[dir="rtl"] を script.js が付ける。ここでは物理プロパティで
+   組んである箇所だけを左右反転させる。
+   ================================================================= */
+
+html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+}
+
+/* 数値・メールアドレス・時刻など、中身がラテン文字のものは左横書きのまま */
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="number"],
+html[dir="rtl"] input[type="password"],
+html[dir="rtl"] .capacity-label,
+html[dir="rtl"] .program-no,
+html[dir="rtl"] .candidate-meta {
     direction: ltr;
-    text-align: left;
+    text-align: right;
 }
 
-html[lang="ar"] .content-wrapper,
-html[lang="ar"] .input-group,
-html[lang="ar"] .input-group label,
-html[lang="ar"] .input-group p,
-html[lang="ar"] #status-summary,
-html[lang="ar"] .status-summary,
-html[lang="ar"] .status-toggle-wrapper {
-    text-align: inherit;
-}
+html[dir="rtl"] .header-content { flex-direction: row-reverse; }
+html[dir="rtl"] .header-buttons { margin-right: 0; margin-left: 40px; }
 
-html[lang="ar"] .form-row {
-    flex-direction: row;
-    gap: 12px;
-}
+html[dir="rtl"] .back-btn i { transform: scaleX(-1); }
+html[dir="rtl"] .btn-return i { transform: scaleX(-1); }
 
-html[lang="ar"] .form-row .form-col {
-    text-align: inherit;
-}
+html[dir="rtl"] .lang-menu,
+html[dir="rtl"] .theme-menu { right: auto; left: 0; text-align: right; }
+html[dir="rtl"] #lang-menu a,
+html[dir="rtl"] #theme-menu a { text-align: right; }
 
-html[lang="ar"] input,
-html[lang="ar"] textarea,
-html[lang="ar"] select {
-    direction: ltr;
-    text-align: left;
-}
+html[dir="rtl"] .field-error,
+html[dir="rtl"] .field-note,
+html[dir="rtl"] .candidate-status,
+html[dir="rtl"] .candidate-item,
+html[dir="rtl"] .editor-item-hint,
+html[dir="rtl"] .program-grid,
+html[dir="rtl"] .confirmation-details { text-align: right; }
 
-html[lang="ar"] .button-group {
-    flex-direction: row;
-}
+html[dir="rtl"] .ui-table th,
+html[dir="rtl"] table th,
+html[dir="rtl"] table td { text-align: right; }
 
-html[lang="ar"] .lang-menu,
-html[lang="ar"] .theme-menu {
-    direction: ltr;
-    text-align: left;
-}
-
-html[lang="ar"] .header-buttons {
-    flex-direction: row;
-    gap: 12px;
-}
-
-html[lang="ar"] #lang-menu a,
-html[lang="ar"] #theme-menu a {
-    text-align: left;
-}
+html[dir="rtl"] .candidate-badge { margin-left: 0; margin-right: 8px; }
+html[dir="rtl"] .field-error::before { content: " ⚠"; }
 
 body.liquid-mode {
     --primary-color: rgba(0, 120, 255, 0.6);
@@ -1905,7 +1901,7 @@ body.dark-mode .program-card-status .chip { background: rgba(255,255,255,0.06); 
     #walk-in-section input, #walk-in-section select, #walk-in-section textarea { font-size: 16px; }
 
     /* 管理画面: タブ/入力/表のモバイル最適化 */
-    .admin-tabs { overflow-x: auto; white-space: nowrap; gap: 8px; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+    .admin-tabs { flex-wrap: wrap; gap: 8px; row-gap: 2px; padding-bottom: 6px; }
     .admin-tab { flex: 0 0 auto; padding: 8px 12px; font-size: 14px; }
     .admin-tab-content { padding: 0; }
     .editor-item-row { flex-direction: column; align-items: stretch; gap: 6px; }
@@ -2283,3 +2279,551 @@ body.home-locked #reception-view .content-wrapper {
     .button-group { gap: 12px; flex-wrap: nowrap; }
     .btn-large { height: 128px; width: min(82vw, 240px); font-size: 16px; }
 }
+/* === 予約者の候補リスト ============================================
+   入力しながら該当者を出し、スタッフがタップで選ぶ。
+   「名前が出てこない」を潰すのが目的なので、掠った候補も広めに出す。
+   ================================================================= */
+
+.field-note {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: var(--text-secondary-color);
+    text-align: left;
+}
+
+.candidate-status {
+    margin: 10px 0 0;
+    min-height: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary-color);
+    text-align: left;
+}
+.candidate-status.is-empty { color: var(--danger-color); }
+
+.candidate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    max-height: 46vh;
+    overflow-y: auto;
+    /* 空のときに余白だけ残さない */
+    text-align: left;
+}
+.candidate-list:empty { display: none; }
+
+.candidate-item {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--light-gray);
+    border-radius: 12px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .1s ease;
+}
+.candidate-item:hover { border-color: var(--primary-color); }
+.candidate-item:focus-visible { border-color: var(--primary-color); }
+.candidate-item:active { transform: scale(.995); }
+
+.candidate-name {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.candidate-meta {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--text-secondary-color);
+}
+.candidate-meta span + span::before {
+    content: "・";
+    margin: 0 2px;
+}
+.candidate-choices {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-secondary-color);
+}
+
+/* 受付済みの人は選べないことが一目で分かるようにする */
+.candidate-item.is-done {
+    opacity: .6;
+    cursor: not-allowed;
+}
+.candidate-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    vertical-align: 2px;
+    background: var(--light-gray);
+    color: var(--text-secondary-color);
+}
+.candidate-badge.is-done {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+/* --- 入力エラーの説明文 --- */
+.field-error {
+    margin: 6px 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--danger-color);
+    text-align: left;
+    display: none;
+}
+.field-error.visible { display: block; }
+.field-error::before {
+    content: "⚠ ";
+}
+
+/* === プログラムカード：サムネイル枠と定員バー ======================
+   サムネイルは将来ここに写真を入れるための枠。未設定のあいだは
+   番号を大きく出したプレースホルダを描いておく。
+   ================================================================= */
+
+:root {
+    --warning-color: #C77700;   /* 残りわずか。黄色系だが白背景で読める濃さにする */
+    --warning-bg: #FFF4E0;
+}
+body.dark-mode {
+    --warning-color: #F0B450;
+    --warning-bg: #43331A;
+}
+
+.program-card { overflow: hidden; padding: 0; }
+.program-body { padding: 18px 20px 20px; }
+
+.program-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--light-gray);
+    overflow: hidden;
+}
+.program-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.program-thumb.is-placeholder {
+    display: grid;
+    place-items: center;
+    background:
+        repeating-linear-gradient(
+            135deg,
+            rgba(15, 140, 82, .07) 0 14px,
+            rgba(15, 140, 82, .12) 14px 28px
+        ),
+        var(--card-bg);
+}
+.program-thumb.is-placeholder span {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--primary-color);
+    opacity: .5;
+    font-variant-numeric: tabular-nums;
+}
+body.dark-mode .program-thumb.is-placeholder {
+    background:
+        repeating-linear-gradient(
+            135deg,
+            rgba(141, 191, 33, .09) 0 14px,
+            rgba(141, 191, 33, .15) 14px 28px
+        ),
+        var(--card-bg);
+}
+body.dark-mode .program-thumb.is-placeholder span { color: var(--accent-color); }
+
+.program-card h3 { display: flex; align-items: baseline; gap: 10px; }
+.program-no {
+    flex: none;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(15, 140, 82, .12);
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+}
+body.dark-mode .program-no { background: rgba(141, 191, 33, .18); color: var(--accent-color); }
+
+/* --- 定員バー --- */
+.capacity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+.capacity-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--light-gray);
+    overflow: hidden;
+}
+.capacity-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary-color);
+    transition: width .3s ease;
+}
+.capacity-label {
+    flex: none;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.capacity[data-level="low"] .capacity-bar span { background: var(--warning-color); }
+.capacity[data-level="low"] .capacity-label     { color: var(--warning-color); }
+.capacity[data-level="full"] .capacity-bar span { background: var(--danger-color); }
+.capacity[data-level="full"] .capacity-label {
+    color: #fff;
+    background: var(--danger-color);
+    padding: 2px 10px;
+    border-radius: 999px;
+}
+
+/* 満席カードは赤枠で、薄くしすぎず「読めるが選べない」状態にする */
+.program-card.is-full { opacity: 1; border-color: var(--danger-color); }
+.program-card.is-full .program-thumb { filter: grayscale(1); opacity: .55; }
+.full-overlay {
+    background: none;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
+}
+.full-overlay span {
+    background: var(--danger-color);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+body.dark-mode .full-overlay { background: none; }
+
+/* プログラム編集：画像パス欄の補足 */
+.editor-item-hint {
+    margin: -6px 0 10px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary-color);
+    text-align: left;
+}
+
+
+/* === 数字の桁を揃える ============================================
+   受付状況の人数は数秒おきに書き換わる。プロポーショナル数字のままだと
+   桁が変わるたびに横幅が動いて読みにくいので、等幅数字に固定する。
+   ================================================================= */
+.capacity-label,
+.program-no,
+.roster-count,
+.status-summary,
+#status-summary,
+#status-table td,
+#waiting-list-table td,
+#roster-reservations-table td,
+#roster-briefing-table td,
+#roster-others-table td,
+.total-progress .label,
+input[type="number"] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+/* === 管理タブを折り返して横スクロールを出さない ====================
+   Windows のブラウザでは overflow-x のスクロールバーが常時見えてしまい、
+   タブ列の下に灰色の帯が残る。タブは 5 つしかないので折り返しで足りる。
+   ================================================================= */
+.admin-tabs {
+    flex-wrap: wrap;
+    overflow: visible;
+    row-gap: 2px;
+}
+/* 折り返すと下線インジケータの位置が合わなくなるため、各タブに直接引く */
+.admin-tabs::after { display: none; }
+.admin-tab {
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+}
+.admin-tab.active { border-bottom-color: var(--primary-color); }
+
+/* === 割り当て方法の選択 ==========================================
+   当日の運用を決める設定なので、トグルではなく 4 択を並べて
+   どれが選ばれているか一目で分かる形にする。
+   ================================================================= */
+.mode-group {
+    border: none;
+    margin: 20px 0 0;
+    padding: 0;
+    text-align: left;
+}
+.mode-group legend {
+    padding: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.mode-group-note {
+    margin: 6px 0 14px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary-color);
+}
+
+.mode-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid var(--light-gray);
+    border-radius: 12px;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.mode-option + .mode-option { margin-top: 10px; }
+.mode-option:hover { border-color: var(--secondary-color); }
+.mode-option:focus-within {
+    border-color: var(--primary-color);
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+.mode-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background: rgba(15, 140, 82, .07);
+}
+body.dark-mode .mode-option:has(input:checked) { background: rgba(141, 191, 33, .12); }
+
+.mode-option input[type="radio"] {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin: 2px 0 0;
+    accent-color: var(--primary-color);
+}
+.mode-body { display: block; }
+.mode-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.mode-desc {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary-color);
+}
+
+/* :has() が無いブラウザ向けの保険。選択中でも読める見た目は保たれる。 */
+@supports not (selector(:has(*))) {
+    .mode-option { border-color: var(--light-gray); }
+}
+
+/* === 最初の画面の言語切替 =========================================
+   ヘッダーのアイコンだけでは、日本語が読めない来場者が自力で見つけ
+   られない。押す場所が二択しかない画面なので、その下に並べても
+   迷いは増えない。
+   ================================================================= */
+.lang-quick {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px 18px;
+    margin-top: 32px;
+}
+.lang-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 2px solid var(--light-gray);
+    border-radius: 999px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color .15s ease;
+}
+.lang-quick-btn i { font-size: 18px; color: var(--primary-color); }
+.lang-quick-btn:hover { border-color: var(--primary-color); }
+.lang-quick-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.lang-quick-more {
+    border: none;
+    background: none;
+    padding: 6px 4px;
+    color: var(--text-secondary-color);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+.lang-quick-more:hover { color: var(--primary-color); }
+.lang-quick-more:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* --- ラベル付きヘッダーボタン（管理画面） --- */
+.header-btn-labelled {
+    width: auto;
+    padding: 0 14px;
+    gap: 7px;
+    border-radius: 999px;
+}
+.header-btn-labelled span {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+@media (max-width: 600px) {
+    /* 幅が足りないときは文字を落としてアイコンだけにする */
+    .header-btn-labelled span { display: none; }
+    .header-btn-labelled { width: 40px; padding: 0; }
+}
+
+/* ==================================================================
+   デザイン整理レイヤー
+   ------------------------------------------------------------------
+   デジタル庁デザインシステムの考え方を、KUAS の緑を保ったまま
+   取り込むための層。既存の見た目を作り直すのではなく、
+   「読みやすさ」と「操作の分かりやすさ」に効く部分だけを揃える。
+
+   1. フォーカスがどこにあるか常に見える
+   2. 角丸・余白を一定の刻みに揃える
+   3. 面はグラデーションではなく単色。境界は線で示す
+   4. 補助テキストのコントラストを上げる
+   ================================================================== */
+
+:root {
+    /* 角丸の刻み。用途で使い分け、中間の値を増やさない */
+    --radius-sm: 8px;    /* 入力欄・小さなボタン */
+    --radius-md: 12px;   /* ボタン・カード */
+    --radius-lg: 16px;   /* 大きなカード */
+    --radius-pill: 999px;
+
+    /* フォーカスリング。緑と競合しない暖色で、明暗どちらの背景でも見える */
+    --focus-ring: #FFB020;
+    --focus-ring-contrast: #1A2E22;
+}
+body.dark-mode {
+    --focus-ring: #FFC44D;
+    --focus-ring-contrast: #05100A;
+}
+
+/* --- 1. フォーカス表示 -------------------------------------------
+   キーボードで操作している人が、今どこにいるか見失わないようにする。
+   二重リングにしているのは、明るい面と暗い面のどちらでも輪郭が
+   立つようにするため。 */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--focus-ring-contrast);
+    border-radius: var(--radius-sm);
+}
+
+/* 入力欄はフォーカス時に outline を消していたので戻す。
+   :where() は詳細度 0 なので、既存の詳細度の高いルールに勝てるよう
+   ここは実セレクタで書く。 */
+.input-group input:focus-visible,
+.input-group textarea:focus-visible,
+.input-group select:focus-visible,
+body:not(.dark-mode) .editor-item-row input:focus-visible,
+body:not(.dark-mode) .editor-item-row textarea:focus-visible,
+.editor-item-row input:focus-visible,
+.editor-item-row textarea:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+}
+
+/* 大きなボタンは浮かせる演出でフォーカスを表していたが、
+   マウス操作でも同じ見た目になるため区別がつかなかった */
+.btn-large:focus { outline: none; }
+.btn-large:focus-visible {
+    outline: 4px solid var(--focus-ring);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 7px var(--focus-ring-contrast);
+}
+
+/* --- 2. 面は単色にする -------------------------------------------
+   グラデーションと強い影は、写真の背景の上だと輪郭がぼやける。
+   単色 + 明確な境界のほうが、屋外光の下でも形が読める。 */
+.btn {
+    border-radius: var(--radius-md);
+    text-shadow: none;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.btn-primary {
+    background: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(15, 60, 38, .22);
+}
+.btn-secondary {
+    background: var(--secondary-color);
+    box-shadow: 0 2px 6px rgba(15, 60, 38, .18);
+}
+.btn-danger {
+    background: var(--danger-color);
+    box-shadow: 0 2px 6px rgba(110, 20, 30, .22);
+}
+.btn:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(15, 60, 38, .28);
+}
+.btn-primary:hover   { background: #0C7345; }
+.btn-secondary:hover { background: #3B8F67; }
+.btn-danger:hover    { background: #C02334; }
+.btn:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(15, 60, 38, .3); }
+
+.btn-large { border-radius: var(--radius-lg); }
+.btn-large:focus:not(:focus-visible) { box-shadow: none; }
+.btn-large:hover,
+.btn-large:focus { transform: none; }
+.btn-large:hover { box-shadow: 0 6px 18px rgba(15, 60, 38, .3); }
+/* 表面を横切る光沢アニメーションは、押せる場所を示す役には立たない */
+.btn-large::before { display: none; }
+
+/* --- 3. 角丸と境界を揃える --------------------------------------- */
+.input-group input,
+.input-group textarea,
+.input-group select { border-radius: var(--radius-sm); }
+
+.program-card    { border-radius: var(--radius-lg); }
+.candidate-item  { border-radius: var(--radius-md); }
+.mode-option     { border-radius: var(--radius-md); }
+.full-overlay    { border-radius: var(--radius-lg); }
+
+/* --- 4. 補助テキストのコントラスト -------------------------------
+   #5A7A5A は白地で 4.8:1。AA は満たすが 12〜14px で使っており、
+   屋外光の下では読みづらい。5.9:1 まで上げる。 */
+:root      { --text-secondary-color: #4A6A52; }
+body.dark-mode { --text-secondary-color: #C3DACF; }

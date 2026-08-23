@@ -471,18 +471,41 @@ let currentLanguage = window.currentLanguage || 'ja';
     // 直接書き換えず、syncDerivedLists() 経由で更新する。
     let confirmedAttendees = [];   // プログラムに割り当て済みの来場者
     let waitingList = [];          // 満席で待機中の来場者
-    let programEnrollment = {};    // プログラムIDごとの確定人数
+    let programEnrollment = {};    // プログラムIDごとの確定人数（未受付の予約者を含む）
+    let programReservedHold = {};  // うち、まだ受付に来ていない予約者のぶん
+
+    /** その氏名が既に受付を済ませているか。 */
+    function hasBeenReceived(name) {
+        return allParticipants.some(p => p.name === name);
+    }
 
     function syncDerivedLists() {
         confirmedAttendees = allParticipants.filter(p => !!p.assignedProgramId);
         waitingList = allParticipants.filter(p => p.status === 'waiting');
 
         programEnrollment = {};
-        programs.forEach(p => { programEnrollment[p.id] = 0; });
+        programReservedHold = {};
+        programs.forEach(p => {
+            programEnrollment[p.id] = 0;
+            programReservedHold[p.id] = 0;
+        });
+
+        // 受付済みの割り当て
         confirmedAttendees.forEach(p => {
             if (programEnrollment[p.assignedProgramId] !== undefined) {
                 programEnrollment[p.assignedProgramId]++;
             }
+        });
+
+        // まだ来ていない予約者の第1希望も、確保済みとして定員から差し引く。
+        // この画面を見るのは当日の飛び込み参加者なので、予約者のぶんを空きに
+        // 見せてしまうと定員を超える。
+        reservations.forEach(r => {
+            if (hasBeenReceived(r.name)) return;   // 受付済みなら上で数えている
+            const firstChoice = normalizeChoicesToProgramIds(r.choices)[0];
+            if (!firstChoice || programEnrollment[firstChoice] === undefined) return;
+            programEnrollment[firstChoice]++;
+            programReservedHold[firstChoice]++;
         });
     }
 
@@ -532,10 +555,28 @@ function getTranslatedValue(defaultValue, englishValue) {
 }
 
 let currentTheme = 'light';
+    /**
+     * 割り当て方法。
+     * firstCome 以外は受付時にいったん待機にし、全員の受付後に
+     * assignWaitingListParticipants() でまとめて確定する。
+     */
+    const ASSIGNMENT_MODES = ['firstCome', 'reserved', 'grade', 'repeat'];
+
     let settings = {
-        prioritizeReserved: true,
-        prioritizeGrade: true // 予約なしの学年優先（デフォルトON）
+        assignmentMode: 'grade'
     };
+
+    /** 旧設定（真偽値2つ）を新しい assignmentMode に読み替える。 */
+    function migrateSettings(loaded) {
+        if (!loaded) return;
+        if (ASSIGNMENT_MODES.includes(loaded.assignmentMode)) {
+            settings.assignmentMode = loaded.assignmentMode;
+            return;
+        }
+        if (loaded.prioritizeGrade) settings.assignmentMode = 'grade';
+        else if (loaded.prioritizeReserved) settings.assignmentMode = 'reserved';
+        else settings.assignmentMode = 'firstCome';
+    }
     // 管理者の認証状態（ローカルセッションで管理）
     // ローカル運用のため、パスワードはこの定数で管理する
     const ADMIN_PASSWORD = 'admin';
@@ -546,6 +587,22 @@ let currentTheme = 'light';
 let adminEditorDirty = false;
 // 名簿マッピング情報（どの列がどのフィールドかの記録）
 
+    // 右横書きの言語。増えたらここに足す。
+    const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+    /**
+     * 最初の画面の言語ボタンの見出し。
+     * 切り替え先の言語名を、その言語自身の表記で出す。日本語話者には
+     * 「English」、英語話者には「日本語」と見えるので、意味が伝わる。
+     */
+    function updateQuickLangLabel() {
+        const label = document.getElementById('lang-quick-label');
+        if (!label) return;
+        const target = currentLanguage === 'ja' ? 'en' : 'ja';
+        label.textContent = (window.translations[target] && window.translations[target].languageSelfName)
+            || (target === 'en' ? 'English' : '日本語');
+    }
+
     async function updateLanguage(lang) {
         const wrapper = document.querySelector('#reception-view .content-wrapper');
         const heightContext = prepareHeightAnimation(wrapper);
@@ -553,6 +610,8 @@ let adminEditorDirty = false;
         await window.loadTranslations(lang);
         currentLanguage = lang;
         document.documentElement.setAttribute('lang', lang);
+        // アラビア語は右横書き。CSS 側は論理プロパティで追従させる。
+        document.documentElement.setAttribute('dir', RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr');
         document.documentElement.classList.add('lang-switching');
         requestAnimationFrame(() => {
             document.documentElement.classList.remove('lang-switching');
@@ -567,6 +626,7 @@ let adminEditorDirty = false;
             const translation = getTranslation(key);
             if (translation) el.placeholder = translation;
         });
+        updateQuickLangLabel();
         const currentVisibleSection = document.querySelector('#reception-sections-wrapper .section:not(.section-hidden)');
         if (currentVisibleSection && currentVisibleSection.id === 'program-selection-section') {
             renderProgramGrid();
@@ -788,14 +848,14 @@ let adminEditorDirty = false;
     }
     // --- 割り当てと完了画面 ---
     function assignProgram(user) {
-        // 保存済みの受付データから現在のプログラム参加人数を計算
-        const currentEnrollment = {};
-        programs.forEach(p => { currentEnrollment[p.id] = 0; });
-        allParticipants.forEach(p => {
-            if (p.assignedProgramId && currentEnrollment[p.assignedProgramId] !== undefined) {
-                currentEnrollment[p.assignedProgramId]++;
-            }
-        });
+        // 現在の埋まり具合。予約者の確保ぶんも含めた programEnrollment を使う。
+        // ただし本人が予約者なら、自分が確保している枠は空きとして扱う。
+        const currentEnrollment = Object.assign({}, programEnrollment);
+        const ownReservation = reservations.find(r => r.name === user.name);
+        if (ownReservation && !hasBeenReceived(user.name)) {
+            const held = normalizeChoicesToProgramIds(ownReservation.choices)[0];
+            if (held && currentEnrollment[held] > 0) currentEnrollment[held]--;
+        }
 
         for (const choiceId of user.choices) {
             if (choiceId && (currentEnrollment[choiceId] || 0) < programs.find(p => p.id === choiceId).capacity) {
@@ -964,6 +1024,11 @@ let adminEditorDirty = false;
                     <textarea id="desc-en-${escapeHTML(p.id)}" autocomplete="off" spellcheck="false">${escapeHTML(p.description_en || '')}</textarea>
                 </div>
                 <div class="editor-item-row">
+                    <label for="image-${escapeHTML(p.id)}">${escapeHTML(getTranslation('imageLabel') || '画像')}</label>
+                    <input type="text" id="image-${escapeHTML(p.id)}" value="${escapeHTML(p.image || '')}" placeholder="public/programs/p1.jpg" autocomplete="off" spellcheck="false">
+                </div>
+                <p class="editor-item-hint">${escapeHTML(getTranslation('imageHint') || '画像ファイルを public/programs/ に置き、そのパスを入力してください。空欄ならプレースホルダを表示します。')}</p>
+                <div class="editor-item-row">
                     <label for="capacity-${escapeHTML(p.id)}">${escapeHTML(translations[currentLanguage].capacityLabel)}</label>
                     <input type="number" id="capacity-${escapeHTML(p.id)}" value="${escapeHTML(p.capacity)}" style="width: 80px; flex-grow: 0;">
                     <div style="margin-left: auto;">
@@ -1023,12 +1088,14 @@ let adminEditorDirty = false;
             const newTitleEn = itemElement.querySelector(`#title-en-${id}`).value;
             const newDescEn = itemElement.querySelector(`#desc-en-${id}`).value;
             const newCapacity = parseInt(itemElement.querySelector(`#capacity-${id}`).value, 10);
+            const newImage = (itemElement.querySelector(`#image-${id}`)?.value || '').trim();
             newPrograms.push({
                 id: id,
                 title: newTitle,
                 description: newDesc,
                 title_en: newTitleEn,
                 description_en: newDescEn,
+                image: newImage,
                 capacity: newCapacity || 10
             });
         });
@@ -1042,35 +1109,89 @@ let adminEditorDirty = false;
 
     // 自動英訳機能は削除済み
 
+    // 残席がこの割合を下回ったら「残りわずか」として黄色にする
+    const LOW_CAPACITY_RATIO = 0.8;
+
+    /** プログラムの埋まり具合を 'full' | 'low' | 'open' で返す。 */
+    function capacityLevel(program) {
+        const capacity = program.capacity || 0;
+        if (capacity <= 0) return 'open';
+        const enrolled = programEnrollment[program.id] || 0;
+        if (enrolled >= capacity) return 'full';
+        if (enrolled / capacity >= LOW_CAPACITY_RATIO) return 'low';
+        return 'open';
+    }
+
+    /**
+     * 定員バー。埋まり具合に応じて緑 → 黄 → 赤に変わる。
+     * 満席のときは数値ではなく「満席」と出す。
+     */
+    function renderCapacityBar(program) {
+        const capacity = program.capacity || 0;
+        const enrolled = programEnrollment[program.id] || 0;
+        const level = capacityLevel(program);
+        const ratio = capacity > 0 ? Math.min(100, Math.round((enrolled / capacity) * 100)) : 0;
+
+        let label;
+        if (level === 'full') {
+            // バッジに載せるので、説明文ではなく短い語を使う
+            label = escapeHTML(getTranslation('seatsFull') || '満席');
+        } else {
+            const remaining = Math.max(0, capacity - enrolled);
+            const tmpl = getTranslation('remainingSeats') || '残り{count}';
+            label = escapeHTML(tmpl.replace('{count}', remaining));
+        }
+
+        return `
+            <div class="capacity" data-level="${level}">
+                <div class="capacity-bar" role="img" aria-label="${escapeHTML(String(enrolled))} / ${escapeHTML(String(capacity))}">
+                    <span style="width:${ratio}%"></span>
+                </div>
+                <span class="capacity-label">${label}</span>
+            </div>`;
+    }
+
+    /** 画像が未設定のプログラム用のプレースホルダ。番号だけを大きく出す。 */
+    function renderProgramThumb(program, index) {
+        const alt = escapeHTML(getTranslatedValue(program.title, program.title_en));
+        if (program.image) {
+            return `<div class="program-thumb"><img src="${escapeHTML(program.image)}" alt="${alt}" loading="lazy" decoding="async"></div>`;
+        }
+        return `<div class="program-thumb is-placeholder" aria-hidden="true"><span>${index + 1}</span></div>`;
+    }
+
     function renderProgramGrid() {
         const grid = document.getElementById('program-grid');
-        if (grid) {
-            grid.classList.toggle('disabled', document.body.classList.contains('offline'));
-        }
+        if (!grid) return;
         grid.innerHTML = '';
-        programs.forEach(p => {
+        programs.forEach((p, index) => {
             const card = document.createElement('div');
+            const level = capacityLevel(p);
+            const isFull = level === 'full';
             card.className = 'program-card';
             card.id = `card-${p.id}`;
-            const isFull = (programEnrollment[p.id] || 0) >= p.capacity;
-            if (isFull) {
-                card.classList.add('is-full');
-            }
+            card.dataset.capacity = level;
+            if (isFull) card.classList.add('is-full');
+
             const title = getTranslatedValue(p.title, p.title_en);
             const description = getTranslatedValue(p.description, p.description_en);
-            let fullOverlayHTML = '';
-            const fullText = getTranslation('full');
-            if (isFull && fullText) {
-                fullOverlayHTML = `<div class="full-overlay"><span>${escapeHTML(fullText)}</span></div>`;
-            }
+            const fullText = getTranslation('seatsFull') || '満席';
+            const fullOverlayHTML = isFull
+                ? `<div class="full-overlay"><span>${escapeHTML(fullText)}</span></div>`
+                : '';
+
             card.innerHTML = `
                 ${fullOverlayHTML}
-                <h3>${escapeHTML(title)}</h3>
-                <p>${escapeHTML(description)}</p>
-                <div class="program-choice-btns" data-program-id="${p.id}">
-                    <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
-                    <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
-                    <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
+                ${renderProgramThumb(p, index)}
+                <div class="program-body">
+                    <h3><span class="program-no">${index + 1}</span>${escapeHTML(title)}</h3>
+                    <p>${escapeHTML(description)}</p>
+                    ${renderCapacityBar(p)}
+                    <div class="program-choice-btns" data-program-id="${p.id}">
+                        <button class="p1" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice1') || '')}</button>
+                        <button class="p2" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice2') || '')}</button>
+                        <button class="p3" ${isFull ? 'disabled' : ''}>${escapeHTML(getTranslation('choice3') || '')}</button>
+                    </div>
                 </div>`;
             grid.appendChild(card);
         });
@@ -1092,7 +1213,7 @@ let adminEditorDirty = false;
                         return;
                     }
                     // 満員
-                    const isFull = (programEnrollment[program.id] || 0) >= program.capacity;
+                    const isFull = capacityLevel(program) === 'full';
                     if (isFull) {
                         showCustomAlert('errorProgramFull');
                         return;
@@ -1239,18 +1360,90 @@ let adminEditorDirty = false;
     }
 
     // --- 入力検証 ---
+    // --- 入力エラーの表示 ---
+
+    /** そのフィールドの直後に置くエラー文の要素を用意する。 */
+    function fieldErrorElement(el) {
+        if (!el) return null;
+        const id = (el.id || 'field') + '-error';
+        let node = document.getElementById(id);
+        if (!node) {
+            node = document.createElement('p');
+            node.id = id;
+            node.className = 'field-error';
+            node.setAttribute('role', 'alert');
+            el.insertAdjacentElement('afterend', node);
+        }
+        return node;
+    }
+
+    /** フィールドを赤枠にし、理由を文章で添える。 */
+    function showFieldError(el, message) {
+        if (!el) return;
+        el.classList.add('input-error');
+        el.setAttribute('aria-invalid', 'true');
+        const node = fieldErrorElement(el);
+        if (node) {
+            node.textContent = message;
+            node.classList.add('visible');
+            el.setAttribute('aria-describedby', node.id);
+        }
+    }
+
+    function clearFieldError(el) {
+        if (!el) return;
+        el.classList.remove('input-error');
+        el.removeAttribute('aria-invalid');
+        const node = document.getElementById((el.id || 'field') + '-error');
+        if (node) {
+            node.textContent = '';
+            node.classList.remove('visible');
+        }
+    }
+
+    /** フィールドの表示名。ラベルから拾い、無ければ id をそのまま使う。 */
+    function fieldLabelText(el) {
+        if (!el) return '';
+        const label = el.id ? document.querySelector('label[for="' + el.id + '"]') : null;
+        return label ? label.textContent.trim() : (el.id || '');
+    }
+
+    /**
+     * 未入力のフィールドを赤枠にし、それぞれの下に理由を出す。
+     * 戻り値は「全部埋まっているか」。従来どおり真偽値だけ見れば動く。
+     */
     function validateAndHighlight(elements) {
         let allValid = true;
+        const missing = [];
         elements.forEach(el => {
+            if (!el) return;
             if (!el.value) {
-                el.classList.add('input-error');
+                const key = (el.tagName === 'SELECT') ? 'errorFieldSelect' : 'errorFieldRequired';
+                const fallback = (el.tagName === 'SELECT') ? '{field}を選択してください。' : '{field}を入力してください。';
+                const tmpl = getTranslation(key) || fallback;
+                showFieldError(el, tmpl.replace('{field}', fieldLabelText(el)));
+                missing.push(el);
                 allValid = false;
             } else {
-                el.classList.remove('input-error');
+                clearFieldError(el);
             }
         });
+        // 最初の未入力へ移動して、どこを直せばよいか分かるようにする
+        if (missing.length > 0) missing[0].focus();
         return allValid;
     }
+
+    // 入力し直したらエラー表示を消す
+    document.addEventListener('input', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('input-error') && e.target.value) {
+            clearFieldError(e.target);
+        }
+    });
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('input-error') && e.target.value) {
+            clearFieldError(e.target);
+        }
+    });
     
     // プログラム選択画面の同伴者入力の表示/非表示を切り替え
     function setProgramCompanionsVisibility(visible) {
@@ -1340,6 +1533,8 @@ let adminEditorDirty = false;
                 renderSelect('第1希望列', 'map-choice-1', options, (resAuto.choiceIdxs?.[0] ?? -1), false),
                 renderSelect('第2希望列', 'map-choice-2', options, (resAuto.choiceIdxs?.[1] ?? -1), true),
                 renderSelect('第3希望列', 'map-choice-3', options, (resAuto.choiceIdxs?.[2] ?? -1), true),
+                renderSelect('メールアドレス列（任意）', 'map-email', options, (resAuto.emailIdx ?? -1), true),
+                renderSelect('参加回数列（任意・リピーター優先で使用）', 'map-visits', options, (resAuto.visitsIdx ?? -1), true),
                 renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         } else {
@@ -1352,6 +1547,7 @@ let adminEditorDirty = false;
                 renderSelect('セイ（フリガナ）列（任意）', 'map-furigana-sei', options, (briAuto.furiganaIdxs?.[0] ?? -1), true),
                 renderSelect('メイ（フリガナ）列（任意）', 'map-furigana-mei', options, (briAuto.furiganaIdxs?.[1] ?? -1), true),
                 renderSelect('時間列', 'map-time', options, timeAutoIdx, false),
+                renderSelect('メールアドレス列（任意）', 'map-email', options, (briAuto.emailIdx ?? -1), true),
                 renderSelect('同伴者人数列（任意）', 'map-companions', options, -1, true)
             ].join('');
         }
@@ -1380,6 +1576,8 @@ let adminEditorDirty = false;
         const firstIdx = getIdx('map-first-name');
         const furiSeiIdx = getIdx('map-furigana-sei');
         const furiMeiIdx = getIdx('map-furigana-mei');
+        const emailIdx = getIdx('map-email');
+        const visitsIdx = getIdx('map-visits');
 
         if (type === 'reservations') {
             const c1 = getIdx('map-choice-1');
@@ -1390,6 +1588,8 @@ let adminEditorDirty = false;
                 nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
                 choiceIdxs: [c1, c2, c3],
+                emailIdx: emailIdx,
+                visitsIdx: visitsIdx,
                 companionsIdx: compIdx
             };
             rosterMappingInfo.reservations = map;
@@ -1409,7 +1609,9 @@ let adminEditorDirty = false;
                         return v || null;
                     });
                     const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
-                    return { name, furigana: furigana || undefined, choices, companions };
+                    const email = get(row, map.emailIdx);
+                    const visits = Math.max(0, parseInt(get(row, map.visitsIdx), 10) || 0);
+                    return { name, furigana: furigana || undefined, email: email || undefined, visits, choices, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             reservations = parsed;
@@ -1422,6 +1624,7 @@ let adminEditorDirty = false;
                 nameIdx: nameSingle >= 0 ? nameSingle : [lastIdx, firstIdx].filter(i => i >= 0),
                 furiganaIdxs: [furiSeiIdx, furiMeiIdx],
                 timeIdx: timeIdx,
+                emailIdx: emailIdx,
                 companionsIdx: compIdx
             };
             rosterMappingInfo.briefing = map;
@@ -1438,7 +1641,8 @@ let adminEditorDirty = false;
                     const furigana = furiParts.filter(i => i >= 0).map(i => get(row, i)).filter(Boolean).join(' ');
                     const time = get(row, map.timeIdx);
                     const companions = Math.max(0, parseInt(get(row, map.companionsIdx), 10) || 0);
-                    return { name, furigana: furigana || undefined, time: time || undefined, companions };
+                    const email = get(row, map.emailIdx);
+                    return { name, furigana: furigana || undefined, email: email || undefined, time: time || undefined, companions };
                 })
                 .filter(r => (r.name || '').trim() !== '');
             briefingSessionAttendees = parsed;
@@ -1446,6 +1650,7 @@ let adminEditorDirty = false;
             if (statusEl) statusEl.innerHTML += `<p>工学部説明会名簿を読み込みました。${briefingSessionAttendees.length}件</p>`;
         }
 
+        indexRosters();
         saveStateToLocalStorage();
         saveRosterData();
         updateRosterMappingText();
@@ -1877,10 +2082,14 @@ function detectReservationHeaderMapping(headerRow) {
     const firstIdx = find(['第1希望','第一希望','1st','first','第一','1希望']);
     const secondIdx = find(['第2希望','第二希望','2nd','second','第二','2希望']);
     const thirdIdx = find(['第3希望','第三希望','3rd','third','第三','3希望']);
+    const emailIdx = find(['メール','ﾒｰﾙ','mail','e-mail','アドレス','address']);
+    const visitsIdx = find(['参加回数','来場回数','回数','visits','visit']);
     return {
         nameIdx: nameIdx >= 0 ? nameIdx : 0,
         furiganaIdxs,
-        choiceIdxs: [firstIdx, secondIdx, thirdIdx].map(i => (i == null ? -1 : i))
+        choiceIdxs: [firstIdx, secondIdx, thirdIdx].map(i => (i == null ? -1 : i)),
+        emailIdx,
+        visitsIdx
     };
 }
 
@@ -1896,7 +2105,8 @@ function detectBriefingHeaderMapping(headerRow) {
         const singleFuri = find(['フリガナ','ふりがな','kana','yomi','読み']);
         if (singleFuri >= 0) furiganaIdxs = [singleFuri, singleFuri];
     }
-    return { nameIdx: nameIdx >= 0 ? nameIdx : 0, furiganaIdxs };
+    const emailIdx = find(['メール','ﾒｰﾙ','mail','e-mail','アドレス','address']);
+    return { nameIdx: nameIdx >= 0 ? nameIdx : 0, furiganaIdxs, emailIdx };
 }
 
 function updateRosterMappingText() {
@@ -1954,9 +2164,7 @@ function columnLetter(index) {
         if (savedState) {
             try {
                 const state = JSON.parse(savedState);
-                if (state.settings) {
-                    settings = state.settings;
-                }
+                migrateSettings(state.settings);
             } catch (e) {
                 console.error("Failed to parse saved state:", e);
             }
@@ -2153,6 +2361,10 @@ function columnLetter(index) {
             if (langPressTimer) return;
             handleLangTap();
         });
+
+        // 最初の画面に置いた言語切替。ヘッダーのアイコンと同じ動きをする。
+        safeOn(document.getElementById('btn-lang-quick'), 'click', handleLangTap);
+        safeOn(document.getElementById('btn-lang-more'), 'click', triggerLangMenu);
         safeOn(langSwitchBtn, 'contextmenu', (e) => e.preventDefault());
         const startLangPress = () => {
             if (langPressTimer) clearTimeout(langPressTimer);
@@ -2173,7 +2385,9 @@ function columnLetter(index) {
             safeOn(langSwitchBtn, evt, clearLangPress, { passive: true });
         });
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#lang-switch-btn') && !(langMenu && langMenu.contains(e.target))) {
+            if (!e.target.closest('#lang-switch-btn')
+                && !e.target.closest('#btn-lang-more')
+                && !(langMenu && langMenu.contains(e.target))) {
                 hideLangMenu();
             }
             if (!e.target.closest('#theme-switch-btn') && !(themeMenu && themeMenu.contains(e.target))) {
@@ -2342,55 +2556,160 @@ function columnLetter(index) {
         }
     });
     
+    // --- 予約者の照合（NameMatch による候補リスト方式） ---
+
+    const candidateListEl = document.getElementById('reservation-candidates');
+    const candidateStatusEl = document.getElementById('reservation-candidates-status');
+    const studentNameInput = document.getElementById('student-name');
+
+    /** その名前が既に受付済みか。受付済みなら候補として出すが選べなくする。 */
+    function isAlreadyReceived(name) {
+        return confirmedAttendees.some(a => a.name === name)
+            || waitingList.some(a => a.name === name);
+    }
+
+    /** 予約レコードを受付フローに載せる。希望未入力ならプログラム選択へ回す。 */
+    function beginReceptionFor(reservation) {
+        const trim = (v) => (v || '').toString().trim();
+        const rawChoices = Array.isArray(reservation.choices) ? reservation.choices : [];
+        const hasNoPreference = rawChoices.length === 0 || rawChoices.every(v => {
+            const t = trim(v);
+            return !t || t === '-' || t === '希望なし' || t.toLowerCase() === 'none' || t === 'N/A';
+        });
+
+        currentUser = Object.assign({}, reservation, {
+            choices: normalizeChoicesToProgramIds(reservation.choices)
+        });
+
+        if (hasNoPreference) {
+            showCustomAlert('noChoicesProvided');
+            currentChoices = { 1: null, 2: null, 3: null };
+            renderProgramGrid();
+            updateProgramSelectionUI();
+            navigateTo('program-selection-section');
+            setProgramCompanionsVisibility(true);
+            setProgramCompanionsFromCurrentUser();
+            document.querySelector('.content-wrapper').classList.add('has-back-btn');
+            return;
+        }
+
+        showConfirmation(currentUser);
+        navigateTo('reservation-confirmation-section');
+    }
+
+    /** 候補を1件ぶんのボタンとして組み立てる。 */
+    function renderCandidateItem(reservation) {
+        const done = isAlreadyReceived(reservation.name);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'candidate-item' + (done ? ' is-done' : '');
+        button.setAttribute('role', 'option');
+        button.disabled = done;
+
+        const meta = [];
+        if (reservation.furigana) meta.push(reservation.furigana);
+        if (reservation.school) meta.push(reservation.school);
+        if (reservation.email) meta.push(reservation.email);
+
+        const choiceTitles = normalizeChoicesToProgramIds(reservation.choices)
+            .map((id, i) => {
+                const program = programs.find(prog => prog.id === id);
+                if (!program) return null;
+                const label = getTranslation('choice' + (i + 1)) || ('第' + (i + 1) + '希望');
+                return escapeHTML(label) + ': ' + escapeHTML(extractBaseTitle(getTranslatedValue(program.title, program.title_en)));
+            })
+            .filter(Boolean);
+
+        const doneBadge = done
+            ? '<span class="candidate-badge is-done">' + escapeHTML(getTranslation('alreadyReceived') || '受付済み') + '</span>'
+            : '';
+
+        button.innerHTML =
+            '<div class="candidate-name">' + escapeHTML(reservation.name) + doneBadge + '</div>'
+            + (meta.length ? '<div class="candidate-meta">' + meta.map(m => '<span>' + escapeHTML(m) + '</span>').join('') + '</div>' : '')
+            + (choiceTitles.length ? '<div class="candidate-choices">' + choiceTitles.join(' / ') + '</div>' : '');
+
+        if (!done) {
+            button.addEventListener('click', () => {
+                clearCandidates();
+                beginReceptionFor(reservation);
+            });
+        }
+        return button;
+    }
+
+    function clearCandidates() {
+        if (candidateListEl) candidateListEl.innerHTML = '';
+        if (candidateStatusEl) {
+            candidateStatusEl.textContent = '';
+            candidateStatusEl.classList.remove('is-empty');
+        }
+    }
+
+    /** 直近の検索結果。「予約を確認する」ボタンが参照する。 */
+    let candidateHits = [];
+
+    function refreshCandidates() {
+        if (!candidateListEl || !studentNameInput) return;
+        const query = studentNameInput.value;
+        candidateHits = [];
+
+        if (!query.trim()) {
+            clearCandidates();
+            return;
+        }
+
+        candidateHits = window.NameMatch.search(query, reservations, { limit: 20 });
+        candidateListEl.innerHTML = '';
+
+        if (candidateHits.length === 0) {
+            candidateStatusEl.textContent = getTranslation('candidatesNone')
+                || '該当する予約が見つかりません。表記を変えて試すか、「予約なし」で受付してください。';
+            candidateStatusEl.classList.add('is-empty');
+            return;
+        }
+
+        candidateStatusEl.classList.remove('is-empty');
+        const tmpl = getTranslation('candidatesFound') || '{count}件見つかりました。該当する方を選んでください。';
+        candidateStatusEl.textContent = tmpl.replace('{count}', candidateHits.length);
+
+        const fragment = document.createDocumentFragment();
+        candidateHits.forEach(hit => fragment.appendChild(renderCandidateItem(hit.record)));
+        candidateListEl.appendChild(fragment);
+    }
+
+    if (studentNameInput) {
+        studentNameInput.addEventListener('input', refreshCandidates);
+    }
+
     document.getElementById('btn-check-reservation').addEventListener('click', () => {
         const nameInput = document.getElementById('student-name');
         if (!validateAndHighlight([nameInput])) {
-            showCustomAlert('errorEnterName');
-            return;
-        }
-        const name = nameInput.value.trim().replace(/　/g, ' ');
-
-        // 既に登録済みかチェック
-        const isAlreadyConfirmed = confirmedAttendees.some(attendee => attendee.name === name);
-        const isAlreadyWaiting = waitingList.some(attendee => attendee.name === name);
-        
-        if (isAlreadyConfirmed || isAlreadyWaiting) {
-            showCustomAlert('errorAlreadyRegistered');
-            nameInput.focus();
             return;
         }
 
-        const student = reservations.find(r => r.name === name);
-        if (student) {
-            // Excelの値で "希望なし" 等が入っている場合の判定
-            const normalize = (v) => (v || '').toString().trim();
-            const rawChoices = Array.isArray(student.choices) ? student.choices : [];
-            const hasNoPreference = rawChoices.length === 0 || rawChoices.every(v => {
-                const s = normalize(v);
-                return !s || s === '-' || s === '希望なし' || s.toLowerCase() === 'none' || s === 'N/A';
-            });
+        refreshCandidates();
 
-            // 予約レコードからchoicesをID配列に正規化
-            const normalized = normalizeChoicesToProgramIds(student.choices);
-            currentUser = {...student, choices: normalized};
-            if (hasNoPreference) {
-                // 希望が未入力の場合は希望選択画面へ誘導
-                showCustomAlert('noChoicesProvided');
-                currentChoices = { 1: null, 2: null, 3: null };
-                renderProgramGrid();
-                updateProgramSelectionUI();
-                navigateTo('program-selection-section');
-                setProgramCompanionsVisibility(true); // 予約あり（希望未入力）は表示
-                setProgramCompanionsFromCurrentUser();
-                document.querySelector('.content-wrapper').classList.add('has-back-btn');
-                return;
+        const selectable = candidateHits.filter(hit => !isAlreadyReceived(hit.record.name));
+
+        if (selectable.length === 1) {
+            // 1人に絞れているなら確認を挟まず進める
+            clearCandidates();
+            beginReceptionFor(selectable[0].record);
+            return;
+        }
+        if (selectable.length === 0) {
+            if (candidateHits.length > 0) {
+                showCustomAlert('errorAlreadyRegistered');
+            } else {
+                showCustomAlert('errorNotFound');
             }
-            showConfirmation(currentUser);
-            navigateTo('reservation-confirmation-section');
-        } else {
-            showCustomAlert('errorNotFound');
             nameInput.focus();
+            return;
         }
+        // 複数該当。候補リストから選んでもらう
+        const firstItem = candidateListEl.querySelector('.candidate-item:not([disabled])');
+        if (firstItem) firstItem.focus();
     });
 
     document.getElementById('btn-change-reservation').addEventListener('click', () => {
@@ -2411,7 +2730,6 @@ function columnLetter(index) {
         const companionsEl = document.getElementById('walk-in-companions');
         
         if (!validateAndHighlight([nameEl, furiganaEl, gradeEl, companionsEl])) {
-            showCustomAlert('errorAllFields');
             return;
         }
         
@@ -2445,7 +2763,6 @@ function columnLetter(index) {
         const gradeEl = document.getElementById('walk-in-grade');
         
         if (!validateAndHighlight([nameEl, furiganaEl, gradeEl])) {
-            showCustomAlert('errorAllFields');
             return;
         }
         
@@ -2562,11 +2879,6 @@ function columnLetter(index) {
         }, 100);
     });
     
-    // エラーハイライト解除リスナー
-    ['student-name', 'walk-in-name', 'walk-in-furigana', 'walk-in-school', 'walk-in-grade', 'walk-in-companions'].forEach(id => {
-        document.getElementById(id).addEventListener('input', (e) => e.target.classList.remove('input-error'));
-    });
-
     // 管理者フローは setupAdminAuth で初期化済み
 // 未保存変更がある場合に離脱確認してからタブ切り替え
     const adminTabsContainer = document.querySelector('.admin-tabs');
@@ -2664,21 +2976,17 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
 	document.getElementById('briefing-session-file-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'briefing'));
 	document.getElementById('btn-export-excel').addEventListener('click', openExportPicker);
     
-    document.getElementById('prioritize-toggle-checkbox').checked = settings.prioritizeReserved;
-    document.getElementById('prioritize-toggle-checkbox').addEventListener('change', (e) => {
-        settings.prioritizeReserved = e.target.checked;
-        saveStateToLocalStorage();
-        showSaveIndicator(translations[currentLanguage].settingsSaved);
-    });
-    const prioritizeGradeEl = document.getElementById('prioritize-grade-toggle-checkbox');
-    if (prioritizeGradeEl) {
-        prioritizeGradeEl.checked = settings.prioritizeGrade;
-        prioritizeGradeEl.addEventListener('change', (e) => {
-            settings.prioritizeGrade = e.target.checked;
+    // 割り当て方法の選択
+    document.querySelectorAll('input[name="assignment-mode"]').forEach(radio => {
+        radio.checked = (radio.value === settings.assignmentMode);
+        radio.addEventListener('change', (e) => {
+            if (!e.target.checked) return;
+            settings.assignmentMode = e.target.value;
             saveStateToLocalStorage();
-            showSaveIndicator(translations[currentLanguage].settingsSaved);
+            renderProgramGrid();
+            showSaveIndicator(getTranslation('settingsSaved') || '設定を保存しました');
         });
-    }
+    });
     
     document.getElementById('btn-reset-data').addEventListener('click', () => {
         showCustomAlert('resetConfirm', () => {
@@ -2692,6 +3000,50 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
         }, true);
     });
 
+    // 学年の優先順。上にあるものほど先に割り当てる。
+    const GRADE_ORDER = ['高校3年生', '高校2年生', '高校1年生', 'その他'];
+
+    function gradeRank(grade) {
+        const index = GRADE_ORDER.indexOf(grade);
+        return index >= 0 ? index : GRADE_ORDER.length;
+    }
+
+    /** 事前予約のあった来場者か。受付時に立てたフラグを優先する。 */
+    function isReservedParticipant(participant) {
+        if (typeof participant.isReserved === 'boolean') return participant.isReserved;
+        return reservations.some(r => r.name === participant.name);
+    }
+
+    /** その来場者の過去の参加回数。名簿に列が無ければ 0。 */
+    function visitCount(participant) {
+        if (typeof participant.visits === 'number') return participant.visits;
+        const reservation = reservations.find(r => r.name === participant.name);
+        return (reservation && Number(reservation.visits)) || 0;
+    }
+
+    /**
+     * 一括割り当ての並び順。
+     * どのモードでも、決め手が同じ人どうしは受付順（先に来た人が先）になる。
+     */
+    function waitingComparator() {
+        const byArrival = (a, b) => (a.createdAt || 0) - (b.createdAt || 0);
+
+        switch (settings.assignmentMode) {
+            case 'reserved':
+                return (a, b) => {
+                    const ar = isReservedParticipant(a) ? 0 : 1;
+                    const br = isReservedParticipant(b) ? 0 : 1;
+                    return (ar - br) || byArrival(a, b);
+                };
+            case 'grade':
+                return (a, b) => (gradeRank(a.grade) - gradeRank(b.grade)) || byArrival(a, b);
+            case 'repeat':
+                return (a, b) => (visitCount(b) - visitCount(a)) || byArrival(a, b);
+            default:
+                return byArrival;
+        }
+    }
+
     // 待機者を空きのあるプログラムへ繰り上げる
     function assignWaitingListParticipants() {
         if (waitingList.length === 0) {
@@ -2699,8 +3051,7 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
             return;
         }
 
-        // 受付順（古い順）に処理する
-        const queue = waitingList.slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        const queue = waitingList.slice().sort(waitingComparator());
         let assignedCount = 0;
 
         queue.forEach(user => {
@@ -2714,6 +3065,9 @@ document.getElementById('btn-exit-admin').addEventListener('click', () => {
                 furigana: user.furigana || '',
                 school: user.school || '',
                 grade: user.grade || '',
+                email: user.email || '',
+                visits: user.visits || 0,
+                isReserved: !!user.isReserved,
                 companions: user.companions || 0,
                 choices: user.choices || [],
                 assignedProgramId: program.id,
@@ -2748,8 +3102,9 @@ if (statusViewToggle) {
             return;
         }
 
-        const isReserved = reservations.some(r => r.name === currentUser.name);
-        const shouldHold = settings.prioritizeReserved && !isReserved;
+        // 先着順以外は、その場では確定させず待機に積む。
+        // 全員の受付が済んでから一括で割り当てる運用を前提にしている。
+        const shouldHold = settings.assignmentMode !== 'firstCome';
         const assignedProgram = shouldHold ? null : assignProgram(currentUser);
         if (!shouldHold && assignedProgram === null) {
             showCustomAlert('errorProgramFull');
@@ -2764,11 +3119,16 @@ if (statusViewToggle) {
 
         try {
             const assignedProgramId = assignedProgram ? assignedProgram.id : null;
+            const reservation = reservations.find(r => r.name === currentUser.name);
             window.LocalStore.participants.add({
                 name: currentUser.name,
                 furigana: currentUser.furigana || '',
                 school: currentUser.school || '',
                 grade: currentUser.grade || '',
+                email: currentUser.email || (reservation && reservation.email) || '',
+                // 並べ替えの材料は受付時点で固定しておく（名簿を入れ直しても結果が動かない）
+                visits: Number(currentUser.visits ?? (reservation && reservation.visits)) || 0,
+                isReserved: !!reservation,
                 companions: currentUser.companions || 0,
                 choices: currentUser.choices || [],
                 assignedProgramId: assignedProgramId,
@@ -2851,8 +3211,22 @@ if (statusViewToggle) {
         const stored = window.LocalStore.rosters.load();
         if (stored.reservations) reservations = stored.reservations;
         if (stored.briefings) briefingSessionAttendees = stored.briefings;
+        indexRosters();
         renderRosterPreview();
         renderStatusTable();
+    }
+
+    /**
+     * 名簿が入れ替わったときの後始末。
+     * 照合用の検索キーを作り直し、定員の数え直しも走らせる
+     * （未受付の予約者ぶんを定員に含めているため）。
+     */
+    function indexRosters() {
+        if (window.NameMatch) {
+            window.NameMatch.indexRecords(reservations);
+            window.NameMatch.indexRecords(briefingSessionAttendees);
+        }
+        syncDerivedLists();
     }
 
     function writeRostersToStore() {
