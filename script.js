@@ -2371,9 +2371,7 @@ function columnLetter(index) {
         const loginBtn = document.getElementById('btn-admin-login');
         const cancelBtn = document.getElementById('btn-cancel-login');
         const logoutBtn = document.getElementById('btn-admin-logout');
-        const emailInput = document.getElementById('admin-email');
         const passwordInput = document.getElementById('admin-password');
-        const emailSpan = document.getElementById('admin-user-email');
         const errorEl = document.getElementById('password-error');
 
         let isLoggingIn = false;
@@ -2382,7 +2380,7 @@ function columnLetter(index) {
             if (!adminLoginModal) return;
             errorEl.textContent = '';
             adminLoginModal.classList.add('visible');
-            setTimeout(() => (emailInput && emailInput.focus()), 0);
+            setTimeout(() => (passwordInput && passwordInput.focus()), 0);
         }
 
         // エントリーボタン（未ログイン時のみモーダルを表示）
@@ -2417,14 +2415,11 @@ function columnLetter(index) {
             loginBtn.disabled = true;
             errorEl.textContent = '';
             try {
-                const email = (emailInput.value || '').trim();
                 const password = passwordInput.value || '';
                 if (password === ADMIN_PASSWORD) {
                     adminLoginModal.classList.remove('visible');
                     passwordInput.value = '';
                     try { localStorage.setItem('adminSession', 'true'); } catch (_) {}
-                    try { localStorage.setItem('adminEmail', email); } catch (_) {}
-                    if (emailSpan) emailSpan.textContent = email;
                     pendingAdminAccess = false;
                     showAdminView();
                     updateAdminEntryVisual(true);
@@ -2452,9 +2447,7 @@ function columnLetter(index) {
         // ログアウト
         safeOn(logoutBtn, 'click', () => {
             try { localStorage.removeItem('adminSession'); } catch (_) {}
-            try { localStorage.removeItem('adminEmail'); } catch (_) {}
             pendingAdminAccess = false;
-            if (emailSpan) emailSpan.textContent = '';
             showReceptionView();
             updateAdminEntryVisual(false);
             isAdminAuthenticated = false;
@@ -2463,9 +2456,6 @@ function columnLetter(index) {
         // 保存済みセッションの復元
         try {
             isAdminAuthenticated = localStorage.getItem('adminSession') === 'true';
-            if (isAdminAuthenticated && emailSpan) {
-                emailSpan.textContent = localStorage.getItem('adminEmail') || '';
-            }
             updateAdminEntryVisual(isAdminAuthenticated);
         } catch (_) {}
     }
